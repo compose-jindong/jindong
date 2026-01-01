@@ -2,10 +2,9 @@
 # They are provided by a third-party and are governed by
 # separate terms of service, privacy policy, and support
 # documentation.
-# This workflow will build a Java project with Gradle and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-gradle
+# This workflow will build a Kotlin Multiplatform project with Gradle
 
-name: Java CI with Gradle
+name: Jindong CI
 
 on:
   push:
@@ -24,10 +23,6 @@ jobs:
         include:
           - target: iosSimulatorArm64Test
             os: macos-latest
-          - target: jvmTest
-            os: ubuntu-latest
-          - target: linuxX64Test
-            os: ubuntu-latest
           - target: testAndroidHostTest
             os: ubuntu-latest
     runs-on: ${{ matrix.os }}
