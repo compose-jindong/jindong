@@ -40,8 +40,7 @@ import io.kotest.matchers.shouldBe
 class JindongApplierTest :
   FunSpec({
 
-    fun createNode(durationMs: Long): HapticEventNode =
-      HapticEventNode(durationMs = durationMs, intensity = 1.0f)
+    fun createNode(durationMs: Long): HapticEventNode = HapticEventNode(durationMs = durationMs, intensity = 1.0f)
 
     lateinit var root: HapticNode
     lateinit var applier: JindongApplier
