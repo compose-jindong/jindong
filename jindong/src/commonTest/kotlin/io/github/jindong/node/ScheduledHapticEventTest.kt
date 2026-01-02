@@ -15,6 +15,7 @@
  */
 package io.github.jindong.node
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
@@ -29,10 +30,12 @@ class ScheduledHapticEventTest :
         intensity = 0.8f,
       )
 
-      event.startTimeMs shouldBe 0
-      event.durationMs shouldBe 100
-      event.intensity shouldBe 0.8f
-      event.iosParameters.shouldBeNull()
+      assertSoftly(event) {
+        startTimeMs shouldBe 0
+        durationMs shouldBe 100
+        intensity shouldBe 0.8f
+        iosParameters.shouldBeNull()
+      }
     }
 
     test("should preserve all specified parameter values") {
