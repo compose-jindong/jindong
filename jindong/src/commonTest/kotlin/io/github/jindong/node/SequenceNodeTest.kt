@@ -15,6 +15,7 @@
  */
 package io.github.jindong.node
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -36,10 +37,14 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 1
-      events[0].startTimeMs shouldBe 0
-      events[0].durationMs shouldBe 100
-      events[0].intensity shouldBe 0.8f
+      assertSoftly {
+        events shouldHaveSize 1
+        with(events.single()) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 100
+          intensity shouldBe 0.8f
+        }
+      }
     }
 
     test("collectEvents should execute children sequentially") {
@@ -49,11 +54,17 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 2
-      events[0].startTimeMs shouldBe 0
-      events[0].durationMs shouldBe 100
-      events[1].startTimeMs shouldBe 100 // starts after first ends
-      events[1].durationMs shouldBe 50
+      assertSoftly {
+        events shouldHaveSize 2
+        with(events[0]) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 100
+        }
+        with(events[1]) {
+          startTimeMs shouldBe 100
+          durationMs shouldBe 50
+        }
+      }
     }
 
     test("collectEvents should handle DelayNode by advancing time only") {
@@ -64,11 +75,17 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 2 // only 2 haptic events
-      events[0].startTimeMs shouldBe 0
-      events[0].durationMs shouldBe 100
-      events[1].startTimeMs shouldBe 150 // 100 + 50 delay
-      events[1].durationMs shouldBe 200
+      assertSoftly {
+        events shouldHaveSize 2
+        with(events[0]) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 100
+        }
+        with(events[1]) {
+          startTimeMs shouldBe 150
+          durationMs shouldBe 200
+        }
+      }
     }
 
     test("collectEvents should preserve custom startTimeMs") {
@@ -78,9 +95,11 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 500)
 
-      events shouldHaveSize 2
-      events[0].startTimeMs shouldBe 500
-      events[1].startTimeMs shouldBe 600
+      assertSoftly {
+        events shouldHaveSize 2
+        events[0].startTimeMs shouldBe 500
+        events[1].startTimeMs shouldBe 600
+      }
     }
 
     test("collectEvents should handle multiple delays") {
@@ -91,9 +110,13 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 1
-      events[0].startTimeMs shouldBe 150 // 100 + 50
-      events[0].durationMs shouldBe 30
+      assertSoftly {
+        events shouldHaveSize 1
+        with(events.single()) {
+          startTimeMs shouldBe 150
+          durationMs shouldBe 30
+        }
+      }
     }
 
     test("collectEvents should handle only DelayNodes") {
@@ -120,13 +143,17 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 2
-      // First haptic
-      events[0].startTimeMs shouldBe 0
-      events[0].durationMs shouldBe 100
-      // Second haptic (after 100ms haptic + 50ms delay)
-      events[1].startTimeMs shouldBe 150
-      events[1].durationMs shouldBe 200
+      assertSoftly {
+        events shouldHaveSize 2
+        with(events[0]) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 100
+        }
+        with(events[1]) {
+          startTimeMs shouldBe 150
+          durationMs shouldBe 200
+        }
+      }
     }
 
     test("collectEvents should handle nested SequenceNode") {
@@ -140,10 +167,12 @@ class SequenceNodeTest :
 
       val events = outerSequence.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 3
-      events[0].startTimeMs shouldBe 0
-      events[1].startTimeMs shouldBe 100
-      events[2].startTimeMs shouldBe 150
+      assertSoftly {
+        events shouldHaveSize 3
+        events[0].startTimeMs shouldBe 0
+        events[1].startTimeMs shouldBe 100
+        events[2].startTimeMs shouldBe 150
+      }
     }
 
     test("collectEvents should preserve iOS parameters") {
@@ -168,8 +197,10 @@ class SequenceNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events shouldHaveSize 2
-      events[0].startTimeMs shouldBe 0
-      events[1].startTimeMs shouldBe 100 // no additional delay
+      assertSoftly {
+        events shouldHaveSize 2
+        events[0].startTimeMs shouldBe 0
+        events[1].startTimeMs shouldBe 100
+      }
     }
   })

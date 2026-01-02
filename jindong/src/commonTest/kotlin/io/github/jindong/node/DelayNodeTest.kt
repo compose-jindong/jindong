@@ -15,6 +15,7 @@
  */
 package io.github.jindong.node
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
@@ -52,14 +53,18 @@ class DelayNodeTest :
     test("should support zero duration") {
       val node = DelayNode(durationMs = 0)
 
-      node.durationMs shouldBe 0
-      node.collectEvents(startTimeMs = 0).shouldBeEmpty()
+      assertSoftly {
+        node.durationMs shouldBe 0
+        node.collectEvents(startTimeMs = 0).shouldBeEmpty()
+      }
     }
 
     test("should support large duration values") {
       val node = DelayNode(durationMs = 5000)
 
-      node.durationMs shouldBe 5000
-      node.collectEvents(startTimeMs = 1000).shouldBeEmpty()
+      assertSoftly {
+        node.durationMs shouldBe 5000
+        node.collectEvents(startTimeMs = 1000).shouldBeEmpty()
+      }
     }
   })

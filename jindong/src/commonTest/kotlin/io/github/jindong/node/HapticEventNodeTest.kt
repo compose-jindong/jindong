@@ -53,7 +53,7 @@ class HapticEventNodeTest :
       val events = node.collectEvents(startTimeMs = 0)
 
       events shouldHaveSize 1
-      with(events[0]) {
+      assertSoftly(events.single()) {
         durationMs shouldBe 250
         intensity shouldBe 0.3f
         iosParameters?.sharpness shouldBe 0.7f
