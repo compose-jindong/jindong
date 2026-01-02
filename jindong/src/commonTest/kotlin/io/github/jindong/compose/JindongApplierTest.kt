@@ -323,9 +323,6 @@ class JindongApplierTest :
 
         applier.down(sequence2)
         applier.insertTopDown(0, node2)
-        applier.up()
-
-        applier.up()
 
         root.children shouldContainExactly listOf(sequence1, node3)
         sequence1.children shouldContainExactly listOf(node1, sequence2)
