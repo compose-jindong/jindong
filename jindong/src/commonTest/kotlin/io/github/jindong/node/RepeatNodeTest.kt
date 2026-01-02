@@ -97,7 +97,7 @@ class RepeatNodeTest :
       }
     }
 
-    test("collectEvents should handle DelayNode by advancing time only") {
+    test("collectEvents should offset next iteration start time by delay duration") {
       val node = RepeatNode(count = 2)
       node.children.add(HapticEventNode(durationMs = 50, intensity = 0.8f))
       node.children.add(DelayNode(durationMs = 100))
