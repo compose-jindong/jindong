@@ -54,10 +54,12 @@ class ScheduledHapticEventTest :
         iosParameters = iosParams,
       )
 
-      event.startTimeMs shouldBe 100
-      event.durationMs shouldBe 200
-      event.intensity shouldBe 0.5f
-      event.iosParameters shouldBe iosParams
-      event.iosParameters?.sharpness shouldBe 0.9f
+      assertSoftly(event) {
+        startTimeMs shouldBe 100
+        durationMs shouldBe 200
+        intensity shouldBe 0.5f
+        iosParameters shouldBe iosParams
+        iosParameters?.sharpness shouldBe 0.9f
+      }
     }
   })
