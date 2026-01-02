@@ -16,10 +16,12 @@
 package io.github.jindong.node
 
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 class RepeatNodeTest :
   FunSpec({
@@ -40,13 +42,14 @@ class RepeatNodeTest :
       events.shouldBeEmpty()
     }
 
-    test("collectEvents should return empty list when count is negative") {
+    test("collectEvents should throw IllegalArgumentException when count is negative") {
       val node = RepeatNode(count = -1)
       node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
 
-      val events = node.collectEvents(startTimeMs = 0)
-
-      events.shouldBeEmpty()
+      val exception = shouldThrow<IllegalArgumentException> {
+        node.collectEvents(startTimeMs = 0)
+      }
+      exception.message shouldContain "count must be non-negative"
     }
 
     test("collectEvents should repeat single child correctly") {
