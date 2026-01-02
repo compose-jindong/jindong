@@ -13,35 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.node
-
-import io.github.compose.jindong.model.HapticIntensity
-import io.github.compose.jindong.model.IosHapticParameters
-import io.github.compose.jindong.model.ScheduledHapticEvent
+package io.github.compose.jindong.model
 
 /**
- * A leaf node representing a single haptic event (vibration).
+ * Represents a scheduled haptic event with absolute timing.
  *
- * This node has no children and returns a single [io.github.jindong.model.ScheduledHapticEvent]
- * when [collectEvents] is called.
- *
+ * @property startTimeMs Absolute start time in milliseconds (relative to pattern start)
  * @property durationMs Duration of the haptic event in milliseconds
  * @property intensity Vibration intensity level
  * @property iosParameters iOS Core Haptics parameters (ignored on Android)
  */
-internal class HapticEventNode(
+internal data class ScheduledHapticEvent(
+  val startTimeMs: Long,
   val durationMs: Long,
   val intensity: HapticIntensity,
   val iosParameters: IosHapticParameters? = null,
-) : HapticNode {
-  override val children: MutableList<HapticNode> = mutableListOf()
-
-  override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> = listOf(
-    ScheduledHapticEvent(
-      startTimeMs = startTimeMs,
-      durationMs = durationMs,
-      intensity = intensity,
-      iosParameters = iosParameters,
-    ),
-  )
-}
+)

@@ -16,6 +16,7 @@
 package io.github.compose.jindong.node
 
 import io.github.compose.jindong.model.HapticIntensity
+import io.github.compose.jindong.model.IosHapticParameters
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty

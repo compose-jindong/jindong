@@ -13,13 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.jindong.model
+package io.github.compose.jindong.model
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlin.collections.get
 
 class HapticPatternTest :
   FunSpec({
@@ -34,12 +35,12 @@ class HapticPatternTest :
         ScheduledHapticEvent(
           startTimeMs = 0,
           durationMs = 100,
-          intensity = 0.8f,
+          intensity = HapticIntensity.STRONG,
         ),
         ScheduledHapticEvent(
           startTimeMs = 150,
           durationMs = 200,
-          intensity = 1.0f,
+          intensity = HapticIntensity.HIGH,
         ),
       )
 
@@ -50,12 +51,12 @@ class HapticPatternTest :
         with(pattern.events[0]) {
           startTimeMs shouldBe 0
           durationMs shouldBe 100
-          intensity shouldBe 0.8f
+          intensity shouldBe HapticIntensity.STRONG
         }
         with(pattern.events[1]) {
           startTimeMs shouldBe 150
           durationMs shouldBe 200
-          intensity shouldBe 1.0f
+          intensity shouldBe HapticIntensity.HIGH
         }
       }
     }

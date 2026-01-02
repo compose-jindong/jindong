@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.jindong.model
+package io.github.compose.jindong.model
 
 /**
  * Represents a complete haptic pattern ready for execution.
