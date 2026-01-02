@@ -21,6 +21,7 @@ import androidx.compose.runtime.ExperimentalComposeApi
 import io.github.jindong.node.HapticEventNode
 import io.github.jindong.node.HapticNode
 import io.github.jindong.node.SequenceNode
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
@@ -39,7 +40,8 @@ import io.kotest.matchers.shouldBe
 class JindongApplierTest :
   FunSpec({
 
-    fun createNode(durationMs: Long): HapticEventNode = HapticEventNode(durationMs = durationMs, intensity = 1.0f)
+    fun createNode(durationMs: Long): HapticEventNode =
+      HapticEventNode(durationMs = durationMs, intensity = 1.0f)
 
     lateinit var root: HapticNode
     lateinit var applier: JindongApplier
@@ -226,6 +228,15 @@ class JindongApplierTest :
             nodes[1],
             nodes[2],
           )
+        }
+
+        test("should throw exception when target index is out of bounds") {
+          val nodes = (1..5).map { createNode(it * 100L) }
+          nodes.forEach { applier.insertTopDown(root.children.size, it) }
+
+          shouldThrow<IndexOutOfBoundsException> {
+            applier.move(from = 0, to = 10, count = 1)
+          }
         }
       }
 
