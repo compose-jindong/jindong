@@ -117,7 +117,7 @@ class RepeatNodeTest :
       }
     }
 
-    test("collectEvents should handle only DelayNodes") {
+    test("collectEvents should not produce events for pure delay nodes") {
       val node = RepeatNode(count = 3)
       node.children.add(DelayNode(durationMs = 100))
 
