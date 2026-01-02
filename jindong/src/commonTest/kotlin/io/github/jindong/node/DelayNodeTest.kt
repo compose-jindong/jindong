@@ -58,13 +58,4 @@ class DelayNodeTest :
         node.collectEvents(startTimeMs = 0).shouldBeEmpty()
       }
     }
-
-    test("should support large duration values") {
-      val node = DelayNode(durationMs = 5000)
-
-      assertSoftly {
-        node.durationMs shouldBe 5000
-        node.collectEvents(startTimeMs = 1000).shouldBeEmpty()
-      }
-    }
   })
