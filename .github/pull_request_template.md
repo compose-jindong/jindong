@@ -15,12 +15,6 @@ close #
 <!-- Test Results are handled by CI-->
 <!-- ## Test Results -->
 
-## Test Scenarios Covered
-<!-- List what scenarios are tested -->
-- [ ] Unit tests for new components
-- [ ] Integration tests (if applicable)
-- [ ] Edge cases handled
-
 ## Additional Context (Optional)
 <!-- Any other context, design decisions, or references -->
 
