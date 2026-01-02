@@ -15,6 +15,7 @@
  */
 package io.github.jindong.node
 
+import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
@@ -28,9 +29,11 @@ class HapticEventNodeTest :
       val events = node.collectEvents(startTimeMs = 50)
 
       events shouldHaveSize 1
-      events[0].startTimeMs shouldBe 50
-      events[0].durationMs shouldBe 100
-      events[0].intensity shouldBe 0.8f
+      assertSoftly(events.single()) {
+        startTimeMs shouldBe 50
+        durationMs shouldBe 100
+        intensity shouldBe 0.8f
+      }
     }
 
     test("children should always be empty for leaf node") {
@@ -67,6 +70,6 @@ class HapticEventNodeTest :
 
       val events = node.collectEvents(startTimeMs = 0)
 
-      events[0].iosParameters shouldBe iosParams
+      events.single().iosParameters shouldBe iosParams
     }
   })
