@@ -39,7 +39,8 @@ internal class RepeatNode(
   override val children: MutableList<HapticNode> = mutableListOf()
 
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {
-    if (count <= 0) return emptyList()
+    require(count >= 0) { "count must be non-negative, but was $count" }
+    if (count == 0) return emptyList()
 
     return (0 until count)
       .fold(
