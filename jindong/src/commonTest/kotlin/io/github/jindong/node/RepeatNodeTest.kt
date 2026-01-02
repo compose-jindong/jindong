@@ -153,7 +153,7 @@ class RepeatNodeTest :
         events shouldHaveSize 4
         events[0].startTimeMs shouldBe 0
         events[1].startTimeMs shouldBe 30
-        // starts at 50ms = 30 + 20)
+        // starts at 50ms = 30 + 20
         events[2].startTimeMs shouldBe 50
         events[3].startTimeMs shouldBe 80
       }
