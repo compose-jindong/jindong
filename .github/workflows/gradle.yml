@@ -39,14 +39,7 @@ jobs:
 
   build:
     needs: check
-    strategy:
-      matrix:
-        include:
-          - target: iosSimulatorArm64Test
-            os: macos-latest
-          - target: testAndroidHostTest
-            os: ubuntu-latest
-    runs-on: ${{ matrix.os }}
+    runs-on: macos-latest
 
     steps:
     - uses: actions/checkout@v4
@@ -65,4 +58,4 @@ jobs:
     - name: Build with Gradle
       uses: gradle/gradle-build-action@ce999babab2de1c4b649dc15f0ee67e6246c994f
       with:
-        arguments: ${{ matrix.target }}
+        arguments: allTests
