@@ -40,19 +40,16 @@ internal class RepeatNode(
 
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {
     require(count >= 0) { "count must be non-negative, but was $count" }
-    if (count == 0) return emptyList()
 
-    return (0 until count)
-      .fold(
-        initial = IterationState(startTimeMs, emptyList()),
-      ) { state, _ ->
-        val (events, endTimeMs) = collectIterationEvents(state.nextStartTimeMs)
-        IterationState(
-          nextStartTimeMs = endTimeMs,
-          events = state.events + events,
-        )
+    return buildList {
+      var currentTime = startTimeMs
+
+      repeat(count) {
+        val (events, endTimeMs) = collectIterationEvents(currentTime)
+        addAll(events)
+        currentTime = endTimeMs
       }
-      .events
+    }
   }
 
   /**
@@ -80,11 +77,6 @@ internal class RepeatNode(
     }
     return IterationResult(events = events, endTimeMs = currentTimeMs)
   }
-
-  private data class IterationState(
-    val nextStartTimeMs: Long,
-    val events: List<ScheduledHapticEvent>,
-  )
 
   private data class ChildState(
     val currentTimeMs: Long,
