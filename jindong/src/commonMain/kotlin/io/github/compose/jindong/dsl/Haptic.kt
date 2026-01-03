@@ -24,21 +24,17 @@ import io.github.compose.jindong.node.HapticEventNode
 import kotlin.time.Duration
 
 /**
- * Defines a single haptic event (vibration) in the haptic pattern.
+ * Emits a vibration for the specified duration.
  *
- * This composable creates a [HapticEventNode] in the composition tree,
- * which will be converted to a [ScheduledHapticEvent] when the pattern is compiled.
- *
- * Example:
  * ```
  * Jindong(trigger) {
- *     Haptic(duration = 100.ms)
- *     Haptic(duration = 50.ms, intensity = HapticIntensity.STRONG)
+ *     Haptic(100.ms)                                    // medium intensity
+ *     Haptic(50.ms, intensity = HapticIntensity.STRONG) // strong intensity
  * }
  * ```
  *
- * @param duration Duration of the haptic event
- * @param intensity Vibration intensity level (default: [HapticIntensity.MEDIUM])
+ * @param duration How long the vibration lasts
+ * @param intensity Vibration strength (default: [HapticIntensity.MEDIUM])
  */
 @Composable
 fun JindongScope.Haptic(
