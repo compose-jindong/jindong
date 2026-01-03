@@ -26,7 +26,7 @@ import io.kotest.matchers.shouldBe
 
 class JindongTest :
   FunSpec({
-    test("compilePattern with single Haptic should return one event") {
+    test("single Haptic produces one event starting at 0ms") {
       val pattern = compilePattern {
         Haptic(duration = 100.ms)
       }
@@ -38,7 +38,7 @@ class JindongTest :
       }
     }
 
-    test("compilePattern with multiple Haptics should execute sequentially") {
+    test("multiple Haptics execute sequentially without overlap") {
       val pattern = compilePattern {
         Haptic(duration = 50.ms)
         Haptic(duration = 100.ms)
@@ -66,13 +66,13 @@ class JindongTest :
       }
     }
 
-    test("compilePattern with empty content should return empty pattern") {
+    test("empty block produces no events") {
       val pattern = compilePattern { }
 
       pattern.events.shouldBeEmpty()
     }
 
-    test("compilePattern should preserve intensity values") {
+    test("each Haptic preserves its own intensity") {
       val pattern = compilePattern {
         Haptic(duration = 50.ms, intensity = HapticIntensity.LIGHT)
         Haptic(duration = 50.ms, intensity = HapticIntensity.STRONG)
