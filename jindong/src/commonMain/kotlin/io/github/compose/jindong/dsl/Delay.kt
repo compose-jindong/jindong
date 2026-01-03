@@ -19,30 +19,26 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.model.HapticIntensity
-import io.github.compose.jindong.node.HapticEventNode
+import io.github.compose.jindong.node.DelayNode
 import kotlin.time.Duration
 
 /**
- * Emits a vibration for the specified duration.
+ * Pauses the pattern for the specified duration without vibrating.
  *
  * ```
  * Jindong(trigger) {
- *     Haptic(100.ms)                                    // medium intensity
- *     Haptic(50.ms, intensity = HapticIntensity.STRONG) // strong intensity
+ *     Haptic(50.ms)
+ *     Delay(100.ms)  // wait 100ms
+ *     Haptic(50.ms)  // starts at 150ms
  * }
  * ```
  *
- * @param duration How long the vibration lasts
- * @param intensity Vibration strength (default: [HapticIntensity.MEDIUM])
+ * @param duration How long to wait before the next event
  */
 @Composable
-fun JindongScope.Haptic(
-  duration: Duration,
-  intensity: HapticIntensity = HapticIntensity.MEDIUM,
-) {
-  ComposeNode<HapticEventNode, JindongApplier>(
-    factory = { HapticEventNode(duration.inWholeMilliseconds, intensity) },
+fun JindongScope.Delay(duration: Duration) {
+  ComposeNode<DelayNode, JindongApplier>(
+    factory = { DelayNode(duration.inWholeMilliseconds) },
     update = { },
   )
 }

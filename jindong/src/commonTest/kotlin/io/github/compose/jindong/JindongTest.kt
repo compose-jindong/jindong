@@ -15,70 +15,220 @@
  */
 package io.github.compose.jindong
 
+import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
+import io.github.compose.jindong.dsl.Repeat
+import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
-import io.kotest.core.start
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 
 class JindongTest :
   FunSpec({
-    test("single Haptic produces one event starting at 0ms") {
-      val pattern = compilePattern {
-        Haptic(duration = 100.ms)
+    context("Haptic") {
+      test("single Haptic produces one event starting at 0ms") {
+        val pattern = compilePattern {
+          Haptic(duration = 100.ms)
+        }
+
+        pattern.events shouldHaveSize 1
+        assertSoftly(pattern.events[0]) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 100
+        }
       }
 
-      pattern.events shouldHaveSize 1
-      assertSoftly(pattern.events[0]) {
-        startTimeMs shouldBe 0
-        durationMs shouldBe 100
+      test("multiple Haptics execute sequentially without overlap") {
+        val pattern = compilePattern {
+          Haptic(duration = 50.ms)
+          Haptic(duration = 100.ms)
+          Haptic(duration = 75.ms)
+        }
+
+        pattern.events shouldHaveSize 3
+
+        // First haptic starts at 0ms
+        assertSoftly(pattern.events[0]) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 50
+        }
+
+        // Second haptic starts at 50ms (after first ends)
+        assertSoftly(pattern.events[1]) {
+          startTimeMs shouldBe 50
+          durationMs shouldBe 100
+        }
+
+        // Third haptic starts at 150ms (after second ends)
+        assertSoftly(pattern.events[2]) {
+          startTimeMs shouldBe 150
+          durationMs shouldBe 75
+        }
+      }
+
+      test("empty block produces no events") {
+        val pattern = compilePattern { }
+
+        pattern.events.shouldBeEmpty()
+      }
+
+      test("each Haptic preserves its own intensity") {
+        val pattern = compilePattern {
+          Haptic(duration = 50.ms, intensity = HapticIntensity.LIGHT)
+          Haptic(duration = 50.ms, intensity = HapticIntensity.STRONG)
+        }
+
+        pattern.events[0].intensity shouldBe HapticIntensity.LIGHT
+        pattern.events[1].intensity shouldBe HapticIntensity.STRONG
       }
     }
 
-    test("multiple Haptics execute sequentially without overlap") {
-      val pattern = compilePattern {
-        Haptic(duration = 50.ms)
-        Haptic(duration = 100.ms)
-        Haptic(duration = 75.ms)
+    context("Delay") {
+      test("Delay between haptic events") {
+        val pattern = compilePattern {
+          Haptic(duration = 50.ms)
+          Delay(duration = 100.ms)
+          Haptic(duration = 50.ms)
+        }
+
+        pattern.events shouldHaveSize 2
+
+        // First haptic starts at 0ms
+        assertSoftly(pattern.events[0]) {
+          startTimeMs shouldBe 0
+          durationMs shouldBe 50
+        }
+
+        // Second haptic starts at 150ms (50ms haptic + 100ms delay)
+        assertSoftly(pattern.events[1]) {
+          startTimeMs shouldBe 150
+          durationMs shouldBe 50
+        }
       }
 
-      pattern.events shouldHaveSize 3
+      test("Delay at start of pattern") {
+        val pattern = compilePattern {
+          Delay(duration = 100.ms)
+          Haptic(duration = 50.ms)
+        }
 
-      // First haptic starts at 0ms
-      assertSoftly(pattern.events[0]) {
-        startTimeMs shouldBe 0
-        durationMs shouldBe 50
-      }
-
-      // Second haptic starts at 50ms (after first ends)
-      assertSoftly(pattern.events[1]) {
-        startTimeMs shouldBe 50
-        durationMs shouldBe 100
-      }
-
-      // Third haptic starts at 150ms (after second ends)
-      assertSoftly(pattern.events[2]) {
-        startTimeMs shouldBe 150
-        durationMs shouldBe 75
+        pattern.events shouldHaveSize 1
+        pattern.events[0].startTimeMs shouldBe 100
       }
     }
 
-    test("empty block produces no events") {
-      val pattern = compilePattern { }
+    context("Repeat") {
+      test("simple repeat") {
+        val pattern = compilePattern {
+          Repeat(count = 3) {
+            Haptic(duration = 50.ms)
+          }
+        }
 
-      pattern.events.shouldBeEmpty()
-    }
+        pattern.events shouldHaveSize 3
 
-    test("each Haptic preserves its own intensity") {
-      val pattern = compilePattern {
-        Haptic(duration = 50.ms, intensity = HapticIntensity.LIGHT)
-        Haptic(duration = 50.ms, intensity = HapticIntensity.STRONG)
+        // Events at 0ms, 50ms, 100ms
+        pattern.events[0].startTimeMs shouldBe 0
+        pattern.events[1].startTimeMs shouldBe 50
+        pattern.events[2].startTimeMs shouldBe 100
       }
 
-      pattern.events[0].intensity shouldBe HapticIntensity.LIGHT
-      pattern.events[1].intensity shouldBe HapticIntensity.STRONG
+      test("repeat with delay after haptic") {
+        val pattern = compilePattern {
+          Repeat(count = 2) {
+            Haptic(duration = 50.ms)
+            Delay(duration = 50.ms)
+          }
+        }
+
+        pattern.events shouldHaveSize 2
+
+        // Events at 0ms and 100ms (50ms haptic + 50ms delay per iteration)
+        pattern.events[0].startTimeMs shouldBe 0
+        pattern.events[1].startTimeMs shouldBe 100
+      }
+
+      test("repeat with delay before haptic") {
+        val pattern = compilePattern {
+          Repeat(count = 2) {
+            Delay(duration = 50.ms)
+            Haptic(duration = 50.ms)
+          }
+        }
+
+        pattern.events shouldHaveSize 2
+
+        // First iteration: delay 50ms, then haptic at 50ms
+        // Second iteration: delay 50ms (starting at 100ms), then haptic at 150ms
+        pattern.events[0].startTimeMs shouldBe 50
+        pattern.events[1].startTimeMs shouldBe 150
+      }
+
+      test("repeat with multiple delays") {
+        val pattern = compilePattern {
+          Repeat(count = 2) {
+            Delay(duration = 25.ms)
+            Haptic(duration = 50.ms)
+            Delay(duration = 25.ms)
+          }
+        }
+
+        pattern.events shouldHaveSize 2
+
+        // First iteration: delay 25ms, haptic at 25ms (ends at 75ms), delay 25ms (ends at 100ms)
+        // Second iteration: delay 25ms (ends at 125ms), haptic at 125ms
+        pattern.events[0].startTimeMs shouldBe 25
+        pattern.events[1].startTimeMs shouldBe 125
+      }
+
+      test("zero count repeat produces no events") {
+        val pattern = compilePattern {
+          Repeat(count = 0) {
+            Haptic(duration = 50.ms)
+          }
+        }
+
+        pattern.events.shouldBeEmpty()
+      }
+    }
+
+    context("Sequence") {
+      test("explicit sequence grouping") {
+        val pattern = compilePattern {
+          Sequence {
+            Haptic(duration = 50.ms)
+            Haptic(duration = 100.ms)
+          }
+        }
+
+        pattern.events shouldHaveSize 2
+
+        // Events at 0ms and 50ms
+        pattern.events[0].startTimeMs shouldBe 0
+        pattern.events[1].startTimeMs shouldBe 50
+      }
+
+      test("nested sequence in repeat") {
+        val pattern = compilePattern {
+          Repeat(count = 2) {
+            Sequence {
+              Haptic(duration = 50.ms)
+              Haptic(duration = 50.ms)
+            }
+          }
+        }
+
+        pattern.events shouldHaveSize 4
+
+        // First iteration: events at 0ms, 50ms
+        // Second iteration: events at 100ms, 150ms
+        pattern.events[0].startTimeMs shouldBe 0
+        pattern.events[1].startTimeMs shouldBe 50
+        pattern.events[2].startTimeMs shouldBe 100
+        pattern.events[3].startTimeMs shouldBe 150
+      }
     }
   })

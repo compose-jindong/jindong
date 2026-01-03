@@ -19,30 +19,37 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.model.HapticIntensity
-import io.github.compose.jindong.node.HapticEventNode
-import kotlin.time.Duration
+import io.github.compose.jindong.node.RepeatNode
 
 /**
- * Emits a vibration for the specified duration.
+ * Repeats the content [count] times.
+ *
+ * Each repetition starts after the previous one completes.
  *
  * ```
  * Jindong(trigger) {
- *     Haptic(100.ms)                                    // medium intensity
- *     Haptic(50.ms, intensity = HapticIntensity.STRONG) // strong intensity
+ *     Repeat(3) {
+ *         Haptic(50.ms)   // vibrates at 0ms, 50ms, 100ms
+ *     }
+ *
+ *     Repeat(2) {
+ *         Haptic(50.ms)
+ *         Delay(50.ms)    // 100ms per iteration
+ *     }
  * }
  * ```
  *
- * @param duration How long the vibration lasts
- * @param intensity Vibration strength (default: [HapticIntensity.MEDIUM])
+ * @param count Number of times to repeat
+ * @param content The pattern to repeat
  */
 @Composable
-fun JindongScope.Haptic(
-  duration: Duration,
-  intensity: HapticIntensity = HapticIntensity.MEDIUM,
+fun JindongScope.Repeat(
+  count: Int,
+  content: @Composable JindongScope.() -> Unit,
 ) {
-  ComposeNode<HapticEventNode, JindongApplier>(
-    factory = { HapticEventNode(duration.inWholeMilliseconds, intensity) },
+  ComposeNode<RepeatNode, JindongApplier>(
+    factory = { RepeatNode(count) },
     update = { },
+    content = { content() },
   )
 }

@@ -19,30 +19,31 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.model.HapticIntensity
-import io.github.compose.jindong.node.HapticEventNode
-import kotlin.time.Duration
+import io.github.compose.jindong.node.SequenceNode
 
 /**
- * Emits a vibration for the specified duration.
+ * Groups events to run one after another.
+ *
+ * Useful for organizing patterns within [io.github.compose.jindong.dsl.Repeat] or other nested structures.
  *
  * ```
  * Jindong(trigger) {
- *     Haptic(100.ms)                                    // medium intensity
- *     Haptic(50.ms, intensity = HapticIntensity.STRONG) // strong intensity
+ *     Repeat(2) {
+ *         Sequence {
+ *             Haptic(50.ms)
+ *             Delay(50.ms)
+ *         }
+ *     }
  * }
  * ```
  *
- * @param duration How long the vibration lasts
- * @param intensity Vibration strength (default: [HapticIntensity.MEDIUM])
+ * @param content The pattern to execute sequentially
  */
 @Composable
-fun JindongScope.Haptic(
-  duration: Duration,
-  intensity: HapticIntensity = HapticIntensity.MEDIUM,
-) {
-  ComposeNode<HapticEventNode, JindongApplier>(
-    factory = { HapticEventNode(duration.inWholeMilliseconds, intensity) },
+fun JindongScope.Sequence(content: @Composable JindongScope.() -> Unit) {
+  ComposeNode<SequenceNode, JindongApplier>(
+    factory = { SequenceNode() },
     update = { },
+    content = { content() },
   )
 }
