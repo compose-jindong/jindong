@@ -15,6 +15,8 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.ScheduledHapticEvent
+
 /**
  * Base interface for all haptic nodes in the composition tree.
  *

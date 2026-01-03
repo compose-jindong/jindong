@@ -13,21 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.node
+package io.github.compose.jindong.model
 
-import io.github.compose.jindong.model.HapticIntensity
+import kotlin.time.Duration
 
 /**
- * Represents a scheduled haptic event with absolute timing.
+ * iOS Core Haptics parameters.
+ * These parameters are ignored on Android.
  *
- * @property startTimeMs Absolute start time in milliseconds (relative to pattern start)
- * @property durationMs Duration of the haptic event in milliseconds
- * @property intensity Vibration intensity level
- * @property iosParameters iOS Core Haptics parameters (ignored on Android)
+ * @property sharpness Sharpness of the haptic from 0.0 (dull) to 1.0 (sharp)
+ * @property attackTime ADSR attack time
+ * @property decayTime ADSR decay time
+ * @property releaseTime ADSR release time
+ * @property sustained Whether the haptic is sustained
  */
-internal data class ScheduledHapticEvent(
-  val startTimeMs: Long,
-  val durationMs: Long,
-  val intensity: HapticIntensity,
-  val iosParameters: IosHapticParameters? = null,
+internal data class IosHapticParameters(
+  val sharpness: Float = 0.5f,
+  val attackTime: Duration? = null,
+  val decayTime: Duration? = null,
+  val releaseTime: Duration? = null,
+  val sustained: Boolean? = null,
 )

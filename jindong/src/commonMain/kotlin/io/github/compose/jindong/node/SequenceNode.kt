@@ -15,6 +15,8 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.ScheduledHapticEvent
+
 /**
  * A container node that executes its children sequentially.
  *
