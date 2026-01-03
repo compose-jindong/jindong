@@ -18,6 +18,7 @@
 package io.github.compose.jindong.compose
 
 import androidx.compose.runtime.ExperimentalComposeApi
+import io.github.compose.jindong.model.HapticIntensity
 import io.github.compose.jindong.node.HapticEventNode
 import io.github.compose.jindong.node.HapticNode
 import io.github.compose.jindong.node.SequenceNode
@@ -40,7 +41,7 @@ import io.kotest.matchers.shouldBe
 class JindongApplierTest :
   FunSpec({
 
-    fun createNode(durationMs: Long): HapticEventNode = HapticEventNode(durationMs = durationMs, intensity = 1.0f)
+    fun createNode(durationMs: Long): HapticEventNode = HapticEventNode(durationMs = durationMs, intensity = HapticIntensity.HIGH)
 
     lateinit var root: HapticNode
     lateinit var applier: JindongApplier

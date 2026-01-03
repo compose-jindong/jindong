@@ -15,6 +15,7 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -33,7 +34,7 @@ class SequenceNodeTest :
 
     test("collectEvents should return events from single child") {
       val node = SequenceNode()
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -42,15 +43,15 @@ class SequenceNodeTest :
         with(events.single()) {
           startTimeMs shouldBe 0
           durationMs shouldBe 100
-          intensity shouldBe 0.8f
+          intensity shouldBe HapticIntensity.STRONG
         }
       }
     }
 
     test("collectEvents should execute children sequentially") {
       val node = SequenceNode()
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 0.5f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.MEDIUM))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -69,9 +70,9 @@ class SequenceNodeTest :
 
     test("collectEvents should handle DelayNode by advancing time only") {
       val node = SequenceNode()
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
       node.children.add(DelayNode(durationMs = 50))
-      node.children.add(HapticEventNode(durationMs = 200, intensity = 0.5f))
+      node.children.add(HapticEventNode(durationMs = 200, intensity = HapticIntensity.MEDIUM))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -90,8 +91,8 @@ class SequenceNodeTest :
 
     test("collectEvents should preserve custom startTimeMs") {
       val node = SequenceNode()
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 0.5f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.MEDIUM))
 
       val events = node.collectEvents(startTimeMs = 500)
 
@@ -106,7 +107,7 @@ class SequenceNodeTest :
       val node = SequenceNode()
       node.children.add(DelayNode(durationMs = 100))
       node.children.add(DelayNode(durationMs = 50))
-      node.children.add(HapticEventNode(durationMs = 30, intensity = 1.0f))
+      node.children.add(HapticEventNode(durationMs = 30, intensity = HapticIntensity.HIGH))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -137,9 +138,9 @@ class SequenceNodeTest :
       //     Haptic(200ms)   // starts at 150ms
       // }
       val node = SequenceNode()
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 1.0f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.HIGH))
       node.children.add(DelayNode(durationMs = 50))
-      node.children.add(HapticEventNode(durationMs = 200, intensity = 1.0f))
+      node.children.add(HapticEventNode(durationMs = 200, intensity = HapticIntensity.HIGH))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -158,11 +159,26 @@ class SequenceNodeTest :
 
     test("collectEvents should handle nested SequenceNode") {
       val innerSequence = SequenceNode()
-      innerSequence.children.add(HapticEventNode(durationMs = 50, intensity = 0.5f))
-      innerSequence.children.add(HapticEventNode(durationMs = 50, intensity = 0.5f))
+      innerSequence.children.add(
+        HapticEventNode(
+          durationMs = 50,
+          intensity = HapticIntensity.MEDIUM,
+        ),
+      )
+      innerSequence.children.add(
+        HapticEventNode(
+          durationMs = 50,
+          intensity = HapticIntensity.MEDIUM,
+        ),
+      )
 
       val outerSequence = SequenceNode()
-      outerSequence.children.add(HapticEventNode(durationMs = 100, intensity = 1.0f))
+      outerSequence.children.add(
+        HapticEventNode(
+          durationMs = 100,
+          intensity = HapticIntensity.HIGH,
+        ),
+      )
       outerSequence.children.add(innerSequence)
 
       val events = outerSequence.collectEvents(startTimeMs = 0)
@@ -179,7 +195,11 @@ class SequenceNodeTest :
       val iosParams = IosHapticParameters(sharpness = 0.9f)
       val node = SequenceNode()
       node.children.add(
-        HapticEventNode(durationMs = 100, intensity = 0.8f, iosParameters = iosParams),
+        HapticEventNode(
+          durationMs = 100,
+          intensity = HapticIntensity.STRONG,
+          iosParameters = iosParams,
+        ),
       )
       node.children.add(DelayNode(durationMs = 50))
 
@@ -191,9 +211,9 @@ class SequenceNodeTest :
 
     test("collectEvents with zero duration delay should not affect timing") {
       val node = SequenceNode()
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
       node.children.add(DelayNode(durationMs = 0))
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
 
       val events = node.collectEvents(startTimeMs = 0)
 

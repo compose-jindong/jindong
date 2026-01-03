@@ -15,6 +15,7 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -35,7 +36,7 @@ class RepeatNodeTest :
 
     test("collectEvents should return empty list when count is 0") {
       val node = RepeatNode(count = 0)
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -44,7 +45,7 @@ class RepeatNodeTest :
 
     test("collectEvents should throw IllegalArgumentException when count is negative") {
       val node = RepeatNode(count = -1)
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
 
       val exception = shouldThrow<IllegalArgumentException> {
         node.collectEvents(startTimeMs = 0)
@@ -54,7 +55,7 @@ class RepeatNodeTest :
 
     test("collectEvents should repeat single child correctly") {
       val node = RepeatNode(count = 3)
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.STRONG))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -64,14 +65,14 @@ class RepeatNodeTest :
         events[1].startTimeMs shouldBe 50
         events[2].startTimeMs shouldBe 100
         events.forEach { it.durationMs shouldBe 50 }
-        events.forEach { it.intensity shouldBe 0.8f }
+        events.forEach { it.intensity shouldBe HapticIntensity.STRONG }
       }
     }
 
     test("collectEvents should repeat multiple children sequentially") {
       val node = RepeatNode(count = 2)
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 1.0f))
-      node.children.add(HapticEventNode(durationMs = 30, intensity = 0.5f))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.HIGH))
+      node.children.add(HapticEventNode(durationMs = 30, intensity = HapticIntensity.MEDIUM))
 
       val events = node.collectEvents(startTimeMs = 0)
 
@@ -99,7 +100,7 @@ class RepeatNodeTest :
 
     test("collectEvents should offset next iteration start time by delay duration") {
       val node = RepeatNode(count = 2)
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.STRONG))
       node.children.add(DelayNode(durationMs = 100))
 
       val events = node.collectEvents(startTimeMs = 0)
@@ -128,7 +129,7 @@ class RepeatNodeTest :
 
     test("collectEvents should preserve custom startTimeMs") {
       val node = RepeatNode(count = 2)
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.STRONG))
 
       val events = node.collectEvents(startTimeMs = 500)
 
@@ -141,8 +142,8 @@ class RepeatNodeTest :
 
     test("collectEvents should handle nested SequenceNode") {
       val innerSequence = SequenceNode()
-      innerSequence.children.add(HapticEventNode(durationMs = 30, intensity = 0.5f))
-      innerSequence.children.add(HapticEventNode(durationMs = 20, intensity = 0.5f))
+      innerSequence.children.add(HapticEventNode(durationMs = 30, intensity = HapticIntensity.MEDIUM))
+      innerSequence.children.add(HapticEventNode(durationMs = 20, intensity = HapticIntensity.MEDIUM))
 
       val node = RepeatNode(count = 2)
       node.children.add(innerSequence)
@@ -163,7 +164,7 @@ class RepeatNodeTest :
       val iosParams = IosHapticParameters(sharpness = 0.9f)
       val node = RepeatNode(count = 2)
       node.children.add(
-        HapticEventNode(durationMs = 100, intensity = 0.8f, iosParameters = iosParams),
+        HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG, iosParameters = iosParams),
       )
 
       val events = node.collectEvents(startTimeMs = 0)
@@ -182,7 +183,7 @@ class RepeatNodeTest :
       //     Delay(50.ms)
       // }
       val node = RepeatNode(count = 3)
-      node.children.add(HapticEventNode(durationMs = 50, intensity = 1.0f))
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.HIGH))
       node.children.add(DelayNode(durationMs = 50))
 
       val events = node.collectEvents(startTimeMs = 0)
@@ -198,7 +199,7 @@ class RepeatNodeTest :
 
     test("collectEvents with count = 1 should execute children once") {
       val node = RepeatNode(count = 1)
-      node.children.add(HapticEventNode(durationMs = 100, intensity = 0.8f))
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
 
       val events = node.collectEvents(startTimeMs = 0)
 
