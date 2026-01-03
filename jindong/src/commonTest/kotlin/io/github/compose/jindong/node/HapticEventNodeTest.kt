@@ -15,6 +15,7 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -24,7 +25,7 @@ import io.kotest.matchers.shouldBe
 class HapticEventNodeTest :
   FunSpec({
     test("collectEvents should return single event with given startTimeMs") {
-      val node = HapticEventNode(durationMs = 100, intensity = 0.8f)
+      val node = HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG)
 
       val events = node.collectEvents(startTimeMs = 50)
 
@@ -32,12 +33,12 @@ class HapticEventNodeTest :
       assertSoftly(events.single()) {
         startTimeMs shouldBe 50
         durationMs shouldBe 100
-        intensity shouldBe 0.8f
+        intensity shouldBe HapticIntensity.STRONG
       }
     }
 
     test("children should always be empty for leaf node") {
-      val node = HapticEventNode(durationMs = 100, intensity = 0.5f)
+      val node = HapticEventNode(durationMs = 100, intensity = HapticIntensity.MEDIUM)
 
       node.children.shouldBeEmpty()
     }
@@ -46,7 +47,7 @@ class HapticEventNodeTest :
       val iosParams = IosHapticParameters(sharpness = 0.7f)
       val node = HapticEventNode(
         durationMs = 250,
-        intensity = 0.3f,
+        intensity = HapticIntensity.LIGHT,
         iosParameters = iosParams,
       )
 
@@ -55,7 +56,7 @@ class HapticEventNodeTest :
       events shouldHaveSize 1
       assertSoftly(events.single()) {
         durationMs shouldBe 250
-        intensity shouldBe 0.3f
+        intensity shouldBe HapticIntensity.LIGHT
         iosParameters?.sharpness shouldBe 0.7f
       }
     }
@@ -64,7 +65,7 @@ class HapticEventNodeTest :
       val iosParams = IosHapticParameters(sustained = true)
       val node = HapticEventNode(
         durationMs = 100,
-        intensity = 1.0f,
+        intensity = HapticIntensity.HIGH,
         iosParameters = iosParams,
       )
 

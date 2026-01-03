@@ -15,6 +15,7 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
@@ -27,13 +28,13 @@ class ScheduledHapticEventTest :
       val event = ScheduledHapticEvent(
         startTimeMs = 0,
         durationMs = 100,
-        intensity = 0.8f,
+        intensity = HapticIntensity.STRONG,
       )
 
       assertSoftly(event) {
         startTimeMs shouldBe 0
         durationMs shouldBe 100
-        intensity shouldBe 0.8f
+        intensity shouldBe HapticIntensity.STRONG
         iosParameters.shouldBeNull()
       }
     }
@@ -50,14 +51,14 @@ class ScheduledHapticEventTest :
       val event = ScheduledHapticEvent(
         startTimeMs = 100,
         durationMs = 200,
-        intensity = 0.5f,
+        intensity = HapticIntensity.MEDIUM,
         iosParameters = iosParams,
       )
 
       assertSoftly(event) {
         startTimeMs shouldBe 100
         durationMs shouldBe 200
-        intensity shouldBe 0.5f
+        intensity shouldBe HapticIntensity.MEDIUM
         iosParameters shouldBe iosParams
         iosParameters?.sharpness shouldBe 0.9f
       }

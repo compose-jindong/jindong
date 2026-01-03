@@ -15,6 +15,8 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.HapticIntensity
+
 /**
  * A leaf node representing a single haptic event (vibration).
  *
@@ -22,12 +24,12 @@ package io.github.compose.jindong.node
  * when [collectEvents] is called.
  *
  * @property durationMs Duration of the haptic event in milliseconds
- * @property intensity Vibration intensity from 0.0 to 1.0
+ * @property intensity Vibration intensity level
  * @property iosParameters iOS Core Haptics parameters (ignored on Android)
  */
 internal class HapticEventNode(
   val durationMs: Long,
-  val intensity: Float,
+  val intensity: HapticIntensity,
   val iosParameters: IosHapticParameters? = null,
 ) : HapticNode {
   override val children: MutableList<HapticNode> = mutableListOf()

@@ -15,17 +15,19 @@
  */
 package io.github.compose.jindong.node
 
+import io.github.compose.jindong.model.HapticIntensity
+
 /**
  * Represents a scheduled haptic event with absolute timing.
  *
  * @property startTimeMs Absolute start time in milliseconds (relative to pattern start)
  * @property durationMs Duration of the haptic event in milliseconds
- * @property intensity Vibration intensity from 0.0 to 1.0
+ * @property intensity Vibration intensity level
  * @property iosParameters iOS Core Haptics parameters (ignored on Android)
  */
 internal data class ScheduledHapticEvent(
   val startTimeMs: Long,
   val durationMs: Long,
-  val intensity: Float,
+  val intensity: HapticIntensity,
   val iosParameters: IosHapticParameters? = null,
 )
