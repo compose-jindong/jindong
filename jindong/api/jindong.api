@@ -13,8 +13,20 @@ public abstract interface class io/github/compose/jindong/JindongScope {
 public abstract interface annotation class io/github/compose/jindong/JindongScopeMarker : java/lang/annotation/Annotation {
 }
 
+public final class io/github/compose/jindong/dsl/DelayKt {
+	public static final fun Delay-dWUq8MI (Lio/github/compose/jindong/JindongScope;JLandroidx/compose/runtime/Composer;I)V
+}
+
 public final class io/github/compose/jindong/dsl/HapticKt {
 	public static final fun Haptic-NcHsxvU (Lio/github/compose/jindong/JindongScope;JLio/github/compose/jindong/model/HapticIntensity;Landroidx/compose/runtime/Composer;II)V
+}
+
+public final class io/github/compose/jindong/dsl/RepeatKt {
+	public static final fun Repeat (Lio/github/compose/jindong/JindongScope;ILkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class io/github/compose/jindong/dsl/SequenceKt {
+	public static final fun Sequence (Lio/github/compose/jindong/JindongScope;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
 }
 
 public abstract class io/github/compose/jindong/model/HapticIntensity {
