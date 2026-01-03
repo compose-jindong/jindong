@@ -212,9 +212,6 @@ class JindongTest :
       }
 
       test("nested sequence in repeat") {
-        // Note: This test reflects current behavior where Delay duration
-        // inside nested Sequence is not propagated to parent timing calculation.
-        // The parent Sequence calculates next start time based on event end times only.
         val pattern = compilePattern {
           Repeat(count = 2) {
             Sequence {
