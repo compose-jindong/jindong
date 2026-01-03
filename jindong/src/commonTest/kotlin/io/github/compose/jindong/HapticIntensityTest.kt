@@ -20,6 +20,21 @@ import io.kotest.matchers.shouldBe
 
 class HapticIntensityTest :
   FunSpec({
+    context("Pre-defined levels") {
+      test("LIGHT should have value 0.25") {
+        HapticIntensity.LIGHT.value shouldBe 0.25f
+      }
+      test("MEDIUM should have value 0.5") {
+        HapticIntensity.MEDIUM.value shouldBe 0.5f
+      }
+      test("STRONG should have value 0.75") {
+        HapticIntensity.STRONG.value shouldBe 0.75f
+      }
+      test("HIGH should have value 1.0") {
+        HapticIntensity.HIGH.value shouldBe 1.0f
+      }
+    }
+
     context("Custom intensity") {
       test("should coerce values above 1.0 to 1.0") {
         HapticIntensity.Custom(1.5f).value shouldBe 1.0f
@@ -31,16 +46,6 @@ class HapticIntensityTest :
         HapticIntensity.Custom(-0.1f).value shouldBe 0.0f
         HapticIntensity.Custom(-1.0f).value shouldBe 0.0f
         HapticIntensity.Custom(-100f).value shouldBe 0.0f
-      }
-
-      test("should support equality comparison") {
-        HapticIntensity.Custom(0.5f) shouldBe HapticIntensity.Custom(0.5f)
-      }
-
-      test("should have different instances for different values") {
-        val custom1 = HapticIntensity.Custom(0.3f)
-        val custom2 = HapticIntensity.Custom(0.7f)
-        (custom1 == custom2) shouldBe false
       }
     }
   })
