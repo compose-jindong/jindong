@@ -22,6 +22,14 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish)
     alias(libs.plugins.kotest)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.binaryCompatibilityValidator)
+}
+
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }
 
 group = "io.github.compose-jindong"
