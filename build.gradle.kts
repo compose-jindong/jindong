@@ -3,7 +3,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform) apply false
     alias(libs.plugins.vanniktech.mavenPublish) apply false
     alias(libs.plugins.spotless) apply false
-    alias(libs.plugins.binaryCompatibilityValidator)
+    alias(libs.plugins.binaryCompatibilityValidator) apply false
 }
 
 subprojects {

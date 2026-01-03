@@ -18,9 +18,18 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.android.kotlin.multiplatform.library)
+    alias(libs.plugins.compose.compiler)
     alias(libs.plugins.vanniktech.mavenPublish)
     alias(libs.plugins.kotest)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.binaryCompatibilityValidator)
+}
+
+apiValidation {
+    @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+    klib {
+        enabled = true
+    }
 }
 
 group = "io.github.compose-jindong"
