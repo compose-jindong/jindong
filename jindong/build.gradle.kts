@@ -23,12 +23,12 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
-group = "io.github.jindong"
+group = "io.github.compose-jindong"
 version = "1.0.0"
 
 kotlin {
     androidLibrary {
-        namespace = "io.github.jindong"
+        namespace = "io.github.compose.jindong"
         compileSdk = libs.versions.android.compileSdk.get().toInt()
         minSdk = libs.versions.android.minSdk.get().toInt()
 

@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.jindong.compose
+package io.github.compose.jindong.compose
 
 import androidx.compose.runtime.AbstractApplier
-import io.github.jindong.node.HapticNode
+import io.github.compose.jindong.node.HapticNode
 
 /**
  * Applier that manages the haptic node tree for Compose Runtime.

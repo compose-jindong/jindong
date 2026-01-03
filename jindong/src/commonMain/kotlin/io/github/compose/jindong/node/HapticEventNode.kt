@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.jindong.node
+package io.github.compose.jindong.node
 
 /**
  * A leaf node representing a single haptic event (vibration).

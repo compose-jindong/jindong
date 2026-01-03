@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.jindong.node
+package io.github.compose.jindong.node
 
 /**
- * Represents a scheduled haptic event with absolute timing.
+ * A leaf node representing a time delay with no haptic output.
  *
- * @property startTimeMs Absolute start time in milliseconds (relative to pattern start)
- * @property durationMs Duration of the haptic event in milliseconds
- * @property intensity Vibration intensity from 0.0 to 1.0
- * @property iosParameters iOS Core Haptics parameters (ignored on Android)
+ * This node has no children and returns an empty list when [collectEvents] is called.
+ * The duration is used by parent nodes (e.g., [SequenceNode]) to advance timing.
+ *
+ * @property durationMs Duration of the delay in milliseconds
  */
-internal data class ScheduledHapticEvent(
-  val startTimeMs: Long,
+internal class DelayNode(
   val durationMs: Long,
-  val intensity: Float,
-  val iosParameters: IosHapticParameters? = null,
-)
+) : HapticNode {
+  override val children: MutableList<HapticNode> = mutableListOf()
+
+  override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> = emptyList()
+}

@@ -15,12 +15,12 @@
  */
 @file:OptIn(ExperimentalComposeApi::class)
 
-package io.github.jindong.compose
+package io.github.compose.jindong.compose
 
 import androidx.compose.runtime.ExperimentalComposeApi
-import io.github.jindong.node.HapticEventNode
-import io.github.jindong.node.HapticNode
-import io.github.jindong.node.SequenceNode
+import io.github.compose.jindong.node.HapticEventNode
+import io.github.compose.jindong.node.HapticNode
+import io.github.compose.jindong.node.SequenceNode
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
