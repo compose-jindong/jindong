@@ -34,7 +34,7 @@ sealed class VibrationCapture {
   data class Waveform(
     val timings: LongArray,
     val amplitudes: IntArray,
-    val repeat: Int = -1,
+    val repeat: Int,
   ) : VibrationCapture() {
     fun createEffect(): VibrationEffect = VibrationEffect.createWaveform(timings, amplitudes, repeat)
 
