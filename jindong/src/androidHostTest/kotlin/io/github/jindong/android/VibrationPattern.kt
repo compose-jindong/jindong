@@ -22,12 +22,12 @@ import android.os.VibrationEffect
  * Since we create VibrationEffect objects in tests, we can capture their parameters
  * to verify they match expected patterns.
  */
-sealed class VibrationCapture {
+sealed class VibrationPattern {
 
   data class OneShot(
     val duration: Long,
     val amplitude: Int,
-  ) : VibrationCapture() {
+  ) : VibrationPattern() {
     fun createEffect(): VibrationEffect = VibrationEffect.createOneShot(duration, amplitude)
   }
 
@@ -35,7 +35,7 @@ sealed class VibrationCapture {
     val timings: LongArray,
     val amplitudes: IntArray,
     val repeat: Int,
-  ) : VibrationCapture() {
+  ) : VibrationPattern() {
     fun createEffect(): VibrationEffect = VibrationEffect.createWaveform(timings, amplitudes, repeat)
 
     override fun equals(other: Any?): Boolean {

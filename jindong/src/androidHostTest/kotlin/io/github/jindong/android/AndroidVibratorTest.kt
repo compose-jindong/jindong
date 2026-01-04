@@ -74,7 +74,7 @@ class AndroidVibratorTest {
   @Test
   fun `should vibrate with high intensity (255)`() {
     // TODO: Replace with Jindong's HapticIntensity.HIGH (value = 1.0 -> 255)
-    val pattern = VibrationCapture.OneShot(duration = 100, amplitude = 255)
+    val pattern = VibrationPattern.OneShot(duration = 100, amplitude = 255)
 
     val effect = pattern.createEffect()
     vibrator.vibrate(effect)
@@ -87,7 +87,7 @@ class AndroidVibratorTest {
   @Test
   fun `should vibrate with medium intensity (128)`() {
     // TODO: Replace with Jindong's HapticIntensity.MEDIUM (value = 0.5 -> 128)
-    val pattern = VibrationCapture.OneShot(duration = 200, amplitude = 128)
+    val pattern = VibrationPattern.OneShot(duration = 200, amplitude = 128)
 
     val effect = pattern.createEffect()
     vibrator.vibrate(effect)
@@ -100,7 +100,7 @@ class AndroidVibratorTest {
   @Test
   fun `should vibrate with low intensity (64)`() {
     // TODO: Replace with Jindong's HapticIntensity.LIGHT (value = 0.25 -> 64)
-    val pattern = VibrationCapture.OneShot(duration = 150, amplitude = 64)
+    val pattern = VibrationPattern.OneShot(duration = 150, amplitude = 64)
 
     val effect = pattern.createEffect()
     vibrator.vibrate(effect)
@@ -126,7 +126,7 @@ class AndroidVibratorTest {
   fun `should handle waveform pattern with delays`() {
     // Pattern: vibrate(100ms@255) -> pause(50ms) -> vibrate(100ms@128)
     // TODO: Replace with Jindong's Sequence pattern
-    val pattern = VibrationCapture.Waveform(
+    val pattern = VibrationPattern.Waveform(
       timings = longArrayOf(0, 100, 50, 100),
       amplitudes = intArrayOf(0, 255, 0, 128),
       repeat = -1,
@@ -145,7 +145,7 @@ class AndroidVibratorTest {
   fun `should handle complex waveform with multiple segments`() {
     // Pattern: Repeat { Haptic -> Delay -> Haptic -> Delay -> Haptic }
     // TODO: Replace with Jindong's Repeat + Sequence pattern
-    val pattern = VibrationCapture.Waveform(
+    val pattern = VibrationPattern.Waveform(
       timings = longArrayOf(0, 100, 50, 100, 50, 100),
       amplitudes = intArrayOf(0, 255, 0, 128, 0, 255),
       repeat = -1,
@@ -180,7 +180,7 @@ class AndroidVibratorTest {
   @Test
   fun `should handle minimum duration (1ms)`() {
     // TODO: Test with Jindong's minimum duration
-    val pattern = VibrationCapture.OneShot(duration = 1, amplitude = 255)
+    val pattern = VibrationPattern.OneShot(duration = 1, amplitude = 255)
 
     val effect = pattern.createEffect()
     vibrator.vibrate(effect)
@@ -194,7 +194,7 @@ class AndroidVibratorTest {
     val shadowVibrator = shadowOf(vibrator)
 
     // TODO: Test with Jindong's Custom(0.0) -> should map to 1 (not 0)
-    val pattern = VibrationCapture.OneShot(duration = 100, amplitude = 1)
+    val pattern = VibrationPattern.OneShot(duration = 100, amplitude = 1)
 
     val effect = pattern.createEffect()
     vibrator.vibrate(effect)
