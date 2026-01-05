@@ -21,21 +21,20 @@ import io.github.compose.jindong.model.HapticPattern
  * Actual implementation class for Android.
  */
 private class DefaultAndroidHapticExecutor : HapticExecutor {
+
   override suspend fun execute(pattern: HapticPattern) {
-    // TODO: Implement Android haptic execution
-    // - Convert pattern.events to VibrationEffect waveform
-    // - Handle timings and amplitudes conversion
-    // - Flatten parallel events to sequential
-    // - Ignore iOS-only parameters (sharpness, envelope)
     TODO("Execute not implemented yet")
   }
 
-  override fun isSupported(): Boolean {
-    // TODO: Check if device supports haptics
-    // - Verify API level >= 26
-    // - Check if vibrator exists and hasVibrator()
-    return false
+  override fun executeAsync(pattern: HapticPattern): HapticHandle {
+    TODO("ExecuteAsync not implemented yet")
   }
+
+  // TODO: Check if device supports haptics
+  // - Verify API level >= 26
+  // - Check if vibrator exists and hasVibrator()
+  override val isSupported: Boolean
+    get() = false
 
   override fun release() {
     // TODO: Release vibrator resources if needed

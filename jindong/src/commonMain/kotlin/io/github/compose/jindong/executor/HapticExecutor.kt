@@ -19,7 +19,7 @@ import io.github.compose.jindong.model.HapticPattern
 
 /**
  * Platform-specific haptic executor interface.
- * Each platform (Android, iOS) provides its own actual implementation:
+ * Each platform (Android, iOS) provides its own actual implementation.
  *
  * This is an internal API used by [Jindong] composable and [JindongState].
  * Users should not interact with this interface directly.
@@ -27,24 +27,35 @@ import io.github.compose.jindong.model.HapticPattern
  * @see createHapticExecutor
  */
 internal interface HapticExecutor {
+
   /**
-   * Executes the given haptic pattern.
+   * Checks if haptic feedback is supported on this device.
+   */
+  val isSupported: Boolean
+
+  /**
+   * Executes haptic pattern. Cancellable via coroutine cancellation.
+   * When cancelled, the ongoing vibration is stopped immediately.
    *
    * This is a suspend function that will complete when the haptic pattern finishes playing.
    * The implementation should handle platform-specific conversion of the pattern and
    * any necessary error handling.
    *
    * @param pattern The haptic pattern to execute
-   * @throws Exception if haptic execution fails
    */
   suspend fun execute(pattern: HapticPattern)
 
   /**
-   * Checks if haptic feedback is supported on this device.
+   * Executes with explicit cancellation handle.
+   * Caller is responsible for lifecycle management.
    *
-   * @return true if haptics are supported and available, false otherwise
+   * Use this method when you need fine-grained control over haptic execution,
+   * such as stopping a pattern before it completes.
+   *
+   * @param pattern The haptic pattern to execute
+   * @return A [HapticHandle] that can be used to cancel the execution
    */
-  fun isSupported(): Boolean
+  fun executeAsync(pattern: HapticPattern): HapticHandle
 
   /**
    * Releases any resources held by the executor.

@@ -22,22 +22,18 @@ import io.github.compose.jindong.model.HapticPattern
  */
 private class DefaultIosHapticExecutor : HapticExecutor {
   override suspend fun execute(pattern: HapticPattern) {
-    // TODO: Implement iOS haptic execution
-    // - Initialize CHHapticEngine if not started
-    // - Convert pattern.events to CHHapticPattern
-    // - Create CHHapticEvents (transient or continuous based on duration)
-    // - Apply intensity, sharpness, and envelope parameters
-    // - Support parallel events with same relativeTime
-    // - Create and start CHHapticPatternPlayer
     TODO("Execute not implemented yet")
   }
 
-  override fun isSupported(): Boolean {
-    // TODO: Check if Core Haptics is supported
-    // - Use CHHapticEngine.capabilitiesForHardware()
-    // - Check supportsHaptics property
-    return false
+  override fun executeAsync(pattern: HapticPattern): HapticHandle {
+    TODO("ExecuteAsync not implemented yet")
   }
+
+  // TODO: Check if Core Haptics is supported
+  // - Use CHHapticEngine.capabilitiesForHardware()
+  // - Check supportsHaptics property
+  override val isSupported: Boolean
+    get() = false
 
   override fun release() {
     // TODO: Stop and release CHHapticEngine
