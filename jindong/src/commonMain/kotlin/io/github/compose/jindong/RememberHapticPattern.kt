@@ -25,8 +25,8 @@ import io.github.compose.jindong.model.HapticPattern
  * @param content DSL block defining the haptic pattern
  * @return The compiled [HapticPattern]
  *
- * @see Jindong for trigger-based pattern execution
- * @see compilePattern for immediate pattern compilation without memoization
+ * @see [Jindong] for trigger-based pattern execution
+ * @see [compilePattern] for immediate pattern compilation without memoization
  */
 @Composable
 internal fun rememberHapticPattern(
