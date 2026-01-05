@@ -55,8 +55,9 @@ fun Jindong(
   vararg keys: Any?,
   content: @Composable JindongScope.() -> Unit,
 ) {
+  val pattern = rememberHapticPattern(content)
+
   LaunchedEffect(*keys) {
-    val pattern = compilePattern(content)
     // TODO: Execute pattern via HapticExecutor (to be implemented in separate change)
     // val executor = LocalHapticExecutor.current
     // executor.execute(pattern)
