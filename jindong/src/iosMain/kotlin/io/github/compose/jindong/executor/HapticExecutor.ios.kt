@@ -149,7 +149,7 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       value = intensity.value,
     )
 
-    val sharpness = iosParameters?.sharpness ?: 0.5f
+    val sharpness = iosParameters?.sharpness ?: DEFAULT_SHARPNESS
     val sharpnessEventParameter = CHHapticEventParameter(
       parameterID = CHHapticEventParameterIDHapticSharpness,
       value = sharpness,
@@ -161,6 +161,10 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       relativeTime = relativeTime,
       duration = duration,
     )
+  }
+
+  companion object {
+    private const val DEFAULT_SHARPNESS = 0.5f
   }
 }
 
