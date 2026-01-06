@@ -28,8 +28,7 @@ import platform.Foundation.NSError
 
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 internal class IosHapticHandle(
-  private val player: CHHapticPatternPlayerProtocol?,
-  private val executor: DefaultIosHapticExecutor?,
+  private var player: CHHapticPatternPlayerProtocol?,
 ) : HapticHandle {
 
   private var _isActive = player != null
@@ -45,6 +44,6 @@ internal class IosHapticHandle(
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
       player?.stopAtTime(0.0, errorPtr.ptr)
     }
-    executor?.stopCurrentPlayer()
+    player = null
   }
 }

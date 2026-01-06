@@ -32,7 +32,6 @@ import platform.CoreHaptics.CHHapticEventParameterIDHapticIntensity
 import platform.CoreHaptics.CHHapticEventParameterIDHapticSharpness
 import platform.CoreHaptics.CHHapticEventTypeHapticContinuous
 import platform.CoreHaptics.CHHapticPattern
-import platform.CoreHaptics.CHHapticPatternPlayerProtocol
 import platform.Foundation.NSError
 
 /**
@@ -42,7 +41,6 @@ import platform.Foundation.NSError
 internal class DefaultIosHapticExecutor : HapticExecutor {
 
   private var engine: CHHapticEngine? = null
-  private var currentPlayer: CHHapticPatternPlayerProtocol? = null
 
   override val isSupported: Boolean by lazy {
     CHHapticEngine.capabilitiesForHardware().supportsHaptics()
@@ -59,53 +57,43 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       val player = currentEngine.createPlayerWithPattern(chPattern, errorPtr.ptr)
       if (errorPtr.value != null || player == null) return
 
-      currentPlayer = player
       player.startAtTime(0.0, errorPtr.ptr)
       if (errorPtr.value != null) return
 
       val totalDurationMs = pattern.events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
       delay(totalDurationMs)
-      currentPlayer = null
+
+      player.stopAtTime(0.0, errorPtr.ptr)
     }
   }
 
   override fun executeAsync(pattern: HapticPattern): HapticHandle {
     if (!isSupported || pattern.events.isEmpty()) {
-      return IosHapticHandle(null, null)
+      return IosHapticHandle(null)
     }
 
-    val currentEngine = ensureEngine() ?: return IosHapticHandle(null, null)
-    val hapticPattern = pattern.toCHHapticPattern() ?: return IosHapticHandle(null, null)
+    val currentEngine = ensureEngine() ?: return IosHapticHandle(null)
+    val hapticPattern = pattern.toCHHapticPattern() ?: return IosHapticHandle(null)
 
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
       val player = currentEngine.createPlayerWithPattern(hapticPattern, errorPtr.ptr)
       if (errorPtr.value != null || player == null) {
-        return@memScoped IosHapticHandle(null, null)
+        return@memScoped IosHapticHandle(null)
       }
 
-      currentPlayer = player
       player.startAtTime(0.0, errorPtr.ptr)
       if (errorPtr.value != null) {
-        return@memScoped IosHapticHandle(null, null)
+        return@memScoped IosHapticHandle(null)
       }
 
-      IosHapticHandle(player, this@DefaultIosHapticExecutor)
+      IosHapticHandle(player)
     }
   }
 
   override fun release() {
-    stopCurrentPlayer()
     engine?.stopWithCompletionHandler(null)
     engine = null
-  }
-
-  internal fun stopCurrentPlayer() {
-    memScoped {
-      val errorPtr = alloc<ObjCObjectVar<NSError?>>()
-      currentPlayer?.stopAtTime(0.0, errorPtr.ptr)
-    }
-    currentPlayer = null
   }
 
   private fun ensureEngine(): CHHapticEngine? {
@@ -120,7 +108,6 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
 
       newEngine.stoppedHandler = { _ ->
         engine = null
-        currentPlayer = null
       }
 
       newEngine.resetHandler = {
