@@ -107,7 +107,7 @@ fun HapticPatternCard(patternType: HapticPatternType) {
 
 @Composable
 fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
-  if (trigger == 0) return // 초기 상태에서는 실행하지 않음
+  if (trigger == 0) return
 
   when (patternType) {
     HapticPatternType.SINGLE_TAP -> {
