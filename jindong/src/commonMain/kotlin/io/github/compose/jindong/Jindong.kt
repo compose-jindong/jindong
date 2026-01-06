@@ -21,6 +21,7 @@ import androidx.compose.runtime.Composition
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Recomposer
 import io.github.compose.jindong.compose.JindongApplier
+import io.github.compose.jindong.executor.LocalHapticExecutor
 import io.github.compose.jindong.model.HapticPattern
 import io.github.compose.jindong.node.SequenceNode
 import kotlinx.coroutines.CoroutineScope
@@ -56,11 +57,10 @@ fun Jindong(
   content: @Composable JindongScope.() -> Unit,
 ) {
   val pattern = rememberHapticPattern(content)
+  val executor = LocalHapticExecutor.current
 
   LaunchedEffect(*keys) {
-    // TODO: Execute pattern via HapticExecutor (to be implemented in separate change)
-    // val executor = LocalHapticExecutor.current
-    // executor.execute(pattern)
+    executor.execute(pattern)
   }
 }
 
