@@ -7,6 +7,10 @@ public final class io/github/compose/jindong/JindongKt {
 	public static final fun Jindong ([Ljava/lang/Object;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
 }
 
+public final class io/github/compose/jindong/JindongProviderKt {
+	public static final fun JindongProvider (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+}
+
 public abstract interface class io/github/compose/jindong/JindongScope {
 }
 
