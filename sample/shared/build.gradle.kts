@@ -24,7 +24,7 @@ plugins {
 
 kotlin {
   androidLibrary {
-    namespace = "io.github.sample.shared"
+    namespace = "io.github.compose.jindong.sample.shared"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
     minSdk = libs.versions.android.minSdk.get().toInt()
 

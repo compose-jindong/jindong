@@ -13,20 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.sample.android
+package io.github.compose.jindong.sample
 
-import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import io.github.sample.SampleApp
+import androidx.compose.ui.window.ComposeUIViewController
 
-class MainActivity : ComponentActivity() {
-  override fun onCreate(savedInstanceState: Bundle?) {
-    super.onCreate(savedInstanceState)
-    enableEdgeToEdge()
-    setContent {
-      SampleApp()
-    }
-  }
-}
+fun MainViewController() = ComposeUIViewController { SampleApp() }
