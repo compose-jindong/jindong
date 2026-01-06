@@ -26,6 +26,9 @@ import io.github.compose.jindong.executor.createHapticExecutor
  * Provides [HapticExecutor] to the composition tree.
  *
  * Wrap your app content with this provider to enable haptic feedback.
+ * The platform-specific context is automatically obtained:
+ * - Android: Uses `LocalContext.current`
+ * - iOS: No context needed
  *
  * Example:
  * ```
@@ -40,15 +43,14 @@ import io.github.compose.jindong.executor.createHapticExecutor
  * }
  * ```
  *
- * @param context Platform-specific context (Android: Context, iOS: null)
  * @param content The content to provide the executor to
  */
 @Composable
 fun JindongProvider(
-  context: Any? = null,
   content: @Composable () -> Unit,
 ) {
-  val executor = remember { createHapticExecutor(context) }
+  val context = platformContext()
+  val executor = remember(context) { createHapticExecutor(context) }
 
   DisposableEffect(Unit) {
     onDispose {

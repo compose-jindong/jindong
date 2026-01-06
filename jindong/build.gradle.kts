@@ -62,6 +62,10 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
 
+        androidMain.dependencies {
+            implementation(libs.compose.ui)
+        }
+
         commonTest.dependencies {
             implementation(libs.kotest.framework.engine)
             implementation(libs.kotest.assertions.core)

@@ -18,7 +18,9 @@ androidxActivity = "1.10.1"
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 compose-runtime = { module = "org.jetbrains.compose.runtime:runtime", version.ref = "composeRuntime" }
+compose-ui = { module = "org.jetbrains.compose.ui:ui", version.ref = "composeRuntime" }
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-test", version.ref = "coroutines" }
 kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", version.ref = "kotest" }
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
