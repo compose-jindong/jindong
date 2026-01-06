@@ -72,6 +72,7 @@ kotlin {
             implementation(libs.androidx.test.core)
             implementation(libs.androidx.test.runner)
             implementation(libs.kotest.assertions.core)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
