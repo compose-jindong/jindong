@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.compose.jindong.Jindong
 import io.github.compose.jindong.JindongProvider
+import org.jetbrains.compose.resources.stringResource
 import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Repeat
@@ -47,14 +48,14 @@ fun SampleApp() {
 }
 
 @Composable
-fun HapticPatternListScreen() {
+private fun HapticPatternListScreen() {
   val patterns = remember { HapticPatternType.entries }
 
   Column(
     modifier = Modifier.fillMaxSize()
   ) {
     Text(
-      text = "Jindong Haptic Patterns",
+      text = stringResource(Res.string.haptic_patterns_title),
       style = MaterialTheme.typography.headlineMedium,
       modifier = Modifier.padding(16.dp)
     )
@@ -72,7 +73,7 @@ fun HapticPatternListScreen() {
 }
 
 @Composable
-fun HapticPatternCard(patternType: HapticPatternType) {
+private fun HapticPatternCard(patternType: HapticPatternType) {
   var triggerCount by remember { mutableIntStateOf(0) }
 
   Card(
@@ -97,7 +98,7 @@ fun HapticPatternCard(patternType: HapticPatternType) {
         )
       }
       Button(onClick = { triggerCount++ }) {
-        Text("Play")
+        Text(stringResource(Res.string.play_button))
       }
     }
   }

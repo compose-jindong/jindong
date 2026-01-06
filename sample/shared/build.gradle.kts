@@ -55,6 +55,13 @@ kotlin {
       implementation(compose.foundation)
       implementation(compose.material3)
       implementation(compose.ui)
+      implementation(compose.components.resources)
     }
   }
+}
+
+compose.resources {
+  publicResClass = false
+  packageOfResClass = "io.github.compose.jindong.sample"
+  generateResClass = auto
 }
