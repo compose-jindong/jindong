@@ -25,12 +25,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import io.github.compose.jindong.Jindong
 import io.github.compose.jindong.JindongProvider
-import org.jetbrains.compose.resources.stringResource
+import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Repeat
 import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.model.HapticIntensity
+import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
 @Composable
@@ -38,7 +39,7 @@ fun SampleApp() {
   MaterialTheme {
     Surface(
       modifier = Modifier.fillMaxSize(),
-      color = MaterialTheme.colorScheme.background
+      color = MaterialTheme.colorScheme.background,
     ) {
       JindongProvider {
         HapticPatternListScreen()
@@ -52,18 +53,18 @@ private fun HapticPatternListScreen() {
   val patterns = remember { HapticPatternType.entries }
 
   Column(
-    modifier = Modifier.fillMaxSize()
+    modifier = Modifier.fillMaxSize(),
   ) {
     Text(
       text = stringResource(Res.string.haptic_patterns_title),
       style = MaterialTheme.typography.headlineMedium,
-      modifier = Modifier.padding(16.dp)
+      modifier = Modifier.padding(16.dp),
     )
 
     LazyColumn(
       modifier = Modifier.fillMaxSize(),
       contentPadding = PaddingValues(16.dp),
-      verticalArrangement = Arrangement.spacedBy(8.dp)
+      verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
       items(patterns) { pattern ->
         HapticPatternCard(pattern)
@@ -77,24 +78,24 @@ private fun HapticPatternCard(patternType: HapticPatternType) {
   var triggerCount by remember { mutableIntStateOf(0) }
 
   Card(
-    modifier = Modifier.fillMaxWidth()
+    modifier = Modifier.fillMaxWidth(),
   ) {
     Row(
       modifier = Modifier
         .fillMaxWidth()
         .padding(16.dp),
       horizontalArrangement = Arrangement.SpaceBetween,
-      verticalAlignment = Alignment.CenterVertically
+      verticalAlignment = Alignment.CenterVertically,
     ) {
       Column(modifier = Modifier.weight(1f)) {
         Text(
           text = patternType.displayName,
-          style = MaterialTheme.typography.titleMedium
+          style = MaterialTheme.typography.titleMedium,
         )
         Text(
           text = patternType.description,
           style = MaterialTheme.typography.bodySmall,
-          color = MaterialTheme.colorScheme.onSurfaceVariant
+          color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
       }
       Button(onClick = { triggerCount++ }) {
@@ -107,24 +108,24 @@ private fun HapticPatternCard(patternType: HapticPatternType) {
 }
 
 @Composable
-fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
+private fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
   if (trigger == 0) return
 
-  when (patternType) {
+  val pattern: @Composable JindongScope.() -> Unit = when (patternType) {
     HapticPatternType.SINGLE_TAP -> {
-      Jindong(trigger) {
-        Haptic(50.milliseconds)
-      }
+      { Haptic(50.milliseconds) }
     }
+
     HapticPatternType.DOUBLE_TAP -> {
-      Jindong(trigger) {
+      {
         Haptic(30.milliseconds)
         Delay(50.milliseconds)
         Haptic(30.milliseconds)
       }
     }
+
     HapticPatternType.TRIPLE_TAP -> {
-      Jindong(trigger) {
+      {
         Repeat(3) {
           Sequence {
             Haptic(25.milliseconds)
@@ -133,18 +134,17 @@ fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
         }
       }
     }
+
     HapticPatternType.LIGHT_FEEDBACK -> {
-      Jindong(trigger) {
-        Haptic(40.milliseconds, HapticIntensity.LIGHT)
-      }
+      { Haptic(40.milliseconds, HapticIntensity.LIGHT) }
     }
+
     HapticPatternType.STRONG_FEEDBACK -> {
-      Jindong(trigger) {
-        Haptic(80.milliseconds, HapticIntensity.STRONG)
-      }
+      { Haptic(80.milliseconds, HapticIntensity.STRONG) }
     }
+
     HapticPatternType.HEARTBEAT -> {
-      Jindong(trigger) {
+      {
         Repeat(2) {
           Sequence {
             Haptic(60.milliseconds, HapticIntensity.STRONG)
@@ -155,15 +155,17 @@ fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
         }
       }
     }
+
     HapticPatternType.NOTIFICATION -> {
-      Jindong(trigger) {
+      {
         Haptic(50.milliseconds, HapticIntensity.MEDIUM)
         Delay(100.milliseconds)
         Haptic(100.milliseconds, HapticIntensity.STRONG)
       }
     }
+
     HapticPatternType.SUCCESS -> {
-      Jindong(trigger) {
+      {
         Haptic(30.milliseconds, HapticIntensity.LIGHT)
         Delay(50.milliseconds)
         Haptic(60.milliseconds, HapticIntensity.MEDIUM)
@@ -171,8 +173,9 @@ fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
         Haptic(100.milliseconds, HapticIntensity.STRONG)
       }
     }
+
     HapticPatternType.ERROR -> {
-      Jindong(trigger) {
+      {
         Repeat(3) {
           Sequence {
             Haptic(100.milliseconds, HapticIntensity.HIGH)
@@ -181,8 +184,9 @@ fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
         }
       }
     }
+
     HapticPatternType.RAMP_UP -> {
-      Jindong(trigger) {
+      {
         Haptic(50.milliseconds, HapticIntensity.LIGHT)
         Delay(30.milliseconds)
         Haptic(50.milliseconds, HapticIntensity.MEDIUM)
@@ -193,6 +197,8 @@ fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
       }
     }
   }
+
+  Jindong(trigger, content = pattern)
 }
 
 enum class HapticPatternType(
