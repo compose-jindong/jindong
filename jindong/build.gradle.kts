@@ -63,7 +63,9 @@ kotlin {
         }
 
         androidMain.dependencies {
-            implementation(libs.compose.ui)
+            val composeBom = project.dependencies.platform(libs.androidx.compose.bom)
+            implementation(composeBom)
+            implementation(libs.androidx.compose.ui)
         }
 
         commonTest.dependencies {
