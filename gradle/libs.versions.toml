@@ -7,11 +7,13 @@ vanniktechMavenPublish = "0.35.0"
 spotless = "8.1.0"
 binaryCompatibilityValidator = "0.18.1"
 composeRuntime = "1.9.3"
+composeMultiplatform = "1.9.3"
 coroutines = "1.10.2"
 kotest = "6.0.7"
 ksp = "2.3.4"
 robolectric = "4.16"
 androidxTest = "1.7.0"
+androidxActivity = "1.10.1"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -22,6 +24,7 @@ kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }
 androidx-test-runner = { module = "androidx.test:runner", version.ref = "androidxTest" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidxActivity" }
 
 [plugins]
 android-kotlin-multiplatform-library = { id = "com.android.kotlin.multiplatform.library", version.ref = "agp" }
@@ -32,3 +35,5 @@ spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 kotest = { id = "io.kotest", version.ref = "kotest" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
+android-application = { id = "com.android.application", version.ref = "agp" }
+composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

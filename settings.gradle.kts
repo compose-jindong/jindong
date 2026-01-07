@@ -15,3 +15,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "jindong"
 include(":jindong")
+include(
+    ":sample:shared",
+    ":sample:android-app"
+)
