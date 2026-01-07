@@ -120,7 +120,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     }
 
     // Add trailing segment to ensure proper termination
-    timings += 10L
+    timings += 1L
     amplitudes += 0
 
     return Waveform(timings.toLongArray(), amplitudes.toIntArray())
