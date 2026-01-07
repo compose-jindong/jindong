@@ -26,8 +26,6 @@ import io.github.compose.jindong.model.HapticPattern
 import io.github.compose.jindong.model.ScheduledHapticEvent
 import io.kotest.assertions.throwables.shouldNotThrow
 import io.kotest.matchers.shouldBe
-import io.kotest.matchers.shouldNotBe
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
 import org.junit.Test
@@ -87,6 +85,8 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    // Single event split: [100ms event] + [1ms gap] + [1ms post] + [1ms end]
+    shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
 
   @Test
@@ -105,6 +105,7 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.pattern shouldBe longArrayOf(200, 1, 1, 1)
   }
 
   @Test
@@ -123,6 +124,7 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.pattern shouldBe longArrayOf(150, 1, 1, 1)
   }
 
   @Test
@@ -141,6 +143,7 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
 
   @Test
@@ -159,6 +162,7 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
 
   // ============================================================================
@@ -186,6 +190,8 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    // [100ms event1] + [50ms gap] + [100ms event2] + [1ms end]
+    shadowVibrator.pattern shouldBe longArrayOf(100, 50, 100, 1)
   }
 
   @Test
@@ -214,6 +220,8 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    // [100ms event1] + [50ms gap1] + [100ms event2] + [50ms gap2] + [100ms event3] + [1ms end]
+    shadowVibrator.pattern shouldBe longArrayOf(100, 50, 100, 50, 100, 1)
   }
 
   @Test
@@ -242,6 +250,8 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    // Back-to-back events without gaps in input: [25ms event1] + [25ms event2] + [25ms event3] + [1ms end]
+    shadowVibrator.pattern shouldBe longArrayOf(25, 25, 25, 1)
   }
 
   // ============================================================================
@@ -263,6 +273,8 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    // Single event split: [1ms event] + [1ms gap] + [1ms post] + [1ms end]
+    shadowVibrator.pattern shouldBe longArrayOf(1, 1, 1, 1)
   }
 
   @Test
@@ -281,6 +293,7 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
 
   @Test
