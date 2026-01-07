@@ -62,6 +62,12 @@ kotlin {
             implementation(libs.kotlinx.coroutines.core)
         }
 
+        androidMain.dependencies {
+            val composeBom = project.dependencies.platform(libs.androidx.compose.bom)
+            implementation(composeBom)
+            implementation(libs.androidx.compose.ui)
+        }
+
         commonTest.dependencies {
             implementation(libs.kotest.framework.engine)
             implementation(libs.kotest.assertions.core)
@@ -72,6 +78,7 @@ kotlin {
             implementation(libs.androidx.test.core)
             implementation(libs.androidx.test.runner)
             implementation(libs.kotest.assertions.core)
+            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }
