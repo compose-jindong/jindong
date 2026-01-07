@@ -46,25 +46,16 @@ internal class SequenceNode : HapticNode {
     return events
   }
 
-  private fun processChildNode(child: HapticNode, state: TimingState): TimingState = if (child is DelayNode) {
-    state.copy(currentTimeMs = state.currentTimeMs + child.durationMs)
-  } else {
+  private fun processChildNode(child: HapticNode, state: TimingState): TimingState {
     val childEvents = child.collectEvents(state.currentTimeMs)
-    val nextStartTime = calculateNextStartTime(childEvents, state.currentTimeMs)
-    TimingState(
+    val nextStartTime = state.currentTimeMs + child.totalDurationMs(state.currentTimeMs)
+    return TimingState(
       currentTimeMs = nextStartTime,
       events = state.events + childEvents,
     )
   }
 
-  private fun calculateNextStartTime(
-    events: List<ScheduledHapticEvent>,
-    currentTimeMs: Long,
-  ): Long = if (events.isEmpty()) {
-    currentTimeMs
-  } else {
-    events.maxOf { it.startTimeMs + it.durationMs }
-  }
+  override fun totalDurationMs(startTimeMs: Long): Long = children.sumOf { it.totalDurationMs(startTimeMs) }
 
   private data class TimingState(
     val currentTimeMs: Long,

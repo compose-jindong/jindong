@@ -31,4 +31,6 @@ internal class DelayNode(
   override val children: MutableList<HapticNode> = mutableListOf()
 
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> = emptyList()
+
+  override fun totalDurationMs(startTimeMs: Long): Long = durationMs
 }

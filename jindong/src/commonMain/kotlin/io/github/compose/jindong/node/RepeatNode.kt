@@ -62,20 +62,12 @@ internal class RepeatNode(
     val (currentTimeMs, events) = children.fold(
       initial = ChildState(startTimeMs, emptyList()),
     ) { state, child ->
-      when (child) {
-        is DelayNode -> state.copy(currentTimeMs = state.currentTimeMs + child.durationMs)
-
-        else -> {
-          val childEvents = child.collectEvents(state.currentTimeMs)
-          val nextTime = childEvents
-            .maxOfOrNull { it.startTimeMs + it.durationMs }
-            ?: state.currentTimeMs
-          ChildState(
-            currentTimeMs = nextTime,
-            events = state.events + childEvents,
-          )
-        }
-      }
+      val childEvents = child.collectEvents(state.currentTimeMs)
+      val nextTime = state.currentTimeMs + child.totalDurationMs(state.currentTimeMs)
+      ChildState(
+        currentTimeMs = nextTime,
+        events = state.events + childEvents,
+      )
     }
     return IterationResult(events = events, endTimeMs = currentTimeMs)
   }
@@ -84,6 +76,16 @@ internal class RepeatNode(
     val currentTimeMs: Long,
     val events: List<ScheduledHapticEvent>,
   )
+
+  override fun totalDurationMs(startTimeMs: Long): Long {
+    if (count == 0) return 0L
+
+    val singleLoopDuration = children.sumOf { child ->
+      child.totalDurationMs(startTimeMs)
+    }
+
+    return singleLoopDuration * count
+  }
 
   private data class IterationResult(
     val events: List<ScheduledHapticEvent>,
