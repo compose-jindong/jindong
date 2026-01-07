@@ -51,7 +51,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   }
 
   override val isSupported: Boolean by lazy {
-    vibrator.hasVibrator() && vibrator.hasAmplitudeControl()
+    vibrator.hasVibrator()
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
