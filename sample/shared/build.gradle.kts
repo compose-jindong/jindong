@@ -35,6 +35,7 @@ kotlin {
         }
       }
     }
+    androidResources { enable = true }
   }
 
   listOf(
