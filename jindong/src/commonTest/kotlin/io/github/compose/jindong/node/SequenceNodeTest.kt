@@ -224,4 +224,32 @@ class SequenceNodeTest :
         events[1].startTimeMs shouldBe 100
       }
     }
+    test("totalDurationMs should sum all children durations sequentially") {
+      val node = SequenceNode()
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
+      node.children.add(DelayNode(durationMs = 50))
+      node.children.add(HapticEventNode(durationMs = 200, intensity = HapticIntensity.MEDIUM))
+
+      // 100 (haptic) + 50 (delay) + 200 (haptic) = 350
+      node.totalDurationMs(startTimeMs = 0) shouldBe 350
+    }
+
+    test("totalDurationMs should handle nested SequenceNode") {
+      val innerSequence = SequenceNode()
+      innerSequence.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.MEDIUM))
+      innerSequence.children.add(DelayNode(durationMs = 25))
+
+      val outerSequence = SequenceNode()
+      outerSequence.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.HIGH))
+      outerSequence.children.add(innerSequence)
+
+      // 100 (haptic) + 75 (inner: 50 haptic + 25 delay) = 175
+      outerSequence.totalDurationMs(startTimeMs = 0) shouldBe 175
+    }
+
+    test("totalDurationMs should return 0 for empty sequence") {
+      val node = SequenceNode()
+
+      node.totalDurationMs(startTimeMs = 0) shouldBe 0
+    }
   })

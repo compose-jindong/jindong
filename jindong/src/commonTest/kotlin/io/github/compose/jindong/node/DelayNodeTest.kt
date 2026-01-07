@@ -58,4 +58,20 @@ class DelayNodeTest :
         node.collectEvents(startTimeMs = 0).shouldBeEmpty()
       }
     }
+
+    test("totalDurationMs should return durationMs") {
+      val node = DelayNode(durationMs = 150)
+
+      node.totalDurationMs(startTimeMs = 0) shouldBe 150
+    }
+
+    test("totalDurationMs should be independent of startTimeMs") {
+      val node = DelayNode(durationMs = 200)
+
+      assertSoftly {
+        node.totalDurationMs(startTimeMs = 0) shouldBe 200
+        node.totalDurationMs(startTimeMs = 500) shouldBe 200
+        node.totalDurationMs(startTimeMs = 1000) shouldBe 200
+      }
+    }
   })
