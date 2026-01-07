@@ -18,6 +18,7 @@ package io.github.compose.jindong
 import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Repeat
+import io.github.compose.jindong.dsl.RepeatWithIndex
 import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
@@ -229,6 +230,73 @@ class JindongTest :
         pattern.events[1].startTimeMs shouldBe 50
         pattern.events[2].startTimeMs shouldBe 100
         pattern.events[3].startTimeMs shouldBe 150
+      }
+
+      context("RepeatWithIndex") {
+        test("index provides 0-based incrementing values") {
+          val capturedIndices = mutableListOf<Int>()
+          val pattern = compilePattern {
+            RepeatWithIndex(count = 5) { index ->
+              capturedIndices.add(index)
+              Haptic(duration = 50.ms)
+            }
+          }
+
+          capturedIndices shouldBe listOf(0, 1, 2, 3, 4)
+          pattern.events shouldHaveSize 5
+        }
+
+        test("nested sequence with delay - timing propagation") {
+          val pattern = compilePattern {
+            RepeatWithIndex(count = 2) { index ->
+              Sequence {
+                Haptic(duration = 50.ms)
+                Delay(duration = 50.ms)
+              }
+            }
+          }
+
+          pattern.events shouldHaveSize 2
+
+          // Iteration 0: Haptic at 0ms, Delay until 100ms
+          // Iteration 1: Haptic at 100ms, Delay until 200ms
+          pattern.events[0].startTimeMs shouldBe 0
+          pattern.events[1].startTimeMs shouldBe 100
+        }
+
+        test("index can determine duration dynamically") {
+          val pattern = compilePattern {
+            RepeatWithIndex(count = 3) { index ->
+              Haptic(duration = (50 + index * 50).ms)
+            }
+          }
+
+          pattern.events shouldHaveSize 3
+
+          // Durations: 50ms, 100ms, 150ms
+          assertSoftly {
+            pattern.events[0].durationMs shouldBe 50
+            pattern.events[1].durationMs shouldBe 100
+            pattern.events[2].durationMs shouldBe 150
+          }
+
+          // Start times: 0ms, 50ms, 150ms
+          assertSoftly {
+            pattern.events[0].startTimeMs shouldBe 0
+            pattern.events[1].startTimeMs shouldBe 50
+            pattern.events[2].startTimeMs shouldBe 150
+          }
+        }
+
+        test("zero count produces no events") {
+          val pattern = compilePattern {
+            RepeatWithIndex(count = 0) { index ->
+              Haptic(duration = 50.ms)
+            }
+          }
+
+          pattern.events.shouldBeEmpty()
+        }
       }
     }
   })
