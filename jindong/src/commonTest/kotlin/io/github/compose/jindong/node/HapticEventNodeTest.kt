@@ -74,4 +74,20 @@ class HapticEventNodeTest :
 
       events.single().iosParameters shouldBe iosParams
     }
+
+    test("totalDurationMs should return durationMs") {
+      val node = HapticEventNode(durationMs = 250, intensity = HapticIntensity.MEDIUM)
+
+      node.totalDurationMs(startTimeMs = 0) shouldBe 250
+    }
+
+    test("totalDurationMs should be independent of startTimeMs") {
+      val node = HapticEventNode(durationMs = 150, intensity = HapticIntensity.STRONG)
+
+      assertSoftly {
+        node.totalDurationMs(startTimeMs = 0) shouldBe 150
+        node.totalDurationMs(startTimeMs = 100) shouldBe 150
+        node.totalDurationMs(startTimeMs = 500) shouldBe 150
+      }
+    }
   })

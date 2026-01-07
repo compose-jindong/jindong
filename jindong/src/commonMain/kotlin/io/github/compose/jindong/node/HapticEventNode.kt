@@ -44,4 +44,6 @@ internal class HapticEventNode(
       iosParameters = iosParameters,
     ),
   )
+
+  override fun totalDurationMs(startTimeMs: Long): Long = durationMs
 }

@@ -38,4 +38,15 @@ internal interface HapticNode {
    * @return List of scheduled haptic events
    */
   fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent>
+
+  /**
+   * Returns the total duration of this node in milliseconds.
+   *
+   * This includes all haptic events AND delays, which is necessary for proper
+   * timing calculation when nesting structures like Sequence inside RepeatWithIndex.
+   *
+   * @param startTimeMs The absolute start time for this node (relative to pattern start)
+   * @return Total duration from start time until all children complete
+   */
+  fun totalDurationMs(startTimeMs: Long): Long
 }

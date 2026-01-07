@@ -210,4 +210,32 @@ class RepeatNodeTest :
         events[0].durationMs shouldBe 100
       }
     }
+
+    test("totalDurationMs should multiply children duration by count") {
+      val node = RepeatNode(count = 2)
+      node.children.add(HapticEventNode(durationMs = 50, intensity = HapticIntensity.STRONG))
+      node.children.add(DelayNode(durationMs = 100))
+
+      // (50 haptic + 100 delay) * 2 = 300
+      node.totalDurationMs(startTimeMs = 0) shouldBe 300
+    }
+
+    test("totalDurationMs should handle nested SequenceNode with delays") {
+      val innerSequence = SequenceNode()
+      innerSequence.children.add(HapticEventNode(durationMs = 30, intensity = HapticIntensity.MEDIUM))
+      innerSequence.children.add(DelayNode(durationMs = 20))
+
+      val node = RepeatNode(count = 2)
+      node.children.add(innerSequence)
+
+      // (30 haptic + 20 delay) * 2 = 100
+      node.totalDurationMs(startTimeMs = 0) shouldBe 100
+    }
+
+    test("totalDurationMs should return 0 when count is 0") {
+      val node = RepeatNode(count = 0)
+      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
+
+      node.totalDurationMs(startTimeMs = 0) shouldBe 0
+    }
   })
