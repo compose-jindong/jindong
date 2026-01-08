@@ -1,0 +1,136 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+/*
+ * Jindong Theme - Vibrant Teal/Mint/Lime Palette
+ * Inspired by the Jindong logo gradient colors
+ *
+ * Primary: Vibrant teal (청록색)
+ * Secondary: Mint green (민트)
+ * Accent: Lime/Yellow-green (라임)
+ */
+
+:root {
+  /* Vibrant teal-green primary from logo */
+  --fd-primary: 162 72% 46%;
+  --primary: 162 72% 46%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Ring color for focus states */
+  --ring: 162 72% 46%;
+}
+
+.dark {
+  /* Dark mode - brighter, more saturated */
+  --fd-primary: 160 75% 52%;
+  --primary: 160 75% 52%;
+  --primary-foreground: 160 10% 5%;
+
+  --ring: 160 75% 52%;
+}
+
+@theme {
+  --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* Teal palette - deeper tones from logo */
+  --color-teal-50: #effefb;
+  --color-teal-100: #c8fff4;
+  --color-teal-200: #91feea;
+  --color-teal-300: #53f5dc;
+  --color-teal-400: #20e3c8;
+  --color-teal-500: #08c7ae;
+  --color-teal-600: #04a08f;
+  --color-teal-700: #088074;
+  --color-teal-800: #0c655e;
+  --color-teal-900: #0f534d;
+  --color-teal-950: #013330;
+
+  /* Mint/Green - vibrant middle tones from logo */
+  --color-mint-50: #edfff7;
+  --color-mint-100: #d5ffed;
+  --color-mint-200: #aeffdc;
+  --color-mint-300: #70ffc4;
+  --color-mint-400: #2bfda4;
+  --color-mint-500: #00e687;
+  --color-mint-600: #00bf6d;
+  --color-mint-700: #009559;
+  --color-mint-800: #067549;
+  --color-mint-900: #07603e;
+  --color-mint-950: #003621;
+
+  /* Lime/Yellow-green - bright accent from logo highlight */
+  --color-lime-50: #f7ffe5;
+  --color-lime-100: #ecffc7;
+  --color-lime-200: #d8ff95;
+  --color-lime-300: #bcfd58;
+  --color-lime-400: #a0f526;
+  --color-lime-500: #81dc07;
+  --color-lime-600: #63b002;
+  --color-lime-700: #4b8508;
+  --color-lime-800: #3e690d;
+  --color-lime-900: #355810;
+  --color-lime-950: #193102;
+}
+
+/* Container utility */
+.container {
+  width: 100%;
+  max-width: 1200px;
+}
+
+/* Hero gradient - vibrant teal/mint/lime glow */
+.hero-gradient {
+  background:
+    radial-gradient(
+      ellipse 60% 40% at 30% -10%,
+      rgba(8, 199, 174, 0.15),
+      transparent 60%
+    ),
+    radial-gradient(
+      ellipse 50% 35% at 70% 0%,
+      rgba(43, 253, 164, 0.12),
+      transparent 55%
+    ),
+    radial-gradient(
+      ellipse 40% 30% at 85% -5%,
+      rgba(188, 253, 88, 0.08),
+      transparent 50%
+    );
+}
+
+/* Feature card gradient on hover */
+.feature-card-gradient {
+  background: linear-gradient(
+    135deg,
+    rgba(8, 199, 174, 0.06) 0%,
+    rgba(43, 253, 164, 0.04) 40%,
+    rgba(188, 253, 88, 0.02) 80%,
+    transparent 100%
+  );
+}
+
+/* Gradient text effect - teal to mint to lime */
+.gradient-text {
+  background: linear-gradient(135deg, #08c7ae 0%, #2bfda4 50%, #a0f526 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Code block with vibrant accent */
+.code-window {
+  background: linear-gradient(180deg, #0a1815 0%, #060f0d 100%);
+  border: 1px solid rgba(8, 199, 174, 0.25);
+}
+
+.code-window-header {
+  background: linear-gradient(180deg, #0f201c 0%, #0a1815 100%);
+  border-bottom: 1px solid rgba(43, 253, 164, 0.15);
+}
+
