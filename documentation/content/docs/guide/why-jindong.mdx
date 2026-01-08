@@ -1,0 +1,103 @@
+---
+title: Why Jindong
+description: The motivation behind Jindong and how it compares to traditional approaches
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# Why Jindong (진동)
+
+Jindong was created to solve the complexity of implementing haptic feedback in Kotlin Multiplatform applications.
+
+<Callout title="About the name">
+Jindong (진동) is the Korean word for "vibration". We chose this name to reflect the library's core purpose while embracing the Korean heritage of its creators.
+</Callout>
+
+## The Problem
+
+### Platform Fragmentation
+
+Implementing haptic feedback traditionally requires:
+
+**Android:**
+```kotlin
+val vibrator = context.getSystemService(Vibrator::class.java)
+vibrator?.vibrate(VibrationEffect.createOneShot(100, 128))
+```
+
+**iOS:**
+```swift
+let engine = try CHHapticEngine()
+let event = CHHapticEvent(...)
+let pattern = try CHHapticPattern(events: [event])
+try engine.makePlayer(with: pattern).start(atTime: 0)
+```
+
+This means:
+- Different APIs on each platform
+- Platform-specific boilerplate
+- Difficult to share haptic patterns
+
+### Complex Pattern Management
+
+Real-world haptic patterns are complex:
+- Multiple vibrations with timing
+- Varying intensities
+- Repetitions and sequences
+- Dynamic patterns based on state
+
+Managing this imperatively becomes unwieldy:
+```kotlin
+// Imperative - hard to read and maintain
+vibrator.vibrate(100)
+delay(50)
+vibrator.vibrate(50)
+delay(30)
+repeat(3) {
+    vibrator.vibrate(30)
+    delay(20)
+}
+```
+
+### Integration with Compose
+
+Compose developers expect reactive, declarative APIs. Traditional haptic code:
+- Requires manual trigger management
+- Doesn't compose well with UI state
+- Feels foreign in Compose codebases
+
+## The Solution: Jindong
+
+### Declarative Patterns Across Platforms
+
+Describe what you want, not how to achieve it for all platforms:
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Haptic(50.ms, HapticIntensity.STRONG)
+        Delay(30.ms)
+    }
+}
+```
+
+## Comparisons
+
+| Feature | Traditional | Jindong |
+|---------|-------------|---------|
+| Cross-platform | Manual | Automatic |
+| API style | Imperative | Declarative |
+| Pattern definition | Step-by-step | DSL |
+| Compose integration | Manual | Native |
+| Complex patterns | Verbose | Concise |
+| Dynamic patterns | Difficult | Natural |
+
+## When to Use Jindong
+
+- Kotlin Multiplatform projects
+- Compose-based UIs
+- Complex haptic patterns
+- Team familiar with Compose
+
+## Summary
+
+Jindong transforms haptic feedback from a platform-specific chore into a declarative, composable experience. It brings the same developer experience that Compose brought to UI - to haptic feedback.

@@ -1,0 +1,174 @@
+---
+title: Documentation
+description: Guide for contributing to Jindong documentation
+---
+
+# Contributing to Documentation
+
+Thank you for your interest in improving Jindong's documentation!
+
+## Getting Started
+
+### Prerequisites
+
+- Node.js 20+
+- Yarn v1 (Classic)
+
+### Local Development
+
+1. Clone the repository:
+```bash
+git clone https://github.com/user/jindong.git
+cd jindong/documentation
+```
+
+2. Install dependencies:
+```bash
+yarn install
+```
+
+3. Start the development server:
+```bash
+yarn dev
+```
+
+4. Open the URL shown in terminal (usually http://localhost:3000)
+
+## Project Structure
+
+```
+documentation/
+├── content/
+│   └── docs/
+│       ├── guide/           # Guide articles
+│       ├── api/             # API reference
+│       │   └── composable-dsl/
+│       └── contributing/    # Contribution guides
+├── app/                     # Next.js app
+├── lib/                     # Utility functions
+└── package.json
+```
+
+## Writing Documentation
+
+### File Format
+
+Documentation is written in MDX (Markdown + JSX):
+
+```mdx
+---
+title: Page Title
+description: Brief description for SEO
+---
+
+# Page Title
+
+Content goes here...
+```
+
+### Frontmatter
+
+Every documentation file requires frontmatter:
+
+| Field | Required | Description |
+|-------|----------|-------------|
+| `title` | Yes | Page title |
+| `description` | Yes | Brief description |
+
+### Code Blocks
+
+Use fenced code blocks with language specification:
+
+````mdx
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)
+}
+```
+````
+
+### Links
+
+Use relative paths for internal links:
+
+```mdx
+See [Getting Started](/docs/guide/getting-started)
+```
+
+### Callouts
+
+Use Fumadocs callouts for important information:
+
+```mdx
+<Callout type="info">
+This is an informational note.
+</Callout>
+
+<Callout type="warn">
+This is a warning.
+</Callout>
+```
+
+## Navigation
+
+### Adding Pages
+
+1. Create the MDX file in the appropriate directory
+2. Update the `meta.json` file in that directory:
+
+```json
+{
+  "title": "Section Title",
+  "pages": ["existing-page", "new-page"]
+}
+```
+
+### Section Structure
+
+- **Guide**: Conceptual and tutorial content
+- **API Reference**: Technical API documentation
+- **Contributing**: Contribution guidelines
+
+## Style Guide
+
+### Writing Style
+
+- Use clear, concise language
+- Use present tense
+- Avoid jargon unless necessary
+
+### Code Examples
+
+- Keep examples minimal and focused
+- Use realistic but simple scenarios
+- Include comments for complex logic
+- Show imports when relevant
+
+### Headings
+
+- Use sentence case for headings
+- Use H1 (`#`) only for page title
+- Use H2 (`##`) for main sections
+- Use H3 (`###`) for subsections
+
+## Building
+
+Test the production build locally:
+
+```bash
+yarn build
+```
+
+This generates a static export in the `out/` directory.
+
+## Pull Request Process
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Test locally with `yarn dev` and `yarn build`
+5. Submit a pull request
+
+## Questions?
+
+If you have questions about contributing, please open an issue on GitHub.

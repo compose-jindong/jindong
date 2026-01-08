@@ -1,0 +1,12 @@
+{
+  "root": true,
+  "pages": [
+    "---Guide---",
+    "...guide",
+    "---API Reference---",
+    "api/core",
+    "api/composable-dsl",
+    "---Contributing---",
+    "...contributing"
+  ]
+}

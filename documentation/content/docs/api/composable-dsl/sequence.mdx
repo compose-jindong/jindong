@@ -1,0 +1,171 @@
+---
+title: Sequence
+description: DSL function to group events sequentially
+---
+
+# Sequence
+
+Groups haptic events to run one after another.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongScope.Sequence(
+    content: @Composable JindongScope.() -> Unit
+)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `content` | `@Composable JindongScope.() -> Unit` | The pattern to execute sequentially |
+
+## Description
+
+`Sequence` groups haptic events into a single sequential block. While events at the top level of `Jindong` already run sequentially, `Sequence` is useful for:
+
+1. Organizing complex patterns
+2. Creating reusable pattern groups
+3. Nesting within `Repeat` or other structures
+
+## Usage
+
+### Basic Usage
+
+```kotlin
+Jindong(trigger) {
+    Sequence {
+        Haptic(50.ms)
+        Delay(30.ms)
+        Haptic(50.ms)
+    }
+}
+```
+
+### Inside Repeat
+
+Most common use - organizing patterns within repetition:
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Sequence {
+            Haptic(50.ms)
+            Delay(30.ms)
+            Haptic(30.ms)
+            Delay(50.ms)
+        }
+    }
+}
+```
+
+### Pattern Organization
+
+Group related events for clarity:
+
+```kotlin
+Jindong(trigger) {
+    // Intro
+    Sequence {
+        Haptic(30.ms, HapticIntensity.LIGHT)
+        Delay(30.ms)
+    }
+
+    // Main pattern
+    Sequence {
+        Repeat(2) {
+            Haptic(50.ms, HapticIntensity.MEDIUM)
+            Delay(40.ms)
+        }
+    }
+
+    // Outro
+    Sequence {
+        Haptic(100.ms, HapticIntensity.STRONG)
+    }
+}
+```
+
+## Examples
+
+### Double Tap Sequence
+
+```kotlin
+Jindong(trigger) {
+    Repeat(2) {
+        Sequence {
+            Haptic(40.ms)
+            Delay(40.ms)
+        }
+    }
+    Delay(100.ms)
+    Haptic(80.ms)  // Confirmation
+}
+```
+
+### Alert Pattern
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Sequence {
+            // Sharp attention pulse
+            Haptic(20.ms, HapticIntensity.HIGH)
+            Delay(20.ms)
+            Haptic(40.ms, HapticIntensity.MEDIUM)
+            Delay(100.ms)
+        }
+    }
+}
+```
+
+### Complex Rhythm
+
+```kotlin
+Jindong(trigger) {
+    // Pattern A
+    Sequence {
+        Haptic(50.ms)
+        Delay(25.ms)
+        Haptic(50.ms)
+        Delay(50.ms)
+    }
+
+    // Pattern B
+    Sequence {
+        Haptic(100.ms)
+        Delay(50.ms)
+    }
+
+    // Repeat A
+    Sequence {
+        Haptic(50.ms)
+        Delay(25.ms)
+        Haptic(50.ms)
+    }
+}
+```
+
+## When to Use
+
+| Scenario | Use Sequence? |
+|----------|---------------|
+| Simple pattern | Not needed |
+| Organizing code | Optional, for clarity |
+| Inside Repeat | Recommended |
+| Nested structures | Recommended |
+
+## Notes
+
+- `Sequence` doesn't change timing behavior
+- It's primarily for code organization
+- Events inside still run sequentially (as they would outside)
+- Useful for making patterns more readable
+
+## See Also
+
+- [Repeat](/docs/api/composable-dsl/repeat)
+- [RepeatWithIndex](/docs/api/composable-dsl/repeat-with-index)
+- [Haptic](/docs/api/composable-dsl/haptic)

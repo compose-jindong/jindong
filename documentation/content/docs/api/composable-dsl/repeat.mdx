@@ -1,0 +1,173 @@
+---
+title: Repeat
+description: DSL function to repeat content N times
+---
+
+# Repeat
+
+Repeats the content block a specified number of times.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongScope.Repeat(
+    count: Int,
+    content: @Composable JindongScope.() -> Unit
+)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `count` | `Int` | Number of times to repeat |
+| `content` | `@Composable JindongScope.() -> Unit` | The pattern to repeat |
+
+## Description
+
+`Repeat` executes the content block multiple times. Each repetition starts after the previous one completes, creating a sequential chain of the pattern.
+
+## Usage
+
+### Basic Usage
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Haptic(50.ms)
+    }
+    // Equivalent to: Haptic → Haptic → Haptic
+}
+```
+
+### With Delay
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Haptic(50.ms)
+        Delay(30.ms)
+    }
+    // Pattern: Haptic-Delay-Haptic-Delay-Haptic-Delay
+}
+```
+
+### Nested Repeat
+
+```kotlin
+Jindong(trigger) {
+    Repeat(2) {
+        Repeat(3) {
+            Haptic(30.ms)
+            Delay(20.ms)
+        }
+        Delay(100.ms)
+    }
+}
+```
+
+## Examples
+
+### Triple Tap
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Haptic(40.ms, HapticIntensity.MEDIUM)
+        Delay(40.ms)
+    }
+}
+```
+
+### Error Alert
+
+```kotlin
+Jindong(error) {
+    Repeat(3) {
+        Haptic(80.ms, HapticIntensity.HIGH)
+        Delay(50.ms)
+    }
+}
+```
+
+### Notification Buzz
+
+```kotlin
+Jindong(notification) {
+    Repeat(2) {
+        Haptic(100.ms)
+        Delay(100.ms)
+    }
+}
+```
+
+### Complex Pattern
+
+```kotlin
+Jindong(trigger) {
+    // Intro: single tap
+    Haptic(50.ms)
+    Delay(100.ms)
+
+    // Main: repeated pattern
+    Repeat(4) {
+        Haptic(30.ms, HapticIntensity.LIGHT)
+        Delay(30.ms)
+        Haptic(50.ms, HapticIntensity.STRONG)
+        Delay(50.ms)
+    }
+
+    // Outro: long finish
+    Delay(100.ms)
+    Haptic(200.ms, HapticIntensity.MEDIUM)
+}
+```
+
+## Timing Calculation
+
+The total duration is `count × (content duration)`:
+
+```kotlin
+Repeat(3) {
+    Haptic(50.ms)   // 50ms
+    Delay(30.ms)    // 30ms
+}
+// Total: 3 × 80ms = 240ms
+```
+
+## vs RepeatWithIndex
+
+Use `Repeat` when each iteration is identical:
+
+```kotlin
+// Same pattern each time - use Repeat
+Repeat(5) {
+    Haptic(50.ms)
+    Delay(30.ms)
+}
+```
+
+Use `RepeatWithIndex` when iterations need to vary:
+
+```kotlin
+// Different intensity each time - use RepeatWithIndex
+RepeatWithIndex(5) { index ->
+    val fade = HapticIntensity.Custom(1.0f - index * 0.2f)
+    Haptic(50.ms, fade)
+    Delay(30.ms)
+}
+```
+
+## Notes
+
+- `count` of 0 or negative produces no output
+- Each iteration runs sequentially
+- Content block is evaluated `count` times at composition
+- All iterations have the same pattern
+
+## See Also
+
+- [RepeatWithIndex](/docs/api/composable-dsl/repeat-with-index)
+- [Sequence](/docs/api/composable-dsl/sequence)
+- [Haptic](/docs/api/composable-dsl/haptic)

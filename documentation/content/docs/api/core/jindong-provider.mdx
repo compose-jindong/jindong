@@ -1,0 +1,146 @@
+---
+title: JindongProvider
+description: Provider component that enables haptic feedback in the composition tree
+---
+
+# JindongProvider
+
+Provider component that creates and provides a `HapticExecutor` to the composition tree.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongProvider(
+    content: @Composable () -> Unit
+)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `content` | `@Composable () -> Unit` | The composable content to provide the executor to |
+
+## Description
+
+`JindongProvider` is a wrapper component that:
+1. Creates a platform-specific `HapticExecutor`
+2. Makes it available via `LocalHapticExecutor` CompositionLocal
+3. Handles executor lifecycle (creation and disposal)
+
+### Platform Context
+
+The provider automatically obtains the platform context:
+- **Android**: Uses `LocalContext.current`
+- **iOS**: No context needed
+
+## Usage
+
+### Basic Usage
+
+Wrap your app content with `JindongProvider`:
+
+```kotlin
+@Composable
+fun App() {
+    JindongProvider {
+        // Your app content
+        MainScreen()
+    }
+}
+```
+
+### With Other Providers
+
+`JindongProvider` can be nested with other providers:
+
+```kotlin
+@Composable
+fun App() {
+    MaterialTheme {
+        JindongProvider {
+            Surface {
+                MainScreen()
+            }
+        }
+    }
+}
+```
+
+### Typical Setup
+
+```kotlin
+// commonMain
+@Composable
+fun App() {
+    JindongProvider {
+        AppContent()
+    }
+}
+
+@Composable
+fun AppContent() {
+    var tapCount by remember { mutableStateOf(0) }
+
+    // Now Jindong works
+    Jindong(tapCount) {
+        Haptic(100.ms)
+    }
+
+    Button(onClick = { tapCount++ }) {
+        Text("Tap")
+    }
+}
+```
+
+## Lifecycle
+
+The provider manages the `HapticExecutor` lifecycle:
+
+```kotlin
+@Composable
+fun JindongProvider(content: @Composable () -> Unit) {
+    val context = platformContext()
+    val executor = remember(context) { createHapticExecutor(context) }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            executor.release()  // Cleanup on disposal
+        }
+    }
+
+    CompositionLocalProvider(LocalHapticExecutor provides executor) {
+        content()
+    }
+}
+```
+
+- **Creation**: Executor created when provider enters composition
+- **Disposal**: `executor.release()` called when provider leaves composition
+
+## Requirements
+
+### Android
+
+Ensure the `VIBRATE` permission is declared:
+
+```xml
+<uses-permission android:name="android.permission.VIBRATE" />
+```
+
+### iOS
+
+No additional requirements. Core Haptics available on iOS 13+.
+
+## Notes
+
+- Place at the root of your app or feature module
+- Only one provider needed per composition tree
+- Nested providers will create separate executors (usually not desired)
+- The executor is automatically cleaned up when the provider is disposed
+
+## See Also
+
+- [Jindong](/docs/api/core/jindong)
+- [Getting Started](/docs/guide/getting-started)

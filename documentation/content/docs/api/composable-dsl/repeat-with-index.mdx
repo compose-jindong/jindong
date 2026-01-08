@@ -1,0 +1,173 @@
+---
+title: RepeatWithIndex
+description: DSL function to repeat content N times with index access
+---
+
+# RepeatWithIndex
+
+Repeats the content block N times, providing the iteration index to each repetition.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongScope.RepeatWithIndex(
+    count: Int,
+    content: @Composable JindongScope.(index: Int) -> Unit
+)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `count` | `Int` | Number of times to repeat (must be non-negative) |
+| `content` | `@Composable JindongScope.(index: Int) -> Unit` | Pattern with 0-based index |
+
+## Description
+
+`RepeatWithIndex` is similar to `Repeat` but provides the current iteration index (0-based) to the content block. This enables dynamic patterns where each iteration can have different parameters.
+
+Unlike `Repeat` which creates a single `RepeatNode`, `RepeatWithIndex` generates N different child nodes at composition time, allowing each iteration to be unique.
+
+## Usage
+
+### Basic Usage
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(3) { index ->
+        // index: 0, 1, 2
+        Haptic(50.ms)
+        Delay(30.ms)
+    }
+}
+```
+
+### Dynamic Intensity
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(5) { index ->
+        val intensity = HapticIntensity.Custom(1.0f - (index * 0.2f))
+        Haptic(50.ms, intensity)
+        Delay(30.ms)
+    }
+    // Intensities: 1.0, 0.8, 0.6, 0.4, 0.2
+}
+```
+
+### Dynamic Duration
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(4) { index ->
+        val duration = (50 + index * 25).ms
+        Haptic(duration)
+        Delay(30.ms)
+    }
+    // Durations: 50ms, 75ms, 100ms, 125ms
+}
+```
+
+## Examples
+
+### Fade Out Effect
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(5) { index ->
+        val fade = HapticIntensity.Custom(1.0f - (index * 0.2f))
+        Haptic(50.ms, fade)
+        Delay(30.ms)
+    }
+}
+```
+
+### Fade In Effect
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(5) { index ->
+        val fadeIn = HapticIntensity.Custom(index * 0.25f)
+        Haptic(50.ms, fadeIn)
+        Delay(30.ms)
+    }
+}
+```
+
+### Accelerating Pattern
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(5) { index ->
+        Haptic(50.ms)
+        // Decreasing delay: 100ms, 75ms, 50ms, 25ms, 0ms
+        val delay = (100 - index * 25).ms
+        Delay(delay)
+    }
+}
+```
+
+### Wave Pattern
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(6) { index ->
+        // Intensity goes up then down: 0.2, 0.5, 0.8, 0.8, 0.5, 0.2
+        val wave = if (index < 3) {
+            0.2f + (index * 0.3f)
+        } else {
+            0.8f - ((index - 3) * 0.3f)
+        }
+        Haptic(40.ms, HapticIntensity.Custom(wave))
+        Delay(30.ms)
+    }
+}
+```
+
+### Crescendo
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(4) { index ->
+        // Both duration and intensity increase
+        val duration = (30 + index * 20).ms
+        val intensity = HapticIntensity.Custom(0.25f + (index * 0.25f))
+        Haptic(duration, intensity)
+        Delay(40.ms)
+    }
+}
+```
+
+## vs Repeat
+
+| Feature | Repeat | RepeatWithIndex |
+|---------|--------|-----------------|
+| Index access | No | Yes |
+| Dynamic content | No | Yes |
+| Implementation | Single RepeatNode | N separate nodes |
+| Use case | Identical iterations | Varying iterations |
+
+Choose `Repeat` for simple repetition:
+```kotlin
+Repeat(5) { Haptic(50.ms) }
+```
+
+Choose `RepeatWithIndex` for dynamic patterns:
+```kotlin
+RepeatWithIndex(5) { i -> Haptic((50 + i * 10).ms) }
+```
+
+## Notes
+
+- Index is 0-based (0 to count-1)
+- Each iteration generates a separate node
+- `count` of 0 or negative produces no output
+- The index can be used in any expression within the content block
+
+## See Also
+
+- [Repeat](/docs/api/composable-dsl/repeat)
+- [HapticIntensity](/docs/api/core/haptic-intensity)
+- [Haptic](/docs/api/composable-dsl/haptic)

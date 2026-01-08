@@ -1,0 +1,142 @@
+---
+title: Haptic
+description: DSL function to emit a vibration event
+---
+
+# Haptic
+
+Emits a vibration event for the specified duration.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongScope.Haptic(
+    duration: Duration,
+    intensity: HapticIntensity = HapticIntensity.MEDIUM
+)
+```
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `duration` | `Duration` | - | How long the vibration lasts |
+| `intensity` | `HapticIntensity` | `MEDIUM` | Vibration strength |
+
+## Description
+
+`Haptic` creates a single vibration event in the haptic pattern. The event is scheduled relative to previous events in the pattern.
+
+## Usage
+
+### Basic Usage
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)  // 100ms vibration at medium intensity
+}
+```
+
+### With Intensity
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms, HapticIntensity.LIGHT)   // Subtle
+    Haptic(100.ms, HapticIntensity.MEDIUM)  // Standard
+    Haptic(100.ms, HapticIntensity.STRONG)  // Noticeable
+    Haptic(100.ms, HapticIntensity.HIGH)    // Maximum
+}
+```
+
+### Custom Intensity
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms, HapticIntensity.Custom(0.65f))
+}
+```
+
+### Sequential Haptics
+
+Events run one after another:
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)  // 0-100ms
+    Haptic(50.ms)   // 100-150ms
+    Haptic(30.ms)   // 150-180ms
+}
+```
+
+### With Delays
+
+```kotlin
+Jindong(trigger) {
+    Haptic(50.ms)   // 0-50ms
+    Delay(100.ms)   // 50-150ms (silence)
+    Haptic(50.ms)   // 150-200ms
+}
+```
+
+## Examples
+
+### Single Tap Feedback
+
+```kotlin
+Jindong(tapCount) {
+    Haptic(50.ms, HapticIntensity.LIGHT)
+}
+```
+
+### Double Tap Pattern
+
+```kotlin
+Jindong(trigger) {
+    Haptic(40.ms)
+    Delay(40.ms)
+    Haptic(40.ms)
+}
+```
+
+### Success Feedback
+
+```kotlin
+Jindong(success) {
+    Haptic(50.ms, HapticIntensity.MEDIUM)
+    Delay(50.ms)
+    Haptic(100.ms, HapticIntensity.STRONG)
+}
+```
+
+### Fade Out
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(5) { index ->
+        val fade = HapticIntensity.Custom(1.0f - (index * 0.2f))
+        Haptic(50.ms, fade)
+        Delay(30.ms)
+    }
+}
+```
+
+## Platform Behavior
+
+| Platform | Implementation |
+|----------|----------------|
+| Android | `VibrationEffect.createOneShot()` |
+| iOS | `CHHapticEvent` with `HapticTransient` or `HapticContinuous` |
+
+## Notes
+
+- Duration is the haptic event length, not a delay
+- Events are sequential by default
+- Use `Delay` to add gaps between haptics
+- Intensity values are normalized (0.0 to 1.0)
+
+## See Also
+
+- [Delay](/docs/api/composable-dsl/delay)
+- [HapticIntensity](/docs/api/core/haptic-intensity)
+- [Repeat](/docs/api/composable-dsl/repeat)
