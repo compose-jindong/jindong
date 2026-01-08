@@ -11,3 +11,62 @@ xcuserdata
 .kotlin
 #So we don't accidentally commit our private keys
 *.gpg
+
+.next/
+
+# Created by https://www.toptal.com/developers/gitignore/api/nextjs,react
+# Edit at https://www.toptal.com/developers/gitignore?templates=nextjs,react
+
+### NextJS ###
+# dependencies
+node_modules
+.pnp
+.pnp.js
+
+# testing
+coverage
+
+# next.js
+.next/
+out/
+
+# production
+build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env*.local
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts
+
+### react ###
+.DS_*
+*.log
+logs
+**/*.backup.*
+**/*.back.*
+
+node_modules
+bower_components
+
+*.sublime*
+
+psd
+thumb
+sketch
+
+# End of https://www.toptal.com/developers/gitignore/api/nextjs,react
