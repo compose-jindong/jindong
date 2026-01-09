@@ -8,6 +8,7 @@
 
 <p align="center">
   <a href="https://github.com/user/jindong/blob/main/LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" alt="License" /></a>
+  <img alt="Maven Central Version" src="https://img.shields.io/maven-central/v/io.github.compose-jindong/jindong">
 </p>
 
 ---
