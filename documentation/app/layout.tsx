@@ -20,7 +20,7 @@ export const metadata: Metadata = {
     default: "Jindong - Declarative Haptic Feedback for KMP",
   },
   description:
-    "A declarative haptic feedback library for Kotlin Multiplatform using Compose Runtime",
+    "A declarative haptic feedback library for Compose Multiplatform using Compose Runtime",
   icons: {
     icon: "/logo.png",
     shortcut: "/logo.png",
