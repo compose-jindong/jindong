@@ -1,0 +1,185 @@
+---
+title: HapticIntensity
+description: Pre-defined haptic intensity levels and custom intensity support
+---
+
+# HapticIntensity
+
+Defines haptic vibration intensity with pre-defined levels and custom value support.
+
+## Definition
+
+```kotlin
+sealed class HapticIntensity(val value: Float) {
+    data object LIGHT : HapticIntensity(0.25f)
+    data object MEDIUM : HapticIntensity(0.5f)
+    data object STRONG : HapticIntensity(0.75f)
+    data object HIGH : HapticIntensity(1.0f)
+    data class Custom(private val customValue: Float) : HapticIntensity(customValue.coerceIn(0f, 1f))
+}
+```
+
+## Pre-defined Levels
+
+| Level | Value | Description |
+|-------|-------|-------------|
+| `LIGHT` | 0.25 | Subtle feedback |
+| `MEDIUM` | 0.5 | Standard feedback (default) |
+| `STRONG` | 0.75 | Noticeable feedback |
+| `HIGH` | 1.0 | Maximum feedback |
+
+## Custom Intensity
+
+Use `Custom` to specify any value between 0.0 and 1.0:
+
+```kotlin
+HapticIntensity.Custom(0.65f)
+```
+
+Values outside the range are automatically coerced:
+- Values < 0.0 become 0.0
+- Values > 1.0 become 1.0
+
+## Usage
+
+### Pre-defined Levels
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms, HapticIntensity.LIGHT)
+    Haptic(100.ms, HapticIntensity.MEDIUM)
+    Haptic(100.ms, HapticIntensity.STRONG)
+    Haptic(100.ms, HapticIntensity.HIGH)
+}
+```
+
+### Custom Values
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms, HapticIntensity.Custom(0.65f))
+    Haptic(100.ms, HapticIntensity.Custom(0.33f))
+}
+```
+
+### Default Intensity
+
+When not specified, `MEDIUM` is used:
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)  // Uses HapticIntensity.MEDIUM
+}
+```
+
+## Examples
+
+### Comparison Pattern
+
+```kotlin
+Jindong(trigger) {
+    // Feel the difference
+    Haptic(100.ms, HapticIntensity.LIGHT)
+    Delay(200.ms)
+    Haptic(100.ms, HapticIntensity.MEDIUM)
+    Delay(200.ms)
+    Haptic(100.ms, HapticIntensity.STRONG)
+    Delay(200.ms)
+    Haptic(100.ms, HapticIntensity.HIGH)
+}
+```
+
+### Fade Out
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(5) { index ->
+        val fade = HapticIntensity.Custom(1.0f - (index * 0.2f))
+        Haptic(50.ms, fade)
+        Delay(30.ms)
+    }
+    // Intensities: 1.0 → 0.8 → 0.6 → 0.4 → 0.2
+}
+```
+
+### Fade In
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(4) { index ->
+        val fadeIn = HapticIntensity.Custom(0.25f + (index * 0.25f))
+        Haptic(50.ms, fadeIn)
+        Delay(30.ms)
+    }
+    // Intensities: 0.25 → 0.5 → 0.75 → 1.0
+}
+```
+
+### Pulse Wave
+
+```kotlin
+Jindong(trigger) {
+    RepeatWithIndex(6) { index ->
+        val wave = if (index < 3) {
+            HapticIntensity.Custom(0.3f + (index * 0.3f))
+        } else {
+            HapticIntensity.Custom(0.9f - ((index - 3) * 0.3f))
+        }
+        Haptic(40.ms, wave)
+        Delay(30.ms)
+    }
+    // Wave: 0.3 → 0.6 → 0.9 → 0.6 → 0.3
+}
+```
+
+### Context-based Intensity
+
+```kotlin
+@Composable
+fun FeedbackHaptic(importance: Importance, trigger: Int) {
+    val intensity = when (importance) {
+        Importance.LOW -> HapticIntensity.LIGHT
+        Importance.NORMAL -> HapticIntensity.MEDIUM
+        Importance.HIGH -> HapticIntensity.STRONG
+        Importance.CRITICAL -> HapticIntensity.HIGH
+    }
+
+    Jindong(trigger) {
+        Haptic(100.ms, intensity)
+    }
+}
+```
+
+## Properties
+
+### value
+
+```kotlin
+val value: Float
+```
+
+Returns the normalized intensity value (0.0 to 1.0).
+
+```kotlin
+HapticIntensity.MEDIUM.value  // 0.5f
+HapticIntensity.Custom(0.7f).value  // 0.7f
+```
+
+## Platform Behavior
+
+| Platform | Interpretation |
+|----------|----------------|
+| Android | Maps to `VibrationEffect` amplitude (0-255) |
+| iOS | Maps to `CHHapticEventParameter.intensity` |
+
+## Notes
+
+- Intensity affects vibration strength, not duration
+- Some devices may not distinguish all levels
+- `Custom` values are coerced to valid range
+- Default intensity is `MEDIUM` when not specified
+
+## See Also
+
+- [Haptic](/docs/api/composable-dsl/haptic)
+- [RepeatWithIndex](/docs/api/composable-dsl/repeat-with-index)

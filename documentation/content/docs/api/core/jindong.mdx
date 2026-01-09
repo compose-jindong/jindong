@@ -1,0 +1,180 @@
+---
+title: Jindong
+description: The main composable for defining and executing haptic patterns
+---
+
+# Jindong
+
+The main composable for defining haptic patterns with trigger-based execution.
+
+## Signature
+
+```kotlin
+@Composable
+fun Jindong(
+    vararg keys: Any?,
+    content: @Composable JindongScope.() -> Unit
+)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `keys` | `vararg Any?` | Keys that trigger re-execution when changed |
+| `content` | `@Composable JindongScope.() -> Unit` | DSL block defining the haptic pattern |
+
+## Description
+
+`Jindong` works similarly to `LaunchedEffect`. When any of the provided keys change, the haptic pattern defined in the content block is compiled and executed.
+
+### Key-based Triggering
+
+```kotlin
+var count by remember { mutableStateOf(0) }
+
+// Executes when count changes
+Jindong(count) {
+    Haptic(100.ms)
+}
+```
+
+Multiple keys trigger on any change:
+```kotlin
+// Executes when either key1 OR key2 changes
+Jindong(key1, key2) {
+    Haptic(100.ms)
+}
+```
+
+### Immediate Execution on Enter
+
+Use `Unit` as a key to execute haptic immediately when the composable enters composition:
+
+```kotlin
+@Composable
+fun WelcomeScreen() {
+    // Executes once when screen appears
+    Jindong(Unit) {
+        Haptic(100.ms, HapticIntensity.MEDIUM)
+    }
+
+    Text("Welcome!")
+}
+```
+
+This is useful for:
+- Screen entry feedback
+- Initial greeting haptics
+- One-time notifications
+
+### Pattern Compilation
+
+The content block is compiled into a `HapticPattern` containing scheduled events. The pattern is then executed by the `HapticExecutor` provided via `LocalHapticExecutor`.
+
+## Usage
+
+### Basic Usage
+
+```kotlin
+@Composable
+fun BasicHaptic() {
+    var trigger by remember { mutableStateOf(0) }
+
+    Jindong(trigger) {
+        Haptic(100.ms)
+    }
+
+    Button(onClick = { trigger++ }) {
+        Text("Trigger")
+    }
+}
+```
+
+### Complex Pattern
+
+```kotlin
+@Composable
+fun ComplexHaptic(trigger: Int) {
+    Jindong(trigger) {
+        Haptic(100.ms, HapticIntensity.MEDIUM)
+        Delay(50.ms)
+        Repeat(3) {
+            Haptic(50.ms, HapticIntensity.STRONG)
+            Delay(30.ms)
+        }
+    }
+}
+```
+
+### Conditional Content
+
+```kotlin
+@Composable
+fun ConditionalHaptic(success: Boolean, trigger: Int) {
+    Jindong(trigger, success) {
+        if (success) {
+            Haptic(100.ms, HapticIntensity.MEDIUM)
+        } else {
+            Repeat(3) {
+                Haptic(50.ms, HapticIntensity.HIGH)
+                Delay(50.ms)
+            }
+        }
+    }
+}
+```
+
+### Dynamic Patterns
+
+```kotlin
+@Composable
+fun DynamicHaptic(intensity: Int, trigger: Int) {
+    Jindong(trigger, intensity) {
+        RepeatWithIndex(intensity) { index ->
+            val fade = HapticIntensity.Custom(1.0f - (index * 0.1f))
+            Haptic(50.ms, fade)
+            Delay(30.ms)
+        }
+    }
+}
+```
+
+## Requirements
+
+`Jindong` must be used within a `JindongProvider`:
+
+```kotlin
+JindongProvider {
+    Jindong(trigger) {
+        // ...
+    }
+}
+```
+
+Without a provider, `LocalHapticExecutor.current` will throw an error.
+
+## Available DSL Functions
+
+Within the `JindongScope`, you can use:
+
+| Function | Description |
+|----------|-------------|
+| [`Haptic`](/docs/api/composable-dsl/haptic) | Emit a vibration |
+| [`Delay`](/docs/api/composable-dsl/delay) | Pause the pattern |
+| [`Sequence`](/docs/api/composable-dsl/sequence) | Group events sequentially |
+| [`Repeat`](/docs/api/composable-dsl/repeat) | Repeat content N times |
+| [`RepeatWithIndex`](/docs/api/composable-dsl/repeat-with-index) | Repeat with index access |
+
+## Notes
+
+- Keys work identically to `LaunchedEffect` keys
+- The pattern executes asynchronously
+- Content block is compiled once per key change
+- Platform-specific execution handled automatically
+
+## See Also
+
+- [JindongProvider](/docs/api/core/jindong-provider)
+- [JindongScope](/docs/api/core/jindong-scope)
+- [Quick Start](/docs/guide/quick-start)

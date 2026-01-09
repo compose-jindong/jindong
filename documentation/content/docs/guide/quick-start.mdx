@@ -1,0 +1,256 @@
+---
+title: Quick Start
+description: Build your first haptic pattern with Jindong in minutes
+---
+
+# Quick Start
+
+Let's build your first haptic feedback pattern with Jindong.
+
+## Minimal Example
+
+```kotlin
+import io.github.compose.jindong.*
+import io.github.compose.jindong.dsl.*
+import kotlin.time.Duration.Companion.ms
+
+@Composable
+fun App() {
+    var count by remember { mutableStateOf(0) }
+
+    JindongProvider {
+        // Haptic triggers when count changes
+        Jindong(count) {
+            Haptic(100.ms)
+        }
+
+        Button(onClick = { count++ }) {
+            Text("Tap me!")
+        }
+    }
+}
+```
+
+That's it! Every time you tap the button, a 100ms haptic pulse fires.
+
+## Understanding the Basics
+
+### JindongProvider
+
+Provides the haptic execution context:
+
+```kotlin
+JindongProvider {
+    // Haptics work inside this scope
+}
+```
+
+### Jindong
+
+The main composable for defining haptic patterns:
+
+```kotlin
+Jindong(key1, key2, ...) {
+    // Haptic pattern defined here
+}
+```
+
+- Works like `LaunchedEffect`
+- Executes when any key changes
+- Content block defines the pattern
+
+### Haptic
+
+Creates a vibration:
+
+```kotlin
+Haptic(duration)
+Haptic(duration, intensity)
+```
+
+## Building Patterns
+
+### Sequential Events
+
+Events execute one after another:
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)  // Starts at 0ms
+    Haptic(50.ms)   // Starts at 100ms
+    Haptic(30.ms)   // Starts at 150ms
+}
+```
+
+### Adding Delays
+
+Use `Delay` for pauses between events:
+
+```kotlin
+Jindong(trigger) {
+    Haptic(50.ms)   // 0-50ms
+    Delay(100.ms)   // 50-150ms (silence)
+    Haptic(50.ms)   // 150-200ms
+}
+```
+
+### Adjusting Intensity
+
+Control vibration strength:
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms, HapticIntensity.LIGHT)   // 25% intensity
+    Haptic(100.ms, HapticIntensity.MEDIUM)  // 50% intensity
+    Haptic(100.ms, HapticIntensity.STRONG)  // 75% intensity
+    Haptic(100.ms, HapticIntensity.HIGH)    // 100% intensity
+}
+```
+
+### Repetition
+
+Repeat patterns with `Repeat`:
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Haptic(50.ms)
+        Delay(30.ms)
+    }
+    // Equivalent to:
+    // Haptic → Delay → Haptic → Delay → Haptic → Delay
+}
+```
+
+## Practical Examples
+
+### Screen Entry Feedback
+
+Use `Unit` as key to trigger haptic immediately when entering a screen:
+
+```kotlin
+@Composable
+fun WelcomeScreen() {
+    // Executes once when screen appears
+    Jindong(Unit) {
+        Haptic(100.ms, HapticIntensity.MEDIUM)
+    }
+
+    Text("Welcome!")
+}
+```
+
+### Button Tap Feedback
+
+```kotlin
+@Composable
+fun TapButton() {
+    var taps by remember { mutableStateOf(0) }
+
+    Jindong(taps) {
+        Haptic(50.ms, HapticIntensity.LIGHT)
+    }
+
+    Button(onClick = { taps++ }) {
+        Text("Tap")
+    }
+}
+```
+
+### Success Notification
+
+```kotlin
+@Composable
+fun SuccessHaptic(success: Boolean) {
+    Jindong(success) {
+        if (success) {
+            // Double pulse for success
+            Haptic(50.ms, HapticIntensity.MEDIUM)
+            Delay(50.ms)
+            Haptic(100.ms, HapticIntensity.STRONG)
+        }
+    }
+}
+```
+
+### Error Alert
+
+```kotlin
+@Composable
+fun ErrorHaptic(error: Boolean) {
+    Jindong(error) {
+        if (error) {
+            // Triple strong pulse for error
+            Repeat(3) {
+                Haptic(80.ms, HapticIntensity.HIGH)
+                Delay(50.ms)
+            }
+        }
+    }
+}
+```
+
+### Fade Out Effect
+
+```kotlin
+@Composable
+fun FadeOutHaptic(trigger: Int) {
+    Jindong(trigger) {
+        RepeatWithIndex(5) { index ->
+            val intensity = HapticIntensity.Custom(1.0f - (index * 0.2f))
+            Haptic(50.ms, intensity)
+            Delay(30.ms)
+        }
+    }
+}
+```
+
+### Heartbeat Pattern
+
+```kotlin
+@Composable
+fun HeartbeatHaptic(trigger: Int) {
+    Jindong(trigger) {
+        // Lub
+        Haptic(60.ms, HapticIntensity.STRONG)
+        Delay(80.ms)
+        // Dub
+        Haptic(40.ms, HapticIntensity.MEDIUM)
+        Delay(400.ms)
+        // Repeat
+        Haptic(60.ms, HapticIntensity.STRONG)
+        Delay(80.ms)
+        Haptic(40.ms, HapticIntensity.MEDIUM)
+    }
+}
+```
+
+## Common Patterns
+
+| Pattern | Key | Code |
+|---------|-----|------|
+| On screen enter | `Jindong(Unit)` | `Haptic(100.ms)` |
+| Single tap | `Jindong(count)` | `Haptic(50.ms)` |
+| Double tap | `Jindong(count)` | `Repeat(2) { Haptic(40.ms); Delay(40.ms) }` |
+| Long press | `Jindong(count)` | `Haptic(200.ms, HapticIntensity.MEDIUM)` |
+| Success | `Jindong(success)` | `Haptic(50.ms); Delay(50.ms); Haptic(100.ms)` |
+| Error | `Jindong(error)` | `Repeat(3) { Haptic(80.ms); Delay(50.ms) }` |
+
+## Tips
+
+### Key Management
+
+Choose keys carefully:
+```kotlin
+// Good: Specific trigger
+Jindong(buttonClickCount) { ... }
+
+// Avoid: Changes too often
+Jindong(System.currentTimeMillis()) { ... }
+```
+
+## Next Steps
+
+- [Jindong API](/docs/api/core/jindong) - Deep dive into the main API
+- [Composable DSL](/docs/api/composable-dsl) - All DSL primitives
+- [HapticIntensity](/docs/api/core/haptic-intensity) - Intensity options

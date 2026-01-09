@@ -1,0 +1,155 @@
+---
+title: Delay
+description: DSL function to pause the pattern without vibrating
+---
+
+# Delay
+
+Pauses the pattern for the specified duration without vibrating.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongScope.Delay(duration: Duration)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `duration` | `Duration` | How long to wait before the next event |
+
+## Description
+
+`Delay` adds a pause between haptic events. During the delay, no vibration occurs. This is useful for creating patterns with distinct gaps or rhythm.
+
+## Usage
+
+### Basic Usage
+
+```kotlin
+Jindong(trigger) {
+    Haptic(50.ms)
+    Delay(100.ms)  // Pause 100ms
+    Haptic(50.ms)  // Then vibrate again
+}
+```
+
+### Creating Rhythm
+
+```kotlin
+Jindong(trigger) {
+    // Short-short-long pattern
+    Haptic(30.ms)
+    Delay(30.ms)
+    Haptic(30.ms)
+    Delay(30.ms)
+    Haptic(100.ms)
+}
+```
+
+### Variable Delays
+
+```kotlin
+Jindong(trigger) {
+    Haptic(50.ms)
+    Delay(50.ms)   // Short pause
+    Haptic(50.ms)
+    Delay(200.ms)  // Long pause
+    Haptic(50.ms)
+}
+```
+
+## Timing Calculation
+
+Delays affect the start time of subsequent events:
+
+```kotlin
+Jindong(trigger) {
+    Haptic(50.ms)   // Starts at 0ms, ends at 50ms
+    Delay(100.ms)   // Adds 100ms pause (50-150ms)
+    Haptic(50.ms)   // Starts at 150ms, ends at 200ms
+}
+```
+
+## Examples
+
+### Heartbeat Pattern
+
+```kotlin
+Jindong(trigger) {
+    // Lub-dub
+    Haptic(60.ms, HapticIntensity.STRONG)
+    Delay(80.ms)
+    Haptic(40.ms, HapticIntensity.MEDIUM)
+    Delay(400.ms)  // Rest between beats
+}
+```
+
+### SOS Pattern
+
+```kotlin
+Jindong(trigger) {
+    // S: three short
+    Repeat(3) {
+        Haptic(50.ms)
+        Delay(50.ms)
+    }
+    Delay(100.ms)
+
+    // O: three long
+    Repeat(3) {
+        Haptic(150.ms)
+        Delay(50.ms)
+    }
+    Delay(100.ms)
+
+    // S: three short
+    Repeat(3) {
+        Haptic(50.ms)
+        Delay(50.ms)
+    }
+}
+```
+
+### Notification Pattern
+
+```kotlin
+Jindong(trigger) {
+    // Attention-getting sequence
+    Repeat(2) {
+        Haptic(30.ms, HapticIntensity.LIGHT)
+        Delay(30.ms)
+    }
+    Delay(100.ms)
+    Haptic(100.ms, HapticIntensity.STRONG)
+}
+```
+
+## Inside Repeat
+
+Delays work naturally inside `Repeat`:
+
+```kotlin
+Jindong(trigger) {
+    Repeat(3) {
+        Haptic(50.ms)
+        Delay(50.ms)
+    }
+    // Total time: 3 × (50ms + 50ms) = 300ms
+}
+```
+
+## Notes
+
+- `Delay` adds to the pattern's total duration
+- Negative delays are **not allowed**. It will cause crash.
+- Use delays to create distinct haptic "beats"
+- Delays inside `Repeat` are repeated with each iteration
+
+## See Also
+
+- [Haptic](/docs/api/composable-dsl/haptic)
+- [Sequence](/docs/api/composable-dsl/sequence)
+- [Repeat](/docs/api/composable-dsl/repeat)

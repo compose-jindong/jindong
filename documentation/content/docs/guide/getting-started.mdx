@@ -1,0 +1,144 @@
+---
+title: Getting Started
+description: Installation and setup guide for Jindong
+---
+
+# Getting Started
+
+This guide will help you add Jindong to your Compose Multiplatform project.
+
+## Requirements
+
+### Platform Requirements
+
+| Platform | Minimum Version |
+|----------|-----------------|
+| Android | API 26 |
+| iOS | iOS 13 |
+
+### Project Requirements
+
+- Kotlin 2.0+
+- Compose Multiplatform project (supports Android, iOS)
+
+## Installation
+
+Add Jindong to your `build.gradle.kts`:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.compose-jindong:jindong:<version>")
+        }
+    }
+}
+```
+
+## Platform Setup
+
+### Android
+
+Add the vibration permission to your `AndroidManifest.xml`:
+
+```xml
+<uses-permission android:name="android.permission.VIBRATE" />
+```
+
+### iOS
+
+No additional setup required. Core Haptics is available on iOS 13+.
+
+<Callout type="warn">
+Not all iOS devices support haptic feedback. Jindong gracefully handles devices without haptic capabilities.
+</Callout>
+
+## Basic Setup
+
+### 1. Wrap with JindongProvider
+
+Wrap your app content with `JindongProvider` to enable haptic feedback:
+
+```kotlin
+@Composable
+fun App() {
+    JindongProvider {
+        // Your app content
+        MainScreen()
+    }
+}
+```
+
+The provider:
+- Creates a platform-specific `HapticExecutor`
+- Makes it available throughout the composition tree
+- Handles resource cleanup automatically
+
+### 2. Use Jindong
+
+Now you can use `Jindong` anywhere in your composition:
+
+```kotlin
+@Composable
+fun MainScreen() {
+    var tapCount by remember { mutableStateOf(0) }
+
+    Jindong(tapCount) {
+        Haptic(100.ms)
+    }
+
+    Button(onClick = { tapCount++ }) {
+        Text("Tap for haptic")
+    }
+}
+```
+
+## Verifying Installation
+
+Create a simple test to verify everything works:
+
+```kotlin
+@Composable
+fun HapticTest() {
+    var trigger by remember { mutableStateOf(0) }
+
+    JindongProvider {
+        Jindong(trigger) {
+            Haptic(100.ms, HapticIntensity.STRONG)
+        }
+
+        Button(onClick = { trigger++ }) {
+            Text("Test Haptic")
+        }
+    }
+}
+```
+
+Run on a physical device (haptics don't work on emulators/simulators) and tap the button. You should feel a haptic pulse.
+
+## Troubleshooting
+
+### No haptic on Android
+
+- Ensure `VIBRATE` permission is declared
+- Test on a physical device
+  + Check if device has vibration hardware
+
+### No haptic on iOS
+
+- Test on a physical device
+  + Simulators don't support haptics
+- Verify iOS 13+ deployment target
+- Some older devices don't have haptic hardware
+
+### Compilation errors
+
+- Verify Kotlin version compatibility
+- Ensure Compose Runtime is not conflicting with other dependencies
+- Check that you're using the correct Gradle configuration
+
+## Next Steps
+
+- [Quick Start](/docs/guide/quick-start) - Build your first haptic pattern
+- [API Reference](/docs/api/core/jindong) - Explore all available APIs
+- [Composable DSL](/docs/api/composable-dsl) - Learn the DSL primitives

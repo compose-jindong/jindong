@@ -1,0 +1,92 @@
+---
+title: Thinking in Declarative Paradigm
+description: Understanding what declarative programming really means
+---
+
+# Thinking in Declarative Paradigm
+
+Before diving into Jindong's API, it helps to understand the declarative programming paradigm that shapes its design.
+
+## What is Declarative Programming?
+
+Declarative programming focuses on **what** you want to achieve, not **how** to achieve it. Instead of writing step-by-step instructions, you describe the desired outcome.
+
+### A Common Misconception
+
+Many developers think "declarative" just means "cleaner syntax" or "less boilerplate." But that misses the core insight.
+
+Consider this comparison:
+
+**Imperative approach:**
+```kotlin
+vibrator.vibrate(100)
+Thread.sleep(50)
+vibrator.vibrate(50)
+```
+
+**Declarative approach:**
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)
+    Delay(50.ms)
+    Haptic(50.ms)
+}
+```
+
+The difference isn't just syntax—it's about **who controls execution**.
+
+## The Essence: Control Flow Abstraction
+
+The declarative paradigm is fundamentally about **abstracting control flow**.
+
+In imperative code, **you** control every step:
+- When to vibrate
+- How long to wait
+- What order to execute
+- How to handle platform differences
+
+In declarative code, **the framework** controls execution:
+- You describe the pattern
+- The framework decides how to execute it
+- Timing, threading, platform differences—all handled for you
+
+### Why This Matters
+
+This abstraction enables:
+
+1. **Optimization** - The framework can batch, reorder, or parallelize operations
+2. **Portability** - Same description works across different execution environments
+3. **Correctness** - Framework guarantees consistent behavior
+
+The functional version still has you calling `vibrate()` directly. The declarative version describes a pattern that the framework interprets.
+
+## The Key Insight
+
+**Declarative programming is a contract:**
+
+> Describe what, not how.
+
+This contract is powerful because:
+- You focus on **intent**, not implementation
+- The framework can evolve without changing your code
+- Platform-specific concerns stay hidden
+
+## Thinking Declaratively
+
+When using Jindong, shift your mindset:
+
+| Imperative Thinking | Declarative Thinking |
+|---------------------|----------------------|
+| "Call vibrate, then wait, then vibrate again" | "I want a tap-pause-tap pattern" |
+| "Check platform, use appropriate API" | "I want medium intensity haptic" |
+| "Loop 3 times with delay between" | "I want 3 repetitions" |
+
+## Summary
+
+Declarative programming means:
+
+1. **Describe outcomes**, not steps
+2. **Delegate control** to the framework
+3. **Trust the abstraction** to handle details
+
+This mental model—focusing on "what" rather than "how"—is the foundation of effective Jindong usage.

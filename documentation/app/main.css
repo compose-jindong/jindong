@@ -1,0 +1,221 @@
+@import "tailwindcss";
+@import "fumadocs-ui/css/neutral.css";
+@import "fumadocs-ui/css/preset.css";
+
+@source "../node_modules/fumadocs-ui/dist/**/*.js";
+
+/*
+ * Jindong Theme - Ethereal Digital Aesthetics
+ *
+ * A sophisticated dark theme with refined teal/mint accents.
+ */
+
+:root {
+  /* Vibrant teal-green primary from logo */
+  --fd-primary: 162 72% 46%;
+  --primary: 162 72% 46%;
+  --primary-foreground: 0 0% 100%;
+
+  /* Ring color for focus states */
+  --ring: 162 72% 46%;
+}
+
+.dark {
+  /* Dark mode - Deep void-like background */
+  --fd-background: 240 10% 3.9%;
+  --fd-foreground: 0 0% 98%;
+
+  --fd-card: 240 10% 3.9%;
+  --fd-card-foreground: 0 0% 98%;
+
+  --fd-popover: 240 10% 3.9%;
+  --fd-popover-foreground: 0 0% 98%;
+
+  --fd-primary: 160 84% 39%;
+  --fd-primary-foreground: 0 0% 100%;
+
+  --fd-secondary: 240 3.7% 15.9%;
+  --fd-secondary-foreground: 0 0% 98%;
+
+  --fd-muted: 240 3.7% 15.9%;
+  --fd-muted-foreground: 240 5% 64.9%;
+
+  --fd-accent: 240 3.7% 15.9%;
+  --fd-accent-foreground: 0 0% 98%;
+
+  --fd-border: 240 3.7% 15.9%;
+  --fd-input: 240 3.7% 15.9%;
+
+  --primary: 160 84% 39%;
+  --primary-foreground: 0 0% 100%;
+  --ring: 160 84% 39%;
+}
+
+@theme {
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
+    "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, "SF Mono",
+    Menlo, Consolas, "Liberation Mono", monospace;
+
+  /* Refined Teal palette */
+  --color-teal-50: #effefb;
+  --color-teal-100: #c8fff4;
+  --color-teal-200: #91feea;
+  --color-teal-300: #53f5dc;
+  --color-teal-400: #20e3c8;
+  --color-teal-500: #08c7ae;
+  --color-teal-600: #04a08f;
+  --color-teal-700: #088074;
+  --color-teal-800: #0c655e;
+  --color-teal-900: #0f534d;
+  --color-teal-950: #013330;
+
+  /* Refined Mint/Green */
+  --color-mint-50: #edfff7;
+  --color-mint-100: #d5ffed;
+  --color-mint-200: #aeffdc;
+  --color-mint-300: #70ffc4;
+  --color-mint-400: #2bfda4;
+  --color-mint-500: #00e687;
+  --color-mint-600: #00bf6d;
+  --color-mint-700: #009559;
+  --color-mint-800: #067549;
+  --color-mint-900: #07603e;
+  --color-mint-950: #003621;
+
+  /* Lime Accent */
+  --color-lime-50: #f7ffe5;
+  --color-lime-100: #ecffc7;
+  --color-lime-200: #d8ff95;
+  --color-lime-300: #bcfd58;
+  --color-lime-400: #a0f526;
+  --color-lime-500: #81dc07;
+  --color-lime-600: #63b002;
+  --color-lime-700: #4b8508;
+  --color-lime-800: #3e690d;
+  --color-lime-900: #355810;
+  --color-lime-950: #193102;
+
+  --color-border: hsl(var(--fd-border));
+  --color-background: hsl(var(--fd-background));
+  --color-foreground: hsl(var(--fd-foreground));
+}
+
+/* Enforce JetBrains Mono globally for all code elements */
+code, kbd, samp, pre {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+/* Background Patterns */
+.bg-grid-small-white {
+  background-size: 40px 40px;
+  background-image: linear-gradient(
+      to right,
+      rgba(255, 255, 255, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+}
+
+.bg-grid-small-black {
+  background-size: 40px 40px;
+  background-image: linear-gradient(
+      to right,
+      rgba(0, 0, 0, 0.05) 1px,
+      transparent 1px
+    ),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.05) 1px, transparent 1px);
+}
+
+.bg-dot-white {
+  background-size: 40px 40px;
+  background-image: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 1px,
+    transparent 1px
+  );
+}
+
+.bg-dot-black {
+  background-size: 40px 40px;
+  background-image: radial-gradient(
+    circle,
+    rgba(0, 0, 0, 0.1) 1px,
+    transparent 1px
+  );
+}
+
+/* Utilities */
+.text-gradient {
+  @apply bg-clip-text text-transparent bg-gradient-to-br from-teal-500 via-mint-400 to-lime-400 dark:from-teal-300 dark:via-mint-200 dark:to-lime-200;
+}
+
+/* Animations */
+@keyframes spotlight {
+  0% {
+    opacity: 0;
+    transform: translate(-72%, -62%) scale(0.5);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-50%, -40%) scale(1);
+  }
+}
+
+.animate-spotlight {
+  animation: spotlight 2s ease 0.75s 1 forwards;
+}
+
+@keyframes shine {
+  from {
+    background-position: 0 0;
+  }
+  to {
+    background-position: -200% 0;
+  }
+}
+
+.animate-shine {
+  animation: shine 2s linear infinite;
+}
+
+/* --- Docs Customization --- */
+
+/* Glassy Callouts / Admonitions */
+/* Glassy Callouts / Admonitions */
+.fd-callout {
+    @apply backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 border-l-4;
+}
+.fd-callout-info { @apply border-l-teal-500; }
+.fd-callout-warn { @apply border-l-amber-500; }
+.fd-callout-error { @apply border-l-red-500; }
+.fd-callout-tip { @apply border-l-lime-500; }
+
+/* Refined typography for MDX */
+.prose blockquote {
+    @apply backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 not-italic border-l-4 border-l-teal-500/50 px-6 py-4 text-zinc-600 dark:text-zinc-300;
+}
+
+.prose :not(pre) > code {
+    @apply rounded-md border border-teal-500/20 bg-teal-50/50 px-1.5 py-0.5 font-mono text-sm text-teal-700 dark:bg-teal-900/20 dark:text-teal-300;
+}
+
+.prose pre {
+    @apply backdrop-blur-xl bg-white/5 dark:bg-black/5;
+}
+
+.prose pre code {
+    @apply bg-transparent border-none p-0 text-inherit;
+}
+
+.prose h1, .prose h2, .prose h3 {
+   @apply tracking-tight scroll-m-20;
+}
+
+.prose h1 {
+    @apply text-4xl font-extrabold lg:text-5xl bg-gradient-to-br from-zinc-900 to-zinc-600 bg-clip-text text-transparent pb-4 leading-normal dark:from-white dark:to-zinc-400;
+}
+
+.prose h2 {
+    @apply text-3xl font-bold border-b border-zinc-200 pb-2 dark:border-zinc-800 first:mt-0;
+}
