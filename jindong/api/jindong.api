@@ -8,7 +8,7 @@ public final class io/github/compose/jindong/JindongKt {
 }
 
 public final class io/github/compose/jindong/JindongProviderKt {
-	public static final fun JindongProvider (Ljava/lang/Object;Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;II)V
+	public static final fun JindongProvider (Lkotlin/jvm/functions/Function2;Landroidx/compose/runtime/Composer;I)V
 }
 
 public abstract interface class io/github/compose/jindong/JindongScope {
@@ -27,6 +27,10 @@ public final class io/github/compose/jindong/dsl/HapticKt {
 
 public final class io/github/compose/jindong/dsl/RepeatKt {
 	public static final fun Repeat (Lio/github/compose/jindong/JindongScope;ILkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class io/github/compose/jindong/dsl/RepeatWithIndexKt {
+	public static final fun RepeatWithIndex (Lio/github/compose/jindong/JindongScope;ILkotlin/jvm/functions/Function4;Landroidx/compose/runtime/Composer;I)V
 }
 
 public final class io/github/compose/jindong/dsl/SequenceKt {
