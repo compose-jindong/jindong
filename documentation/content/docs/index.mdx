@@ -1,0 +1,32 @@
+---
+title: Jindong
+description: Declarative Haptic Feedback Library for Kotlin Multiplatform
+---
+
+import { Cards, Card } from "fumadocs-ui/components/card";
+
+# Jindong (진동)
+
+Declarative haptic feedback library for Kotlin Multiplatform, built with Compose Runtime.
+
+```kotlin
+Jindong(trigger) {
+    Haptic(100.ms)
+    Delay(50.ms)
+    Haptic(50.ms, HapticIntensity.STRONG)
+}
+```
+
+## Get Started
+
+<Cards>
+  <Card title="Why Jindong" href="/docs/guide/why-jindong">
+    Learn about the motivation and benefits.
+  </Card>
+  <Card title="Quick Start" href="/docs/guide/quick-start">
+    Get up and running in minutes.
+  </Card>
+  <Card title="API Reference" href="/docs/api/core/jindong">
+    Explore the complete API documentation.
+  </Card>
+</Cards>
