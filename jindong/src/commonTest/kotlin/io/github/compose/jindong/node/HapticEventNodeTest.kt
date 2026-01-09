@@ -18,10 +18,12 @@ package io.github.compose.jindong.node
 import io.github.compose.jindong.model.HapticIntensity
 import io.github.compose.jindong.model.IosHapticParameters
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 class HapticEventNodeTest :
   FunSpec({
@@ -89,5 +91,15 @@ class HapticEventNodeTest :
         node.totalDurationMs(startTimeMs = 100) shouldBe 150
         node.totalDurationMs(startTimeMs = 500) shouldBe 150
       }
+    }
+
+    test("should throw IllegalArgumentException when durationMs is negative") {
+      val exception = shouldThrow<IllegalArgumentException> {
+        HapticEventNode(
+          durationMs = -100,
+          intensity = HapticIntensity.LIGHT,
+        )
+      }
+      exception.message shouldContain "durationMs must be non-negative"
     }
   })

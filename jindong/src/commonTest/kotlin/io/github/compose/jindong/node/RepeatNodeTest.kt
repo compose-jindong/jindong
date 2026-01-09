@@ -27,6 +27,13 @@ import io.kotest.matchers.string.shouldContain
 
 class RepeatNodeTest :
   FunSpec({
+    test("should throw IllegalArgumentException when count is negative") {
+      val exception = shouldThrow<IllegalArgumentException> {
+        RepeatNode(count = -5)
+      }
+      exception.message shouldContain "count must be non-negative"
+    }
+
     test("collectEvents should return empty list when no children") {
       val node = RepeatNode(count = 3)
 
@@ -42,16 +49,6 @@ class RepeatNodeTest :
       val events = node.collectEvents(startTimeMs = 0)
 
       events.shouldBeEmpty()
-    }
-
-    test("collectEvents should throw IllegalArgumentException when count is negative") {
-      val node = RepeatNode(count = -1)
-      node.children.add(HapticEventNode(durationMs = 100, intensity = HapticIntensity.STRONG))
-
-      val exception = shouldThrow<IllegalArgumentException> {
-        node.collectEvents(startTimeMs = 0)
-      }
-      exception.message shouldContain "count must be non-negative"
     }
 
     test("collectEvents should repeat single child correctly") {
