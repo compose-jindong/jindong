@@ -1,4 +1,4 @@
-name: Documentation Build
+name: Documentation
 
 on:
   push:
@@ -12,6 +12,15 @@ on:
       - 'documentation/**'
       - '.github/workflows/docs.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -31,8 +40,28 @@ jobs:
           cache: 'yarn'
           cache-dependency-path: documentation/yarn.lock
 
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
       - name: Install dependencies
         run: yarn install --frozen-lockfile
 
       - name: Build
         run: yarn build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: documentation/out
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
