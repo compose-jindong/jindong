@@ -83,6 +83,7 @@ function Hero() {
           <div className="flex gap-4 mt-4">
             <Link
               href="/docs/guide/quick-start"
+              prefetch={true}
               className="group relative inline-flex h-12 items-center justify-center overflow-hidden rounded-xl bg-teal-600 px-8 font-medium text-white transition-all hover:bg-teal-500 hover:shadow-[0_0_40px_-10px_rgba(13,148,136,0.6)] dark:bg-teal-500 dark:hover:bg-teal-400"
             >
               <span className="mr-2">Get Started</span>
@@ -306,7 +307,7 @@ export function HomePage() {
               </p>
             </Link>
             <Link
-              href="/docs/api/composable-dsl"
+              href="/docs/api/composable-dsl/haptic"
               className="group rounded-2xl border border-zinc-200 bg-white p-6 transition-all hover:border-teal-400 hover:shadow-lg hover:shadow-teal-500/10 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:border-teal-500/50"
             >
               <div className="mb-4 inline-flex rounded-lg bg-indigo-50 p-3 text-indigo-600 dark:bg-indigo-900/20 dark:text-indigo-400">
