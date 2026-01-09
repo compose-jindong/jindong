@@ -41,7 +41,7 @@ function Hero() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
-          className="max-w-4xl bg-gradient-to-br from-teal-900 via-teal-800 to-teal-500 bg-clip-text text-5xl font-bold tracking-tight text-transparent dark:from-white dark:via-teal-100 dark:to-teal-400 sm:text-7xl"
+          className="max-w-4xl bg-gradient-to-br from-teal-900 via-teal-800 to-teal-500 bg-clip-text text-5xl font-bold tracking-tight text-transparent pb-6 leading-normal dark:from-white dark:via-teal-100 dark:to-teal-400 sm:text-7xl"
         >
           Declarative Haptics for <br />
           <span className="text-gradient">Kotlin Multiplatform</span>
@@ -102,13 +102,13 @@ function Hero() {
 
         {/* Floating Elements (Parallax) */}
         <motion.div style={{ y: y1 }} className="absolute left-[5%] top-[20%] hidden xl:block">
-           <div className="glass-panel rotate-[-6deg] rounded-2xl p-4 shadow-2xl">
+           <div className="backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 rotate-[-6deg] rounded-2xl p-4 shadow-2xl">
               <Activity className="h-8 w-8 text-teal-400" />
            </div>
         </motion.div>
         
         <motion.div style={{ y: y2 }} className="absolute right-[5%] top-[30%] hidden xl:block">
-           <div className="glass-panel rotate-[12deg] rounded-2xl p-4 shadow-2xl">
+           <div className="backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 rotate-[12deg] rounded-2xl p-4 shadow-2xl">
               <Waves className="h-8 w-8 text-lime-400" />
            </div>
         </motion.div>

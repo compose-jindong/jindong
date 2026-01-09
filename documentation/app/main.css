@@ -145,10 +145,6 @@
   @apply bg-clip-text text-transparent bg-gradient-to-br from-teal-500 via-mint-400 to-lime-400 dark:from-teal-300 dark:via-mint-200 dark:to-lime-200;
 }
 
-.glass-panel {
-  @apply backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5;
-}
-
 /* Animations */
 @keyframes spotlight {
   0% {
@@ -176,4 +172,45 @@
 
 .animate-shine {
   animation: shine 2s linear infinite;
+}
+
+/* --- Docs Customization --- */
+
+/* Glassy Callouts / Admonitions */
+/* Glassy Callouts / Admonitions */
+.fd-callout {
+    @apply backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 border-l-4;
+}
+.fd-callout-info { @apply border-l-teal-500; }
+.fd-callout-warn { @apply border-l-amber-500; }
+.fd-callout-error { @apply border-l-red-500; }
+.fd-callout-tip { @apply border-l-lime-500; }
+
+/* Refined typography for MDX */
+.prose blockquote {
+    @apply backdrop-blur-xl bg-white/5 dark:bg-black/5 border border-white/10 dark:border-white/5 not-italic border-l-4 border-l-teal-500/50 px-6 py-4 text-zinc-600 dark:text-zinc-300;
+}
+
+.prose :not(pre) > code {
+    @apply rounded-md border border-teal-500/20 bg-teal-50/50 px-1.5 py-0.5 font-mono text-sm text-teal-700 dark:bg-teal-900/20 dark:text-teal-300;
+}
+
+.prose pre {
+    @apply backdrop-blur-xl bg-white/5 dark:bg-black/5;
+}
+
+.prose pre code {
+    @apply bg-transparent border-none p-0 text-inherit;
+}
+
+.prose h1, .prose h2, .prose h3 {
+   @apply tracking-tight scroll-m-20;
+}
+
+.prose h1 {
+    @apply text-4xl font-extrabold lg:text-5xl bg-gradient-to-br from-zinc-900 to-zinc-600 bg-clip-text text-transparent pb-4 leading-normal dark:from-white dark:to-zinc-400;
+}
+
+.prose h2 {
+    @apply text-3xl font-bold border-b border-zinc-200 pb-2 dark:border-zinc-800 first:mt-0;
 }
