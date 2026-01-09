@@ -6,7 +6,6 @@ const withMDX = createMDX();
 const nextConfig = {
   output: "export",
   basePath: "/jindong",
-  assetPrefix: "/jindong",
   images: {
     unoptimized: true,
   },
