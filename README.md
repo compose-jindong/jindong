@@ -16,7 +16,7 @@
 
 **Jindong (진동)** is the Korean word for "vibration". We chose this name to reflect the library's core purpose, as it's a familiar term for the Korean creators of this library.
 
-Jindong provides a declarative DSL for haptic feedback in Kotlin Multiplatform applications. Built on Compose Runtime, it lets you define complex haptic patterns with a simple, intuitive API that works across Android and iOS.
+Jindong provides a declarative DSL for haptic feedback in Compose Multiplatform applications(supports Android and iOS). Built on Compose Runtime, it lets you define complex haptic patterns with a simple, intuitive API.
 
 ```kotlin
 Jindong(trigger) {
