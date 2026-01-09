@@ -38,19 +38,20 @@ import io.github.compose.jindong.model.ScheduledHapticEvent
 internal class RepeatNode(
   val count: Int,
 ) : HapticNode {
+
+  init {
+    require(count >= 0) { "count must be non-negative, but was $count" }
+  }
+
   override val children: MutableList<HapticNode> = mutableListOf()
 
-  override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {
-    require(count >= 0) { "count must be non-negative, but was $count" }
+  override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> = buildList {
+    var currentTime = startTimeMs
 
-    return buildList {
-      var currentTime = startTimeMs
-
-      repeat(count) {
-        val (events, endTimeMs) = collectIterationEvents(currentTime)
-        addAll(events)
-        currentTime = endTimeMs
-      }
+    repeat(count) {
+      val (events, endTimeMs) = collectIterationEvents(currentTime)
+      addAll(events)
+      currentTime = endTimeMs
     }
   }
 

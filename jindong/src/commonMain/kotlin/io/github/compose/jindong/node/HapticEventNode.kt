@@ -34,6 +34,11 @@ internal class HapticEventNode(
   val intensity: HapticIntensity,
   val iosParameters: IosHapticParameters? = null,
 ) : HapticNode {
+
+  init {
+    require(durationMs >= 0) { "durationMs must be non-negative, but was $durationMs" }
+  }
+
   override val children: MutableList<HapticNode> = mutableListOf()
 
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> = listOf(

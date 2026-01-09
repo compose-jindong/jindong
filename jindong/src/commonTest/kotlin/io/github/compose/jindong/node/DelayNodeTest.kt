@@ -16,9 +16,11 @@
 package io.github.compose.jindong.node
 
 import io.kotest.assertions.assertSoftly
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.shouldBe
+import io.kotest.matchers.string.shouldContain
 
 class DelayNodeTest :
   FunSpec({
@@ -73,5 +75,12 @@ class DelayNodeTest :
         node.totalDurationMs(startTimeMs = 500) shouldBe 200
         node.totalDurationMs(startTimeMs = 1000) shouldBe 200
       }
+    }
+
+    test("should throw IllegalArgumentException when durationMs is negative") {
+      val exception = shouldThrow<IllegalArgumentException> {
+        DelayNode(durationMs = -100)
+      }
+      exception.message shouldContain "durationMs must be non-negative"
     }
   })
