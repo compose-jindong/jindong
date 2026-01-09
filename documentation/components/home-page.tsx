@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, useScroll, useTransform } from "framer-motion";
-import { ArrowRight, Code2, Heart, Sparkles, Layers, Zap, Lightbulb, Rocket, Blocks } from "lucide-react";
+import { ArrowRight, Code2, Heart, Sparkles, Layers, Zap, Lightbulb, Rocket, Blocks, Activity, Waves } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 // --- Components ---
@@ -103,13 +103,13 @@ function Hero() {
         {/* Floating Elements (Parallax) */}
         <motion.div style={{ y: y1 }} className="absolute left-[5%] top-[20%] hidden xl:block">
            <div className="glass-panel rotate-[-6deg] rounded-2xl p-4 shadow-2xl">
-              <Code2 className="h-8 w-8 text-teal-400" />
+              <Activity className="h-8 w-8 text-teal-400" />
            </div>
         </motion.div>
         
         <motion.div style={{ y: y2 }} className="absolute right-[5%] top-[30%] hidden xl:block">
            <div className="glass-panel rotate-[12deg] rounded-2xl p-4 shadow-2xl">
-              <Heart className="h-8 w-8 text-lime-400" />
+              <Waves className="h-8 w-8 text-lime-400" />
            </div>
         </motion.div>
       </div>
