@@ -1,12 +1,13 @@
 import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
 import Image from "next/image";
+import logo from "@/app/assets/logo.png";
 
 export const baseOptions: BaseLayoutProps = {
   nav: {
     title: (
       <>
         <Image
-          src="/logo.png"
+          src={logo}
           alt="Jindong"
           width={24}
           height={24}

@@ -6,6 +6,7 @@ import { ThemeToggle } from "@/components/theme-toggle";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { ArrowRight, Code2, Heart, Sparkles, Layers, Zap, Lightbulb, Rocket, Blocks, Activity, Waves } from "lucide-react";
 import { cn } from "@/lib/utils";
+import logo from "@/app/assets/logo.png";
 
 // --- Components ---
 
@@ -216,7 +217,7 @@ export function HomePage() {
         <div className="container mx-auto flex h-16 items-center justify-between px-4">
           <Link href="/" className="flex items-center gap-2 font-bold text-xl tracking-tight">
             <Image
-              src="/logo.png"
+              src={logo}
               alt="Jindong"
               width={32}
               height={32}
@@ -328,7 +329,7 @@ export function HomePage() {
         <div className="container mx-auto flex flex-col items-center justify-between gap-6 px-4 md:flex-row">
             <div className="flex items-center gap-2">
               <Image
-                src="/logo.png"
+                src={logo}
                 alt="Jindong"
                 width={24}
                 height={24}
