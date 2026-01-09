@@ -50,7 +50,7 @@ kotlin {
 
 | Platform | Minimum Version |
 |----------|-----------------|
-| Android  | API 24          |
+| Android  | API 26          |
 | iOS      | iOS 13          |
 
 ### Android Setup
