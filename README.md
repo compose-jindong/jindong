@@ -3,7 +3,7 @@
 </p>
 
 <p align="center">
-  <strong>Declarative Haptic Feedback Library for Kotlin Multiplatform</strong>
+  <strong>Declarative Haptic Feedback Library for Compose Multiplatform</strong>
 </p>
 
 <p align="center">
