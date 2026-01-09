@@ -54,7 +54,7 @@
 @theme {
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif,
     "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, "SF Mono",
+  --font-mono: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, "SF Mono",
     Menlo, Consolas, "Liberation Mono", monospace;
 
   /* Refined Teal palette */
@@ -99,6 +99,11 @@
   --color-border: hsl(var(--fd-border));
   --color-background: hsl(var(--fd-background));
   --color-foreground: hsl(var(--fd-foreground));
+}
+
+/* Enforce JetBrains Mono globally for all code elements */
+code, kbd, samp, pre {
+  font-family: var(--font-jetbrains-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }
 
 /* Background Patterns */

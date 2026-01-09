@@ -334,7 +334,7 @@ export function HomePage() {
                 height={24}
                 className="rounded-md"
               />
-              <span className="font-medium text-zinc-900 dark:text-zinc-100">Jindong</span>
+              <span className="font-medium text-zinc-900 dark:text-zinc-100">Jindong (진동)</span>
               <span className="text-muted-foreground">
                 — Declarative Haptics
               </span>
