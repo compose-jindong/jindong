@@ -71,3 +71,10 @@ thumb
 sketch
 
 # End of https://www.toptal.com/developers/gitignore/api/nextjs,react
+
+# openspec
+AGENTS.md
+CLAUDE.md
+.claude/
+openspec/
+docs/
