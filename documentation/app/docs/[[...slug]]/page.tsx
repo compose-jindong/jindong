@@ -1,4 +1,5 @@
 import { source } from "@/lib/source";
+import { i18n } from "@/lib/i18n";
 import {
   DocsBody,
   DocsDescription,
@@ -20,7 +21,7 @@ export default async function Page(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = source.getPage(params.slug, i18n.defaultLanguage);
   if (!page) notFound();
 
   const data = page.data as unknown as MDXPageData;
@@ -45,7 +46,7 @@ export async function generateMetadata(props: {
   params: Promise<{ slug?: string[] }>;
 }) {
   const params = await props.params;
-  const page = source.getPage(params.slug);
+  const page = source.getPage(params.slug, i18n.defaultLanguage);
   if (!page) notFound();
 
   return {
