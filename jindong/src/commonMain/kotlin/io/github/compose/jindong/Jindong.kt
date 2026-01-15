@@ -67,7 +67,7 @@ fun Jindong(
 /**
  * Internal class that manages the Composition for haptic pattern compilation.
  */
-private class JindongCompositionHost {
+private class JindongCompositionHost : AutoCloseable {
   private val clock = BroadcastFrameClock()
   private val coroutineScope = CoroutineScope(clock)
   private val rootNode = SequenceNode()
@@ -79,6 +79,10 @@ private class JindongCompositionHost {
     coroutineScope.launch {
       recomposer.runRecomposeAndApplyChanges()
     }
+  }
+
+  override fun close() {
+    dispose()
   }
 
   fun setContent(content: @Composable JindongScope.() -> Unit) {
@@ -115,11 +119,9 @@ private class JindongCompositionHost {
  */
 internal fun compilePattern(
   content: @Composable JindongScope.() -> Unit,
-): HapticPattern {
-  val host = JindongCompositionHost()
-  host.setContent(content)
-  host.sendFrame()
-  val pattern = host.collectEvents()
-  host.dispose()
-  return pattern
-}
+): HapticPattern = JindongCompositionHost()
+  .use { host ->
+    host.setContent(content)
+    host.sendFrame()
+    host.collectEvents()
+  }
