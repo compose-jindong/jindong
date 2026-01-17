@@ -16,6 +16,7 @@ robolectric = "4.16"
 androidxTest = "1.7.0"
 androidxActivity = "1.12.2"
 androidxAnnotation = "1.9.1"
+kover = "0.9.4"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -43,3 +44,4 @@ kotest = { id = "io.kotest", version.ref = "kotest" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }
+kover = { id = "org.jetbrains.kotlinx.kover", version.ref = "kover" }
