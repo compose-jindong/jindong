@@ -1,0 +1,46 @@
+# Jindong (진동)
+
+> Declarative Haptic Feedback Library for Compose Multiplatform
+
+https://github.com/compose-jindong/jindong
+https://compose-jindong.github.io/jindong
+
+## Project Overview
+
+Jindong provides a declarative DSL for haptic feedback in Compose Multiplatform applications (supports Android and iOS). Built on Compose Runtime, it lets you define complex haptic patterns with a simple, intuitive API.
+
+## Content
+
+### Guides
+
+- [Thinking in Declarative Paradigm](https://compose-jindong.github.io/jindong/docs/guide/thinking-declarative): This guide explains the core philosophy behind Jindong. It contrasts imperative vs. declarative haptic feedback and explains why abstracting control flow leads to better optimization and portability.
+- [Why Jindong?](https://compose-jindong.github.io/jindong/docs/guide/why-jindong): Explains the motivation for creating Jindong, identifying the problems with imperative platform-specific haptic APIs. It highlights key benefits like readability, state integration, and cross-platform consistency.
+- [Getting Started](https://compose-jindong.github.io/jindong/docs/guide/getting-started): Step-by-step instructions for installing Jindong in your Compose Multiplatform project. Covers Gradle dependency configuration, platform-specific permission requirements (Android), and basic setup.
+- [Quick Start](https://compose-jindong.github.io/jindong/docs/guide/quick-start): A fast-track guide to your first haptic pattern. Shows how to set up the `JindongProvider` and use the `Jindong` composable to trigger simple feedback on button clicks.
+
+### API Reference
+
+#### Core
+
+- [JindongProvider](https://compose-jindong.github.io/jindong/docs/api/core/jindong-provider): The root composable required to use Jindong. It provides the `HapticExecutor` to the component tree, managing the lifecycle of haptic engines on Android and iOS.
+- [Jindong](https://compose-jindong.github.io/jindong/docs/api/core/jindong): The primary entry point for defining haptic patterns. It functions similarly to `LaunchedEffect`, executing the defined pattern whenever its key parameters change.
+- [HapticIntensity](https://compose-jindong.github.io/jindong/docs/api/core/haptic-intensity): A type-safe value class for defining vibration strength. Supports standard presets (`LIGHT`, `MEDIUM`, `STRONG`, `HIGH`) and custom normalized values (`Custom(0.0f..1.0f)`).
+- [JindongScope](https://compose-jindong.github.io/jindong/docs/api/core/jindong-scope): The receiver scope for the `Jindong` content block. It restricts available functions to valid DSL operations like `Haptic`, `Delay`, and `Repeat`.
+
+#### Composable DSL
+
+- [Haptic](https://compose-jindong.github.io/jindong/docs/api/composable-dsl/haptic): The fundamental atomic operation. Emits a vibration for a specific duration and intensity. It handles platform-specific implementation details (e.g., `VibrationEffect` on Android, `CHHapticEvent` on iOS).
+- [Delay](https://compose-jindong.github.io/jindong/docs/api/composable-dsl/delay): Inserts a pause in the haptic pattern. Essential for creating rhythmic patterns or separating distinct haptic events.
+- [Repeat](https://compose-jindong.github.io/jindong/docs/api/composable-dsl/repeat): A control flow structure to repeat a block of haptic operations a specified number of times. Useful for creating consistent pulsing effects or notifications.
+- [RepeatWithIndex](https://compose-jindong.github.io/jindong/docs/api/composable-dsl/repeat-with-index): Similar to `Repeat`, but provides the current iteration index to the content block. Allows for dynamic patterns like ramping intensity up or down (e.g., fade-in/fade-out).
+- [Sequence](https://compose-jindong.github.io/jindong/docs/api/composable-dsl/sequence): Explicitly groups operations to run sequentially. While all operations in `Jindong` are sequential by default, this can be useful for logical grouping or code organization.
+
+### Contributing
+
+- [Documentation Guide](https://compose-jindong.github.io/jindong/docs/contributing/documentation): Guidelines for contributing to the documentation. Explains the directory structure, MDX usage, and how to verify changes locally.
+
+
+## Resources
+
+- [GitHub Repository](https://github.com/compose-jindong/jindong): The source code, issue tracker, and release notes.
+- [Maven Central](https://central.sonatype.com/artifact/io.github.compose-jindong/jindong): Artifact details for dependency management.
