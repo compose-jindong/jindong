@@ -78,7 +78,7 @@ jobs:
       if: github.event_name == 'pull_request'
       uses: mi-kas/kover-report@v1
       with:
-        path: ${{ github.workspace }}/jindong/build/reports/kover/xml/report.xml
+        path: ${{ github.workspace }}/jindong/build/reports/kover/report.xml
         token: ${{ secrets.GITHUB_TOKEN }}
         title: Test Coverage Report
         update-comment: true
