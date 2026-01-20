@@ -26,6 +26,7 @@ import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.model.HapticPattern
 import io.github.compose.jindong.model.ScheduledHapticEvent
 import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Android implementation of [HapticExecutor] using [VibrationEffect.createWaveform].
@@ -79,7 +80,8 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   @RequiresPermission(Manifest.permission.VIBRATE)
   private fun vibratePattern(pattern: HapticPattern) {
     val waveform = pattern.toWaveform()
-    val vibrationEffect = VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
+    val vibrationEffect =
+      VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
     vibrator.vibrate(vibrationEffect)
   }
 
@@ -151,14 +153,13 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 }
 
 internal class AndroidHapticHandle(private var vibrator: Vibrator?) : HapticHandle {
-
-  override var isActive: Boolean = vibrator != null
-    private set
+  private val _isActive = AtomicBoolean(vibrator != null)
+  override val isActive: Boolean
+    get() = _isActive.get()
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun cancel() {
-    if (!isActive) return
-    isActive = false
+    if (!_isActive.compareAndSet(true, false)) return
     vibrator?.cancel()
     vibrator = null
   }
