@@ -51,7 +51,7 @@ kotlin {
 
   sourceSets {
     commonMain.dependencies {
-      implementation(project(":jindong"))
+      implementation(project(":jindong-compose"))
       implementation(compose.runtime)
       implementation(compose.foundation)
       implementation(compose.material3)
