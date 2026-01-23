@@ -159,14 +159,12 @@ public object HapticManager {
     executor = null
   }
 
-  private fun requireExecutor(): HapticExecutor {
-    return executor ?: run {
-      // Try to get platform context automatically
-      val context = getPlatformContext()
-      val newExecutor = createHapticExecutor(context)
-      executor = newExecutor
-      newExecutor
-    }
+  private fun requireExecutor(): HapticExecutor = executor ?: run {
+    // Try to get platform context automatically
+    val context = getPlatformContext()
+    val newExecutor = createHapticExecutor(context)
+    executor = newExecutor
+    newExecutor
   }
 }
 
@@ -214,9 +212,7 @@ public suspend fun HapticPattern.play() {
  *
  * @return A [HapticHandle] for cancelling the execution
  */
-public fun HapticPattern.playAsync(): HapticHandle {
-  return HapticManager.executeAsync(this)
-}
+public fun HapticPattern.playAsync(): HapticHandle = HapticManager.executeAsync(this)
 
 /**
  * Builds and executes a haptic pattern inline.

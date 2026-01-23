@@ -5,7 +5,7 @@
 // - Show manifest properties: true
 // - Show declarations: true
 
-// Library unique name: <io.github.compose-jindong:jindong>
+// Library unique name: <io.github.compose-jindong:jindong-compose>
 open annotation class io.github.compose.jindong/JindongScopeMarker : kotlin/Annotation { // io.github.compose.jindong/JindongScopeMarker|null[0]
     constructor <init>() // io.github.compose.jindong/JindongScopeMarker.<init>|<init>(){}[0]
 }
