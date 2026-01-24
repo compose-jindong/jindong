@@ -20,6 +20,8 @@ import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
 import io.github.compose.jindong.model.HapticIntensity
+import io.github.compose.jindong.model.HapticProperties
+import io.github.compose.jindong.model.toIosHapticParameters
 import io.github.compose.jindong.node.HapticEventNode
 import kotlin.time.Duration
 
@@ -35,14 +37,22 @@ import kotlin.time.Duration
  *
  * @param duration How long the vibration lasts
  * @param intensity Vibration strength (default: [HapticIntensity.MEDIUM])
+ * @param properties iOS Core Haptics properties (ignored on Android)
  */
 @Composable
 fun JindongScope.Haptic(
   duration: Duration,
   intensity: HapticIntensity = HapticIntensity.MEDIUM,
+  properties: HapticProperties? = null,
 ) {
   ComposeNode<HapticEventNode, JindongApplier>(
-    factory = { HapticEventNode(duration.inWholeMilliseconds, intensity) },
+    factory = {
+      HapticEventNode(
+        durationMs = duration.inWholeMilliseconds,
+        intensity = intensity,
+        iosParameters = properties?.toIosHapticParameters(),
+      )
+    },
     update = { },
   )
 }

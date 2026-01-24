@@ -28,8 +28,12 @@ import kotlinx.coroutines.delay
 import platform.CoreHaptics.CHHapticEngine
 import platform.CoreHaptics.CHHapticEvent
 import platform.CoreHaptics.CHHapticEventParameter
+import platform.CoreHaptics.CHHapticEventParameterIDAttackTime
+import platform.CoreHaptics.CHHapticEventParameterIDDecayTime
 import platform.CoreHaptics.CHHapticEventParameterIDHapticIntensity
 import platform.CoreHaptics.CHHapticEventParameterIDHapticSharpness
+import platform.CoreHaptics.CHHapticEventParameterIDReleaseTime
+import platform.CoreHaptics.CHHapticEventParameterIDSustained
 import platform.CoreHaptics.CHHapticEventTypeHapticContinuous
 import platform.CoreHaptics.CHHapticPattern
 import platform.Foundation.NSError
@@ -144,20 +148,62 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
     val relativeTime = startTimeMs / 1000.0
     val duration = durationMs / 1000.0
 
-    val intensityEventParameter = CHHapticEventParameter(
-      parameterID = CHHapticEventParameterIDHapticIntensity,
-      value = intensity.value,
-    )
+    val hapticEventParameters = buildList {
+      add(
+        CHHapticEventParameter(
+          parameterID = CHHapticEventParameterIDHapticIntensity,
+          value = intensity.value,
+        ),
+      )
 
-    val sharpness = iosParameters?.sharpness ?: DEFAULT_SHARPNESS
-    val sharpnessEventParameter = CHHapticEventParameter(
-      parameterID = CHHapticEventParameterIDHapticSharpness,
-      value = sharpness,
-    )
+      val sharpness = iosParameters?.sharpness ?: DEFAULT_SHARPNESS
+      add(
+        CHHapticEventParameter(
+          parameterID = CHHapticEventParameterIDHapticSharpness,
+          value = sharpness,
+        ),
+      )
+
+      iosParameters?.attackTime?.let { attackTime ->
+        add(
+          CHHapticEventParameter(
+            parameterID = CHHapticEventParameterIDAttackTime,
+            value = attackTime.inWholeMilliseconds / 1000f,
+          ),
+        )
+      }
+
+      iosParameters?.decayTime?.let { decayTime ->
+        add(
+          CHHapticEventParameter(
+            parameterID = CHHapticEventParameterIDDecayTime,
+            value = decayTime.inWholeMilliseconds / 1000f,
+          ),
+        )
+      }
+
+      iosParameters?.releaseTime?.let { releaseTime ->
+        add(
+          CHHapticEventParameter(
+            parameterID = CHHapticEventParameterIDReleaseTime,
+            value = releaseTime.inWholeMilliseconds / 1000f,
+          ),
+        )
+      }
+
+      iosParameters?.sustained?.let { sustained ->
+        add(
+          CHHapticEventParameter(
+            parameterID = CHHapticEventParameterIDSustained,
+            value = if (sustained) 1f else 0f,
+          ),
+        )
+      }
+    }
 
     return CHHapticEvent(
       eventType = CHHapticEventTypeHapticContinuous,
-      parameters = listOf(intensityEventParameter, sharpnessEventParameter),
+      parameters = hapticEventParameters,
       relativeTime = relativeTime,
       duration = duration,
     )

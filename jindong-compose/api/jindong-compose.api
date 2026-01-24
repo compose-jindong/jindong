@@ -22,7 +22,7 @@ public final class io/github/compose/jindong/dsl/DelayKt {
 }
 
 public final class io/github/compose/jindong/dsl/HapticKt {
-	public static final fun Haptic-NcHsxvU (Lio/github/compose/jindong/JindongScope;JLio/github/compose/jindong/model/HapticIntensity;Landroidx/compose/runtime/Composer;II)V
+	public static final fun Haptic-nRVORKE (Lio/github/compose/jindong/JindongScope;JLio/github/compose/jindong/model/HapticIntensity;Lio/github/compose/jindong/model/HapticProperties;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/compose/jindong/dsl/RepeatKt {
@@ -83,5 +83,31 @@ public final class io/github/compose/jindong/model/HapticIntensity$STRONG : io/g
 	public fun equals (Ljava/lang/Object;)Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/model/HapticProperties {
+	public static final field $stable I
+	public static final field Companion Lio/github/compose/jindong/model/HapticProperties$Companion;
+	public synthetic fun <init> (Ljava/lang/Float;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/lang/Float;
+	public final fun component2-FghU774 ()Lkotlin/time/Duration;
+	public final fun component3-FghU774 ()Lkotlin/time/Duration;
+	public final fun component4-FghU774 ()Lkotlin/time/Duration;
+	public final fun envelope-NIICwX4 (Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;)Lio/github/compose/jindong/model/HapticProperties;
+	public static synthetic fun envelope-NIICwX4$default (Lio/github/compose/jindong/model/HapticProperties;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;ILjava/lang/Object;)Lio/github/compose/jindong/model/HapticProperties;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttackTime-FghU774 ()Lkotlin/time/Duration;
+	public final fun getDecayTime-FghU774 ()Lkotlin/time/Duration;
+	public final fun getReleaseTime-FghU774 ()Lkotlin/time/Duration;
+	public final fun getSharpness ()Ljava/lang/Float;
+	public fun hashCode ()I
+	public final fun sharpness (F)Lio/github/compose/jindong/model/HapticProperties;
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/model/HapticProperties$Companion {
+	public final fun envelope-NIICwX4 (Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;)Lio/github/compose/jindong/model/HapticProperties;
+	public static synthetic fun envelope-NIICwX4$default (Lio/github/compose/jindong/model/HapticProperties$Companion;Lkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;ILjava/lang/Object;)Lio/github/compose/jindong/model/HapticProperties;
+	public final fun sharpness (F)Lio/github/compose/jindong/model/HapticProperties;
 }
 

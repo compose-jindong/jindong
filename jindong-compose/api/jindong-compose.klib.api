@@ -12,6 +12,32 @@ open annotation class io.github.compose.jindong/JindongScopeMarker : kotlin/Anno
 
 abstract interface io.github.compose.jindong/JindongScope // io.github.compose.jindong/JindongScope|null[0]
 
+final class io.github.compose.jindong.model/HapticProperties { // io.github.compose.jindong.model/HapticProperties|null[0]
+    final val attackTime // io.github.compose.jindong.model/HapticProperties.attackTime|{}attackTime[0]
+        final fun <get-attackTime>(): kotlin.time/Duration? // io.github.compose.jindong.model/HapticProperties.attackTime.<get-attackTime>|<get-attackTime>(){}[0]
+    final val decayTime // io.github.compose.jindong.model/HapticProperties.decayTime|{}decayTime[0]
+        final fun <get-decayTime>(): kotlin.time/Duration? // io.github.compose.jindong.model/HapticProperties.decayTime.<get-decayTime>|<get-decayTime>(){}[0]
+    final val releaseTime // io.github.compose.jindong.model/HapticProperties.releaseTime|{}releaseTime[0]
+        final fun <get-releaseTime>(): kotlin.time/Duration? // io.github.compose.jindong.model/HapticProperties.releaseTime.<get-releaseTime>|<get-releaseTime>(){}[0]
+    final val sharpness // io.github.compose.jindong.model/HapticProperties.sharpness|{}sharpness[0]
+        final fun <get-sharpness>(): kotlin/Float? // io.github.compose.jindong.model/HapticProperties.sharpness.<get-sharpness>|<get-sharpness>(){}[0]
+
+    final fun component1(): kotlin/Float? // io.github.compose.jindong.model/HapticProperties.component1|component1(){}[0]
+    final fun component2(): kotlin.time/Duration? // io.github.compose.jindong.model/HapticProperties.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Duration? // io.github.compose.jindong.model/HapticProperties.component3|component3(){}[0]
+    final fun component4(): kotlin.time/Duration? // io.github.compose.jindong.model/HapticProperties.component4|component4(){}[0]
+    final fun envelope(kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ...): io.github.compose.jindong.model/HapticProperties // io.github.compose.jindong.model/HapticProperties.envelope|envelope(kotlin.time.Duration?;kotlin.time.Duration?;kotlin.time.Duration?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.model/HapticProperties.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.compose.jindong.model/HapticProperties.hashCode|hashCode(){}[0]
+    final fun sharpness(kotlin/Float): io.github.compose.jindong.model/HapticProperties // io.github.compose.jindong.model/HapticProperties.sharpness|sharpness(kotlin.Float){}[0]
+    final fun toString(): kotlin/String // io.github.compose.jindong.model/HapticProperties.toString|toString(){}[0]
+
+    final object Companion { // io.github.compose.jindong.model/HapticProperties.Companion|null[0]
+        final fun envelope(kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ...): io.github.compose.jindong.model/HapticProperties // io.github.compose.jindong.model/HapticProperties.Companion.envelope|envelope(kotlin.time.Duration?;kotlin.time.Duration?;kotlin.time.Duration?){}[0]
+        final fun sharpness(kotlin/Float): io.github.compose.jindong.model/HapticProperties // io.github.compose.jindong.model/HapticProperties.Companion.sharpness|sharpness(kotlin.Float){}[0]
+    }
+}
+
 sealed class io.github.compose.jindong.model/HapticIntensity { // io.github.compose.jindong.model/HapticIntensity|null[0]
     final val value // io.github.compose.jindong.model/HapticIntensity.value|{}value[0]
         final fun <get-value>(): kotlin/Float // io.github.compose.jindong.model/HapticIntensity.value.<get-value>|<get-value>(){}[0]
@@ -56,13 +82,14 @@ final val io.github.compose.jindong.model/io_github_compose_jindong_model_Haptic
 final val io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_LIGHT$stableprop // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_LIGHT$stableprop|#static{}io_github_compose_jindong_model_HapticIntensity_LIGHT$stableprop[0]
 final val io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_MEDIUM$stableprop // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_MEDIUM$stableprop|#static{}io_github_compose_jindong_model_HapticIntensity_MEDIUM$stableprop[0]
 final val io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_STRONG$stableprop // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_STRONG$stableprop|#static{}io_github_compose_jindong_model_HapticIntensity_STRONG$stableprop[0]
+final val io.github.compose.jindong.model/io_github_compose_jindong_model_HapticProperties$stableprop // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticProperties$stableprop|#static{}io_github_compose_jindong_model_HapticProperties$stableprop[0]
 final val io.github.compose.jindong/ms // io.github.compose.jindong/ms|@kotlin.Int{}ms[0]
     final fun (kotlin/Int).<get-ms>(): kotlin.time/Duration // io.github.compose.jindong/ms.<get-ms>|<get-ms>@kotlin.Int(){}[0]
 final val io.github.compose.jindong/ms // io.github.compose.jindong/ms|@kotlin.Long{}ms[0]
     final fun (kotlin/Long).<get-ms>(): kotlin.time/Duration // io.github.compose.jindong/ms.<get-ms>|<get-ms>@kotlin.Long(){}[0]
 
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Delay(kotlin.time/Duration, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong.dsl/Delay|Delay@io.github.compose.jindong.JindongScope(kotlin.time.Duration;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
-final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Haptic(kotlin.time/Duration, io.github.compose.jindong.model/HapticIntensity?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // io.github.compose.jindong.dsl/Haptic|Haptic@io.github.compose.jindong.JindongScope(kotlin.time.Duration;io.github.compose.jindong.model.HapticIntensity?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
+final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Haptic(kotlin.time/Duration, io.github.compose.jindong.model/HapticIntensity?, io.github.compose.jindong.model/HapticProperties?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // io.github.compose.jindong.dsl/Haptic|Haptic@io.github.compose.jindong.JindongScope(kotlin.time.Duration;io.github.compose.jindong.model.HapticIntensity?;io.github.compose.jindong.model.HapticProperties?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Repeat(kotlin/Int, kotlin/Function3<io.github.compose.jindong/JindongScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong.dsl/Repeat|Repeat@io.github.compose.jindong.JindongScope(kotlin.Int;kotlin.Function3<io.github.compose.jindong.JindongScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/RepeatWithIndex(kotlin/Int, kotlin/Function4<io.github.compose.jindong/JindongScope, kotlin/Int, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong.dsl/RepeatWithIndex|RepeatWithIndex@io.github.compose.jindong.JindongScope(kotlin.Int;kotlin.Function4<io.github.compose.jindong.JindongScope,kotlin.Int,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Sequence(kotlin/Function3<io.github.compose.jindong/JindongScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong.dsl/Sequence|Sequence@io.github.compose.jindong.JindongScope(kotlin.Function3<io.github.compose.jindong.JindongScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
@@ -72,5 +99,6 @@ final fun io.github.compose.jindong.model/io_github_compose_jindong_model_Haptic
 final fun io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_LIGHT$stableprop_getter(): kotlin/Int // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_LIGHT$stableprop_getter|io_github_compose_jindong_model_HapticIntensity_LIGHT$stableprop_getter(){}[0]
 final fun io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_MEDIUM$stableprop_getter(): kotlin/Int // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_MEDIUM$stableprop_getter|io_github_compose_jindong_model_HapticIntensity_MEDIUM$stableprop_getter(){}[0]
 final fun io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_STRONG$stableprop_getter(): kotlin/Int // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticIntensity_STRONG$stableprop_getter|io_github_compose_jindong_model_HapticIntensity_STRONG$stableprop_getter(){}[0]
+final fun io.github.compose.jindong.model/io_github_compose_jindong_model_HapticProperties$stableprop_getter(): kotlin/Int // io.github.compose.jindong.model/io_github_compose_jindong_model_HapticProperties$stableprop_getter|io_github_compose_jindong_model_HapticProperties$stableprop_getter(){}[0]
 final fun io.github.compose.jindong/Jindong(kotlin/Array<out kotlin/Any?>..., kotlin/Function3<io.github.compose.jindong/JindongScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong/Jindong|Jindong(kotlin.Array<out|kotlin.Any?>...;kotlin.Function3<io.github.compose.jindong.JindongScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun io.github.compose.jindong/JindongProvider(kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong/JindongProvider|JindongProvider(kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]

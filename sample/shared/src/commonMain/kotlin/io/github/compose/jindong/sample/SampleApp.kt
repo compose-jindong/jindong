@@ -31,6 +31,7 @@ import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Repeat
 import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.model.HapticIntensity
+import io.github.compose.jindong.model.HapticProperties
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -196,6 +197,26 @@ private fun HapticPatternEffect(patternType: HapticPatternType, trigger: Int) {
         Haptic(50.milliseconds, HapticIntensity.HIGH)
       }
     }
+
+    HapticPatternType.SHARP_TAP -> {
+      {
+        Haptic(
+          duration = 80.milliseconds,
+          properties = HapticProperties.sharpness(1.0f),
+        )
+      }
+    }
+
+    HapticPatternType.SOFT_ENVELOPE -> {
+      {
+        Haptic(
+          duration = 150.milliseconds,
+          properties = HapticProperties
+            .sharpness(0.3f)
+            .envelope(attack = 50.milliseconds, release = 40.milliseconds),
+        )
+      }
+    }
   }
 
   Jindong(trigger, content = pattern)
@@ -215,4 +236,6 @@ enum class HapticPatternType(
   SUCCESS("Success", "Success confirmation pattern"),
   ERROR("Error", "Error alert pattern"),
   RAMP_UP("Ramp Up", "Gradually increasing intensity"),
+  SHARP_TAP("Sharp Tap", "Sharp haptic (iOS)"),
+  SOFT_ENVELOPE("Soft Envelope", "Soft attack/release (iOS)"),
 }
