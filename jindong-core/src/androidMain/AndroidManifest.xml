@@ -20,7 +20,7 @@
     <application>
         <provider
             android:name="io.github.compose.jindong.core.JindongInitializer"
-            android:authorities="${applicationId}.jindong-init"
+            android:authorities="${applicationId}.jindong.provider"
             android:exported="false"
             android:initOrder="100" />
     </application>

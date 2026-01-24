@@ -32,7 +32,7 @@ import android.net.Uri
  *
  * Users do not need to interact with this class directly.
  */
-public class JindongInitializer : ContentProvider() {
+internal class JindongInitializer : ContentProvider() {
 
   override fun onCreate(): Boolean {
     applicationContext = context?.applicationContext
@@ -60,7 +60,7 @@ public class JindongInitializer : ContentProvider() {
     selectionArgs: Array<out String>?,
   ): Int = 0
 
-  public companion object {
+  companion object {
     @SuppressLint("StaticFieldLeak")
     @Volatile
     internal var applicationContext: Context? = null
