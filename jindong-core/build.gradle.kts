@@ -105,6 +105,10 @@ mavenPublishing {
   }
 }
 
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
+}
+
 kover {
   reports {
     total {
