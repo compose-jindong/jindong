@@ -105,7 +105,7 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
   }
 
   private fun ensureEngine(): CHHapticEngine? {
-    if (engine != null) return engine
+    engineRef.load()?.let { return it }
 
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
@@ -130,8 +130,12 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
         return@memScoped null
       }
 
-      engine = newEngine
-      newEngine
+      if (engineRef.compareAndSet(null, newEngine)) {
+        newEngine
+      } else {
+        newEngine.stopWithCompletionHandler(null)
+        engineRef.load()
+      }
     }
   }
 
