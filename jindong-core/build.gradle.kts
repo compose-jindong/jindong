@@ -22,6 +22,7 @@ plugins {
   alias(libs.plugins.kotest)
   alias(libs.plugins.ksp)
   alias(libs.plugins.binaryCompatibilityValidator)
+  alias(libs.plugins.kover)
 }
 
 apiValidation {
@@ -100,6 +101,19 @@ mavenPublishing {
       url = "https://github.com/compose-jindong/jindong"
       connection = "scm:git:git://github.com/compose-jindong/jindong.git"
       developerConnection = "scm:git:ssh://github.com/compose-jindong/jindong.git"
+    }
+  }
+}
+
+kover {
+  reports {
+    total {
+      html {
+        onCheck = true
+      }
+      xml {
+        onCheck = true
+      }
     }
   }
 }
