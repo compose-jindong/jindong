@@ -34,7 +34,7 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
  * }
  * ```
  */
-public class SequenceElement : HapticElement {
+class SequenceElement : HapticElement {
   override val children: MutableList<HapticElement> = mutableListOf()
 
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {

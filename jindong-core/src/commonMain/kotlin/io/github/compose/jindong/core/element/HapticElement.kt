@@ -26,13 +26,13 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
  * This is the core building block of the haptic pattern system,
  * used by both the Kotlin DSL and Compose Runtime integration.
  */
-public interface HapticElement {
+interface HapticElement {
   /**
    * Child elements managed by this element.
    * Container elements maintain their children here.
    * Leaf elements return an empty list.
    */
-  public val children: MutableList<HapticElement>
+  val children: MutableList<HapticElement>
 
   /**
    * Collects haptic events from this element and its children.
@@ -40,7 +40,7 @@ public interface HapticElement {
    * @param startTimeMs The absolute start time for this element (relative to pattern start)
    * @return List of scheduled haptic events
    */
-  public fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent>
+  fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent>
 
   /**
    * Returns the total duration of this element in milliseconds.
@@ -51,5 +51,5 @@ public interface HapticElement {
    * @param startTimeMs The absolute start time for this element (relative to pattern start)
    * @return Total duration from start time until all children complete
    */
-  public fun totalDurationMs(startTimeMs: Long): Long
+  fun totalDurationMs(startTimeMs: Long): Long
 }

@@ -21,6 +21,7 @@ import io.github.compose.jindong.core.executor.HapticExecutor
 import io.github.compose.jindong.core.executor.HapticHandle
 import io.github.compose.jindong.core.executor.createHapticExecutor
 import io.github.compose.jindong.core.model.HapticPattern
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
@@ -78,9 +79,10 @@ import kotlinx.coroutines.sync.withLock
  * @see playAsync
  * @see playHaptic
  */
-public object HapticManager {
+object HapticManager {
 
-  private val mutex = Mutex()
+  private val executionMutex = Mutex()
+  private val stateMutex = Mutex()
   private var executor: HapticExecutor? = null
   private var currentHandle: HapticHandle? = null
 
@@ -94,9 +96,11 @@ public object HapticManager {
    *
    * @param context Platform-specific context (Android: Context, iOS: null)
    */
-  public fun initialize(context: Any? = null) {
-    if (executor == null) {
-      executor = createHapticExecutor(context)
+  fun initialize(context: Any? = null) {
+    withStateLockBlocking {
+      if (executor == null) {
+        executor = createHapticExecutor(context)
+      }
     }
   }
 
@@ -106,8 +110,10 @@ public object HapticManager {
    * @return true if haptic feedback is supported
    * @throws IllegalStateException if HapticManager is not initialized
    */
-  public val isSupported: Boolean
-    get() = requireExecutor().isSupported
+  val isSupported: Boolean
+    get() = withStateLockBlocking {
+      getOrCreateExecutorLocked().isSupported
+    }
 
   /**
    * Executes the given pattern. This is a suspend function that waits for completion.
@@ -116,11 +122,14 @@ public object HapticManager {
    *
    * @param pattern The haptic pattern to execute
    */
-  public suspend fun execute(pattern: HapticPattern) {
-    mutex.withLock {
-      currentHandle?.cancel()
-      currentHandle = null
-      requireExecutor().execute(pattern)
+  suspend fun execute(pattern: HapticPattern) {
+    executionMutex.withLock {
+      val executor = withStateLock {
+        currentHandle?.cancel()
+        currentHandle = null
+        getOrCreateExecutorLocked()
+      }
+      executor.execute(pattern)
     }
   }
 
@@ -132,19 +141,21 @@ public object HapticManager {
    * @param pattern The haptic pattern to execute
    * @return A [HapticHandle] for cancelling the execution
    */
-  public fun executeAsync(pattern: HapticPattern): HapticHandle {
+  fun executeAsync(pattern: HapticPattern): HapticHandle = withStateLockBlocking {
     currentHandle?.cancel()
-    val handle = requireExecutor().executeAsync(pattern)
+    val handle = getOrCreateExecutorLocked().executeAsync(pattern)
     currentHandle = handle
-    return handle
+    handle
   }
 
   /**
    * Cancels any ongoing haptic execution.
    */
-  public fun cancel() {
-    currentHandle?.cancel()
-    currentHandle = null
+  fun cancel() {
+    withStateLockBlocking {
+      currentHandle?.cancel()
+      currentHandle = null
+    }
   }
 
   /**
@@ -152,19 +163,30 @@ public object HapticManager {
    *
    * After calling this, the manager can still be used - it will reinitialize on next use.
    */
-  public fun release() {
-    currentHandle?.cancel()
-    currentHandle = null
-    executor?.release()
-    executor = null
+  fun release() {
+    withStateLockBlocking {
+      currentHandle?.cancel()
+      currentHandle = null
+      executor?.release()
+      executor = null
+    }
   }
 
-  private fun requireExecutor(): HapticExecutor = executor ?: run {
+  private suspend fun <T> withStateLock(action: () -> T): T = stateMutex.withLock { action() }
+
+  private fun <T> withStateLockBlocking(action: () -> T): T = runBlocking {
+    stateMutex.withLock { action() }
+  }
+
+  private fun getOrCreateExecutorLocked(): HapticExecutor {
+    val existing = executor
+    if (existing != null) return existing
+
     // Try to get platform context automatically
     val context = getPlatformContext()
     val newExecutor = createHapticExecutor(context)
     executor = newExecutor
-    newExecutor
+    return newExecutor
   }
 }
 
@@ -187,7 +209,7 @@ public object HapticManager {
  * }
  * ```
  */
-public suspend fun HapticPattern.play() {
+suspend fun HapticPattern.play() {
   HapticManager.execute(this)
 }
 
@@ -212,7 +234,7 @@ public suspend fun HapticPattern.play() {
  *
  * @return A [HapticHandle] for cancelling the execution
  */
-public fun HapticPattern.playAsync(): HapticHandle = HapticManager.executeAsync(this)
+fun HapticPattern.playAsync(): HapticHandle = HapticManager.executeAsync(this)
 
 /**
  * Builds and executes a haptic pattern inline.
@@ -232,7 +254,7 @@ public fun HapticPattern.playAsync(): HapticHandle = HapticManager.executeAsync(
  *
  * @param block The DSL block for defining the pattern
  */
-public suspend fun playHaptic(block: HapticPatternScope.() -> Unit) {
+suspend fun playHaptic(block: HapticPatternScope.() -> Unit) {
   val pattern = buildHapticPattern(block)
   pattern.play()
 }

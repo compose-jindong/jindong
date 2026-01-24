@@ -46,7 +46,7 @@ import kotlin.time.Duration
  * @see buildHapticPattern
  */
 @HapticDslMarker
-public class HapticPatternScope internal constructor() {
+class HapticPatternScope internal constructor() {
 
   internal val rootElement: SequenceElement = SequenceElement()
 
@@ -57,7 +57,7 @@ public class HapticPatternScope internal constructor() {
    * @param intensity Vibration intensity (default: [HapticIntensity.MEDIUM])
    * @param iosParameters iOS Core Haptics parameters (optional, ignored on Android)
    */
-  public fun haptic(
+  fun haptic(
     duration: Duration,
     intensity: HapticIntensity = HapticIntensity.MEDIUM,
     iosParameters: IosHapticParameters? = null,
@@ -76,7 +76,7 @@ public class HapticPatternScope internal constructor() {
    *
    * @param duration Duration of the delay
    */
-  public fun delay(duration: Duration) {
+  fun delay(duration: Duration) {
     rootElement.children.add(
       DelayElement(durationMs = duration.inWholeMilliseconds),
     )
@@ -96,7 +96,7 @@ public class HapticPatternScope internal constructor() {
    * @param count Number of repetitions
    * @param block Block to repeat
    */
-  public fun repeat(count: Int, block: HapticPatternScope.() -> Unit) {
+  fun repeat(count: Int, block: HapticPatternScope.() -> Unit) {
     val repeatElement = RepeatElement(count)
     val innerScope = HapticPatternScope()
     innerScope.block()
@@ -122,7 +122,7 @@ public class HapticPatternScope internal constructor() {
    * @param count Number of repetitions
    * @param block Block to repeat with iteration index (0-based)
    */
-  public fun repeatWithIndex(count: Int, block: HapticPatternScope.(index: Int) -> Unit) {
+  fun repeatWithIndex(count: Int, block: HapticPatternScope.(index: Int) -> Unit) {
     for (i in 0 until count) {
       block(i)
     }
@@ -144,7 +144,7 @@ public class HapticPatternScope internal constructor() {
    *
    * @param block Block containing sequenced elements
    */
-  public fun sequence(block: HapticPatternScope.() -> Unit) {
+  fun sequence(block: HapticPatternScope.() -> Unit) {
     val sequenceElement = SequenceElement()
     val innerScope = HapticPatternScope()
     innerScope.block()
@@ -172,7 +172,7 @@ public class HapticPatternScope internal constructor() {
    *
    * @param pattern The pattern to include
    */
-  public fun include(pattern: HapticPattern) {
+  fun include(pattern: HapticPattern) {
     rootElement.children.add(PatternElement(pattern))
   }
 
@@ -207,7 +207,7 @@ public class HapticPatternScope internal constructor() {
  * @return The constructed [HapticPattern]
  * @see HapticPatternScope
  */
-public fun buildHapticPattern(block: HapticPatternScope.() -> Unit): HapticPattern {
+fun buildHapticPattern(block: HapticPatternScope.() -> Unit): HapticPattern {
   val scope = HapticPatternScope()
   scope.block()
   return scope.build()

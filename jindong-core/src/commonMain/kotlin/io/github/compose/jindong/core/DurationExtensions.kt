@@ -29,7 +29,7 @@ import kotlin.time.Duration.Companion.milliseconds
  * }
  * ```
  */
-public val Int.ms: Duration
+val Int.ms: Duration
   get() = this.milliseconds
 
 /**
@@ -43,5 +43,5 @@ public val Int.ms: Duration
  * }
  * ```
  */
-public val Long.ms: Duration
+val Long.ms: Duration
   get() = this.milliseconds

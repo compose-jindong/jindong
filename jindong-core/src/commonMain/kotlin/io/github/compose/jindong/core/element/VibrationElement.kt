@@ -29,10 +29,10 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
  * @property intensity Vibration intensity level
  * @property iosParameters iOS Core Haptics parameters (ignored on Android)
  */
-public class VibrationElement(
-  public val durationMs: Long,
-  public val intensity: HapticIntensity,
-  public val iosParameters: IosHapticParameters? = null,
+class VibrationElement(
+  val durationMs: Long,
+  val intensity: HapticIntensity,
+  val iosParameters: IosHapticParameters? = null,
 ) : HapticElement {
 
   init {

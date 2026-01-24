@@ -27,12 +27,12 @@ import io.github.compose.jindong.core.model.HapticPattern
  *
  * @see createHapticExecutor
  */
-public interface HapticExecutor {
+interface HapticExecutor {
 
   /**
    * Checks if haptic feedback is supported on this device.
    */
-  public val isSupported: Boolean
+  val isSupported: Boolean
 
   /**
    * Executes haptic pattern. Cancellable via coroutine cancellation.
@@ -44,7 +44,7 @@ public interface HapticExecutor {
    *
    * @param pattern The haptic pattern to execute
    */
-  public suspend fun execute(pattern: HapticPattern)
+  suspend fun execute(pattern: HapticPattern)
 
   /**
    * Executes with explicit cancellation handle.
@@ -56,7 +56,7 @@ public interface HapticExecutor {
    * @param pattern The haptic pattern to execute
    * @return A [HapticHandle] that can be used to cancel the execution
    */
-  public fun executeAsync(pattern: HapticPattern): HapticHandle
+  fun executeAsync(pattern: HapticPattern): HapticHandle
 
   /**
    * Releases any resources held by the executor.
@@ -66,5 +66,5 @@ public interface HapticExecutor {
    *
    * After calling this method, the executor should not be used anymore.
    */
-  public fun release()
+  fun release()
 }

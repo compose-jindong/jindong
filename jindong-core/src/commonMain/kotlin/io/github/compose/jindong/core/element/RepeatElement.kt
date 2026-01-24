@@ -35,8 +35,8 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
  *
  * @property count Number of times to repeat the children
  */
-public class RepeatElement(
-  public val count: Int,
+class RepeatElement(
+  val count: Int,
 ) : HapticElement {
 
   init {

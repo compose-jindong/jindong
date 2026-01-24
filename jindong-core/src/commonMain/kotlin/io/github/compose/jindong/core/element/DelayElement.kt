@@ -25,8 +25,8 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
  *
  * @property durationMs Duration of the delay in milliseconds
  */
-public class DelayElement(
-  public val durationMs: Long,
+class DelayElement(
+  val durationMs: Long,
 ) : HapticElement {
 
   init {

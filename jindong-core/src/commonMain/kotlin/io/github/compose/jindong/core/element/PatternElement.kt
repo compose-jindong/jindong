@@ -39,8 +39,8 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
  *
  * @property pattern The haptic pattern to include
  */
-public class PatternElement(
-  public val pattern: HapticPattern,
+class PatternElement(
+  val pattern: HapticPattern,
 ) : HapticElement {
 
   override val children: MutableList<HapticElement> = mutableListOf()

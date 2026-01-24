@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(ExperimentalAtomicApi::class, ExperimentalForeignApi::class, BetaInteropApi::class)
+
 package io.github.compose.jindong.core.executor
 
 import io.github.compose.jindong.core.model.HapticPattern
@@ -34,14 +36,20 @@ import platform.CoreHaptics.CHHapticEventTypeHapticContinuous
 import platform.CoreHaptics.CHHapticPattern
 import platform.CoreHaptics.CHHapticPatternPlayerProtocol
 import platform.Foundation.NSError
+import kotlin.concurrent.atomics.AtomicReference
+import kotlin.concurrent.atomics.ExperimentalAtomicApi
 
 /**
  * iOS HapticExecutor implementation using Core Haptics.
  */
-@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 internal class DefaultIosHapticExecutor : HapticExecutor {
 
-  private var engine: CHHapticEngine? = null
+  private val engineRef = AtomicReference<CHHapticEngine?>(null)
+  private var engine: CHHapticEngine?
+    get() = engineRef.load()
+    set(value) {
+      engineRef.store(value)
+    }
 
   override val isSupported: Boolean by lazy {
     CHHapticEngine.capabilitiesForHardware().supportsHaptics()
@@ -93,8 +101,7 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
   }
 
   override fun release() {
-    engine?.stopWithCompletionHandler(null)
-    engine = null
+    engineRef.exchange(null)?.stopWithCompletionHandler(null)
   }
 
   private fun ensureEngine(): CHHapticEngine? {
@@ -197,4 +204,4 @@ internal class IosHapticHandle(
  * @param context Not used on iOS, can be null
  * @return IosHapticExecutor implementation
  */
-public actual fun createHapticExecutor(context: Any?): HapticExecutor = DefaultIosHapticExecutor()
+actual fun createHapticExecutor(context: Any?): HapticExecutor = DefaultIosHapticExecutor()
