@@ -95,12 +95,11 @@ object HapticManager {
    * On iOS, this is a no-op as no context is needed.
    *
    * @param context Platform-specific context (Android: Context, iOS: null)
+   * @param executor Platform-specific executor
    */
-  fun initialize(context: Any? = null) {
+  fun initialize(context: Any? = null, executor: HapticExecutor? = null) {
     withStateLockBlocking {
-      if (executor == null) {
-        executor = createHapticExecutor(context)
-      }
+      this.executor = executor ?: createHapticExecutor(context)
     }
   }
 

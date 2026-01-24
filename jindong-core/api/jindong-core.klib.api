@@ -214,7 +214,7 @@ final object io.github.compose.jindong.core/HapticManager { // io.github.compose
 
     final fun cancel() // io.github.compose.jindong.core/HapticManager.cancel|cancel(){}[0]
     final fun executeAsync(io.github.compose.jindong.core.model/HapticPattern): io.github.compose.jindong.core.executor/HapticHandle // io.github.compose.jindong.core/HapticManager.executeAsync|executeAsync(io.github.compose.jindong.core.model.HapticPattern){}[0]
-    final fun initialize(kotlin/Any? = ...) // io.github.compose.jindong.core/HapticManager.initialize|initialize(kotlin.Any?){}[0]
+    final fun initialize(kotlin/Any? = ..., io.github.compose.jindong.core.executor/HapticExecutor? = ...) // io.github.compose.jindong.core/HapticManager.initialize|initialize(kotlin.Any?;io.github.compose.jindong.core.executor.HapticExecutor?){}[0]
     final fun release() // io.github.compose.jindong.core/HapticManager.release|release(){}[0]
     final suspend fun execute(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core/HapticManager.execute|execute(io.github.compose.jindong.core.model.HapticPattern){}[0]
 }

@@ -8,8 +8,8 @@ public final class io/github/compose/jindong/core/HapticManager {
 	public final fun cancel ()V
 	public final fun execute (Lio/github/compose/jindong/core/model/HapticPattern;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public final fun executeAsync (Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/executor/HapticHandle;
-	public final fun initialize (Ljava/lang/Object;)V
-	public static synthetic fun initialize$default (Lio/github/compose/jindong/core/HapticManager;Ljava/lang/Object;ILjava/lang/Object;)V
+	public final fun initialize (Ljava/lang/Object;Lio/github/compose/jindong/core/executor/HapticExecutor;)V
+	public static synthetic fun initialize$default (Lio/github/compose/jindong/core/HapticManager;Ljava/lang/Object;Lio/github/compose/jindong/core/executor/HapticExecutor;ILjava/lang/Object;)V
 	public final fun isSupported ()Z
 	public final fun release ()V
 }
