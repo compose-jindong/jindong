@@ -1,0 +1,231 @@
+// Klib ABI Dump
+// Targets: [iosArm64, iosSimulatorArm64, iosX64]
+// Rendering settings:
+// - Signature version: 2
+// - Show manifest properties: true
+// - Show declarations: true
+
+// Library unique name: <io.github.compose-jindong:jindong-core>
+open annotation class io.github.compose.jindong.core.dsl/HapticDslMarker : kotlin/Annotation { // io.github.compose.jindong.core.dsl/HapticDslMarker|null[0]
+    constructor <init>() // io.github.compose.jindong.core.dsl/HapticDslMarker.<init>|<init>(){}[0]
+}
+
+abstract interface io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/HapticElement|null[0]
+    abstract val children // io.github.compose.jindong.core.element/HapticElement.children|{}children[0]
+        abstract fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/HapticElement.children.<get-children>|<get-children>(){}[0]
+
+    abstract fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/HapticElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    abstract fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/HapticElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+abstract interface io.github.compose.jindong.core.executor/HapticExecutor { // io.github.compose.jindong.core.executor/HapticExecutor|null[0]
+    abstract val isSupported // io.github.compose.jindong.core.executor/HapticExecutor.isSupported|{}isSupported[0]
+        abstract fun <get-isSupported>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticExecutor.isSupported.<get-isSupported>|<get-isSupported>(){}[0]
+
+    abstract fun executeAsync(io.github.compose.jindong.core.model/HapticPattern): io.github.compose.jindong.core.executor/HapticHandle // io.github.compose.jindong.core.executor/HapticExecutor.executeAsync|executeAsync(io.github.compose.jindong.core.model.HapticPattern){}[0]
+    abstract fun release() // io.github.compose.jindong.core.executor/HapticExecutor.release|release(){}[0]
+    abstract suspend fun execute(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core.executor/HapticExecutor.execute|execute(io.github.compose.jindong.core.model.HapticPattern){}[0]
+}
+
+abstract interface io.github.compose.jindong.core.executor/HapticHandle { // io.github.compose.jindong.core.executor/HapticHandle|null[0]
+    abstract val isActive // io.github.compose.jindong.core.executor/HapticHandle.isActive|{}isActive[0]
+        abstract fun <get-isActive>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticHandle.isActive.<get-isActive>|<get-isActive>(){}[0]
+
+    abstract fun cancel() // io.github.compose.jindong.core.executor/HapticHandle.cancel|cancel(){}[0]
+}
+
+final class io.github.compose.jindong.core.dsl/HapticPatternScope { // io.github.compose.jindong.core.dsl/HapticPatternScope|null[0]
+    final fun delay(kotlin.time/Duration) // io.github.compose.jindong.core.dsl/HapticPatternScope.delay|delay(kotlin.time.Duration){}[0]
+    final fun haptic(kotlin.time/Duration, io.github.compose.jindong.core.model/HapticIntensity = ..., io.github.compose.jindong.core.model/IosHapticParameters? = ...) // io.github.compose.jindong.core.dsl/HapticPatternScope.haptic|haptic(kotlin.time.Duration;io.github.compose.jindong.core.model.HapticIntensity;io.github.compose.jindong.core.model.IosHapticParameters?){}[0]
+    final fun include(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core.dsl/HapticPatternScope.include|include(io.github.compose.jindong.core.model.HapticPattern){}[0]
+    final fun repeat(kotlin/Int, kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.repeat|repeat(kotlin.Int;kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]
+    final fun repeatWithIndex(kotlin/Int, kotlin/Function2<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Int, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.repeatWithIndex|repeatWithIndex(kotlin.Int;kotlin.Function2<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Int,kotlin.Unit>){}[0]
+    final fun sequence(kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.sequence|sequence(kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]
+}
+
+final class io.github.compose.jindong.core.element/DelayElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/DelayElement|null[0]
+    constructor <init>(kotlin/Long) // io.github.compose.jindong.core.element/DelayElement.<init>|<init>(kotlin.Long){}[0]
+
+    final val children // io.github.compose.jindong.core.element/DelayElement.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/DelayElement.children.<get-children>|<get-children>(){}[0]
+    final val durationMs // io.github.compose.jindong.core.element/DelayElement.durationMs|{}durationMs[0]
+        final fun <get-durationMs>(): kotlin/Long // io.github.compose.jindong.core.element/DelayElement.durationMs.<get-durationMs>|<get-durationMs>(){}[0]
+
+    final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/DelayElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/DelayElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+final class io.github.compose.jindong.core.element/PatternElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/PatternElement|null[0]
+    constructor <init>(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core.element/PatternElement.<init>|<init>(io.github.compose.jindong.core.model.HapticPattern){}[0]
+
+    final val children // io.github.compose.jindong.core.element/PatternElement.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/PatternElement.children.<get-children>|<get-children>(){}[0]
+    final val pattern // io.github.compose.jindong.core.element/PatternElement.pattern|{}pattern[0]
+        final fun <get-pattern>(): io.github.compose.jindong.core.model/HapticPattern // io.github.compose.jindong.core.element/PatternElement.pattern.<get-pattern>|<get-pattern>(){}[0]
+
+    final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/PatternElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/PatternElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+final class io.github.compose.jindong.core.element/RepeatElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/RepeatElement|null[0]
+    constructor <init>(kotlin/Int) // io.github.compose.jindong.core.element/RepeatElement.<init>|<init>(kotlin.Int){}[0]
+
+    final val children // io.github.compose.jindong.core.element/RepeatElement.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/RepeatElement.children.<get-children>|<get-children>(){}[0]
+    final val count // io.github.compose.jindong.core.element/RepeatElement.count|{}count[0]
+        final fun <get-count>(): kotlin/Int // io.github.compose.jindong.core.element/RepeatElement.count.<get-count>|<get-count>(){}[0]
+
+    final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/RepeatElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/RepeatElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+final class io.github.compose.jindong.core.element/SequenceElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/SequenceElement|null[0]
+    constructor <init>() // io.github.compose.jindong.core.element/SequenceElement.<init>|<init>(){}[0]
+
+    final val children // io.github.compose.jindong.core.element/SequenceElement.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/SequenceElement.children.<get-children>|<get-children>(){}[0]
+
+    final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/SequenceElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/SequenceElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+final class io.github.compose.jindong.core.element/VibrationElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/VibrationElement|null[0]
+    constructor <init>(kotlin/Long, io.github.compose.jindong.core.model/HapticIntensity, io.github.compose.jindong.core.model/IosHapticParameters? = ...) // io.github.compose.jindong.core.element/VibrationElement.<init>|<init>(kotlin.Long;io.github.compose.jindong.core.model.HapticIntensity;io.github.compose.jindong.core.model.IosHapticParameters?){}[0]
+
+    final val children // io.github.compose.jindong.core.element/VibrationElement.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/VibrationElement.children.<get-children>|<get-children>(){}[0]
+    final val durationMs // io.github.compose.jindong.core.element/VibrationElement.durationMs|{}durationMs[0]
+        final fun <get-durationMs>(): kotlin/Long // io.github.compose.jindong.core.element/VibrationElement.durationMs.<get-durationMs>|<get-durationMs>(){}[0]
+    final val intensity // io.github.compose.jindong.core.element/VibrationElement.intensity|{}intensity[0]
+        final fun <get-intensity>(): io.github.compose.jindong.core.model/HapticIntensity // io.github.compose.jindong.core.element/VibrationElement.intensity.<get-intensity>|<get-intensity>(){}[0]
+    final val iosParameters // io.github.compose.jindong.core.element/VibrationElement.iosParameters|{}iosParameters[0]
+        final fun <get-iosParameters>(): io.github.compose.jindong.core.model/IosHapticParameters? // io.github.compose.jindong.core.element/VibrationElement.iosParameters.<get-iosParameters>|<get-iosParameters>(){}[0]
+
+    final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/VibrationElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/VibrationElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+final class io.github.compose.jindong.core.model/HapticPattern { // io.github.compose.jindong.core.model/HapticPattern|null[0]
+    constructor <init>(kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent>, io.github.compose.jindong.core.element/HapticElement? = ...) // io.github.compose.jindong.core.model/HapticPattern.<init>|<init>(kotlin.collections.List<io.github.compose.jindong.core.model.ScheduledHapticEvent>;io.github.compose.jindong.core.element.HapticElement?){}[0]
+
+    final val events // io.github.compose.jindong.core.model/HapticPattern.events|{}events[0]
+        final fun <get-events>(): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.model/HapticPattern.events.<get-events>|<get-events>(){}[0]
+
+    final fun component1(): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.model/HapticPattern.component1|component1(){}[0]
+    final fun copy(kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> = ..., io.github.compose.jindong.core.element/HapticElement? = ...): io.github.compose.jindong.core.model/HapticPattern // io.github.compose.jindong.core.model/HapticPattern.copy|copy(kotlin.collections.List<io.github.compose.jindong.core.model.ScheduledHapticEvent>;io.github.compose.jindong.core.element.HapticElement?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/HapticPattern.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/HapticPattern.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.compose.jindong.core.model/HapticPattern.toString|toString(){}[0]
+
+    final object Companion { // io.github.compose.jindong.core.model/HapticPattern.Companion|null[0]
+        final val Empty // io.github.compose.jindong.core.model/HapticPattern.Companion.Empty|{}Empty[0]
+            final fun <get-Empty>(): io.github.compose.jindong.core.model/HapticPattern // io.github.compose.jindong.core.model/HapticPattern.Companion.Empty.<get-Empty>|<get-Empty>(){}[0]
+    }
+}
+
+final class io.github.compose.jindong.core.model/IosHapticParameters { // io.github.compose.jindong.core.model/IosHapticParameters|null[0]
+    constructor <init>(kotlin/Float = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin/Boolean? = ...) // io.github.compose.jindong.core.model/IosHapticParameters.<init>|<init>(kotlin.Float;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.Boolean?){}[0]
+
+    final val attackTime // io.github.compose.jindong.core.model/IosHapticParameters.attackTime|{}attackTime[0]
+        final fun <get-attackTime>(): kotlin.time/Duration? // io.github.compose.jindong.core.model/IosHapticParameters.attackTime.<get-attackTime>|<get-attackTime>(){}[0]
+    final val decayTime // io.github.compose.jindong.core.model/IosHapticParameters.decayTime|{}decayTime[0]
+        final fun <get-decayTime>(): kotlin.time/Duration? // io.github.compose.jindong.core.model/IosHapticParameters.decayTime.<get-decayTime>|<get-decayTime>(){}[0]
+    final val releaseTime // io.github.compose.jindong.core.model/IosHapticParameters.releaseTime|{}releaseTime[0]
+        final fun <get-releaseTime>(): kotlin.time/Duration? // io.github.compose.jindong.core.model/IosHapticParameters.releaseTime.<get-releaseTime>|<get-releaseTime>(){}[0]
+    final val sharpness // io.github.compose.jindong.core.model/IosHapticParameters.sharpness|{}sharpness[0]
+        final fun <get-sharpness>(): kotlin/Float // io.github.compose.jindong.core.model/IosHapticParameters.sharpness.<get-sharpness>|<get-sharpness>(){}[0]
+    final val sustained // io.github.compose.jindong.core.model/IosHapticParameters.sustained|{}sustained[0]
+        final fun <get-sustained>(): kotlin/Boolean? // io.github.compose.jindong.core.model/IosHapticParameters.sustained.<get-sustained>|<get-sustained>(){}[0]
+
+    final fun component1(): kotlin/Float // io.github.compose.jindong.core.model/IosHapticParameters.component1|component1(){}[0]
+    final fun component2(): kotlin.time/Duration? // io.github.compose.jindong.core.model/IosHapticParameters.component2|component2(){}[0]
+    final fun component3(): kotlin.time/Duration? // io.github.compose.jindong.core.model/IosHapticParameters.component3|component3(){}[0]
+    final fun component4(): kotlin.time/Duration? // io.github.compose.jindong.core.model/IosHapticParameters.component4|component4(){}[0]
+    final fun component5(): kotlin/Boolean? // io.github.compose.jindong.core.model/IosHapticParameters.component5|component5(){}[0]
+    final fun copy(kotlin/Float = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin.time/Duration? = ..., kotlin/Boolean? = ...): io.github.compose.jindong.core.model/IosHapticParameters // io.github.compose.jindong.core.model/IosHapticParameters.copy|copy(kotlin.Float;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.time.Duration?;kotlin.Boolean?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/IosHapticParameters.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/IosHapticParameters.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.compose.jindong.core.model/IosHapticParameters.toString|toString(){}[0]
+}
+
+final class io.github.compose.jindong.core.model/ScheduledHapticEvent { // io.github.compose.jindong.core.model/ScheduledHapticEvent|null[0]
+    constructor <init>(kotlin/Long, kotlin/Long, io.github.compose.jindong.core.model/HapticIntensity, io.github.compose.jindong.core.model/IosHapticParameters? = ...) // io.github.compose.jindong.core.model/ScheduledHapticEvent.<init>|<init>(kotlin.Long;kotlin.Long;io.github.compose.jindong.core.model.HapticIntensity;io.github.compose.jindong.core.model.IosHapticParameters?){}[0]
+
+    final val durationMs // io.github.compose.jindong.core.model/ScheduledHapticEvent.durationMs|{}durationMs[0]
+        final fun <get-durationMs>(): kotlin/Long // io.github.compose.jindong.core.model/ScheduledHapticEvent.durationMs.<get-durationMs>|<get-durationMs>(){}[0]
+    final val intensity // io.github.compose.jindong.core.model/ScheduledHapticEvent.intensity|{}intensity[0]
+        final fun <get-intensity>(): io.github.compose.jindong.core.model/HapticIntensity // io.github.compose.jindong.core.model/ScheduledHapticEvent.intensity.<get-intensity>|<get-intensity>(){}[0]
+    final val iosParameters // io.github.compose.jindong.core.model/ScheduledHapticEvent.iosParameters|{}iosParameters[0]
+        final fun <get-iosParameters>(): io.github.compose.jindong.core.model/IosHapticParameters? // io.github.compose.jindong.core.model/ScheduledHapticEvent.iosParameters.<get-iosParameters>|<get-iosParameters>(){}[0]
+    final val startTimeMs // io.github.compose.jindong.core.model/ScheduledHapticEvent.startTimeMs|{}startTimeMs[0]
+        final fun <get-startTimeMs>(): kotlin/Long // io.github.compose.jindong.core.model/ScheduledHapticEvent.startTimeMs.<get-startTimeMs>|<get-startTimeMs>(){}[0]
+
+    final fun component1(): kotlin/Long // io.github.compose.jindong.core.model/ScheduledHapticEvent.component1|component1(){}[0]
+    final fun component2(): kotlin/Long // io.github.compose.jindong.core.model/ScheduledHapticEvent.component2|component2(){}[0]
+    final fun component3(): io.github.compose.jindong.core.model/HapticIntensity // io.github.compose.jindong.core.model/ScheduledHapticEvent.component3|component3(){}[0]
+    final fun component4(): io.github.compose.jindong.core.model/IosHapticParameters? // io.github.compose.jindong.core.model/ScheduledHapticEvent.component4|component4(){}[0]
+    final fun copy(kotlin/Long = ..., kotlin/Long = ..., io.github.compose.jindong.core.model/HapticIntensity = ..., io.github.compose.jindong.core.model/IosHapticParameters? = ...): io.github.compose.jindong.core.model/ScheduledHapticEvent // io.github.compose.jindong.core.model/ScheduledHapticEvent.copy|copy(kotlin.Long;kotlin.Long;io.github.compose.jindong.core.model.HapticIntensity;io.github.compose.jindong.core.model.IosHapticParameters?){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/ScheduledHapticEvent.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/ScheduledHapticEvent.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.compose.jindong.core.model/ScheduledHapticEvent.toString|toString(){}[0]
+}
+
+sealed class io.github.compose.jindong.core.model/HapticIntensity { // io.github.compose.jindong.core.model/HapticIntensity|null[0]
+    final val value // io.github.compose.jindong.core.model/HapticIntensity.value|{}value[0]
+        final fun <get-value>(): kotlin/Float // io.github.compose.jindong.core.model/HapticIntensity.value.<get-value>|<get-value>(){}[0]
+
+    final class Custom : io.github.compose.jindong.core.model/HapticIntensity { // io.github.compose.jindong.core.model/HapticIntensity.Custom|null[0]
+        constructor <init>(kotlin/Float) // io.github.compose.jindong.core.model/HapticIntensity.Custom.<init>|<init>(kotlin.Float){}[0]
+
+        final fun copy(kotlin/Float = ...): io.github.compose.jindong.core.model/HapticIntensity.Custom // io.github.compose.jindong.core.model/HapticIntensity.Custom.copy|copy(kotlin.Float){}[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/HapticIntensity.Custom.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/HapticIntensity.Custom.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.compose.jindong.core.model/HapticIntensity.Custom.toString|toString(){}[0]
+    }
+
+    final object HIGH : io.github.compose.jindong.core.model/HapticIntensity { // io.github.compose.jindong.core.model/HapticIntensity.HIGH|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/HapticIntensity.HIGH.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/HapticIntensity.HIGH.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.compose.jindong.core.model/HapticIntensity.HIGH.toString|toString(){}[0]
+    }
+
+    final object LIGHT : io.github.compose.jindong.core.model/HapticIntensity { // io.github.compose.jindong.core.model/HapticIntensity.LIGHT|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/HapticIntensity.LIGHT.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/HapticIntensity.LIGHT.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.compose.jindong.core.model/HapticIntensity.LIGHT.toString|toString(){}[0]
+    }
+
+    final object MEDIUM : io.github.compose.jindong.core.model/HapticIntensity { // io.github.compose.jindong.core.model/HapticIntensity.MEDIUM|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/HapticIntensity.MEDIUM.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/HapticIntensity.MEDIUM.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.compose.jindong.core.model/HapticIntensity.MEDIUM.toString|toString(){}[0]
+    }
+
+    final object STRONG : io.github.compose.jindong.core.model/HapticIntensity { // io.github.compose.jindong.core.model/HapticIntensity.STRONG|null[0]
+        final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.model/HapticIntensity.STRONG.equals|equals(kotlin.Any?){}[0]
+        final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.model/HapticIntensity.STRONG.hashCode|hashCode(){}[0]
+        final fun toString(): kotlin/String // io.github.compose.jindong.core.model/HapticIntensity.STRONG.toString|toString(){}[0]
+    }
+}
+
+final object io.github.compose.jindong.core/HapticManager { // io.github.compose.jindong.core/HapticManager|null[0]
+    final val isSupported // io.github.compose.jindong.core/HapticManager.isSupported|{}isSupported[0]
+        final fun <get-isSupported>(): kotlin/Boolean // io.github.compose.jindong.core/HapticManager.isSupported.<get-isSupported>|<get-isSupported>(){}[0]
+
+    final fun cancel() // io.github.compose.jindong.core/HapticManager.cancel|cancel(){}[0]
+    final fun executeAsync(io.github.compose.jindong.core.model/HapticPattern): io.github.compose.jindong.core.executor/HapticHandle // io.github.compose.jindong.core/HapticManager.executeAsync|executeAsync(io.github.compose.jindong.core.model.HapticPattern){}[0]
+    final fun initialize(kotlin/Any? = ...) // io.github.compose.jindong.core/HapticManager.initialize|initialize(kotlin.Any?){}[0]
+    final fun release() // io.github.compose.jindong.core/HapticManager.release|release(){}[0]
+    final suspend fun execute(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core/HapticManager.execute|execute(io.github.compose.jindong.core.model.HapticPattern){}[0]
+}
+
+final val io.github.compose.jindong.core/ms // io.github.compose.jindong.core/ms|@kotlin.Int{}ms[0]
+    final fun (kotlin/Int).<get-ms>(): kotlin.time/Duration // io.github.compose.jindong.core/ms.<get-ms>|<get-ms>@kotlin.Int(){}[0]
+final val io.github.compose.jindong.core/ms // io.github.compose.jindong.core/ms|@kotlin.Long{}ms[0]
+    final fun (kotlin/Long).<get-ms>(): kotlin.time/Duration // io.github.compose.jindong.core/ms.<get-ms>|<get-ms>@kotlin.Long(){}[0]
+
+final fun (io.github.compose.jindong.core.model/HapticPattern).io.github.compose.jindong.core/playAsync(): io.github.compose.jindong.core.executor/HapticHandle // io.github.compose.jindong.core/playAsync|playAsync@io.github.compose.jindong.core.model.HapticPattern(){}[0]
+final fun io.github.compose.jindong.core.dsl/buildHapticPattern(kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>): io.github.compose.jindong.core.model/HapticPattern // io.github.compose.jindong.core.dsl/buildHapticPattern|buildHapticPattern(kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]
+final fun io.github.compose.jindong.core.executor/createHapticExecutor(kotlin/Any? = ...): io.github.compose.jindong.core.executor/HapticExecutor // io.github.compose.jindong.core.executor/createHapticExecutor|createHapticExecutor(kotlin.Any?){}[0]
+final suspend fun (io.github.compose.jindong.core.model/HapticPattern).io.github.compose.jindong.core/play() // io.github.compose.jindong.core/play|play@io.github.compose.jindong.core.model.HapticPattern(){}[0]
+final suspend fun io.github.compose.jindong.core/playHaptic(kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>) // io.github.compose.jindong.core/playHaptic|playHaptic(kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]

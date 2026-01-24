@@ -43,7 +43,8 @@ Add Jindong to your `build.gradle.kts`:
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.compose-jindong:jindong:<version>")
+            implementation("io.github.compose-jindong:jindong-core:<version>")
+            implementation("io.github.compose-jindong:jindong-compose:<version>")
         }
     }
 }

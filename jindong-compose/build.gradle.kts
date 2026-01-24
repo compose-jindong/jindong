@@ -58,6 +58,7 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
+            api(project(":jindong-core"))
             implementation(libs.compose.runtime)
             implementation(libs.kotlinx.coroutines.core)
         }
@@ -88,10 +89,10 @@ mavenPublishing {
 
     signAllPublications()
 
-    coordinates(group.toString(), "jindong", version.toString())
+    coordinates(group.toString(), "jindong-compose", version.toString())
 
     pom {
-        name = "Jindong"
+        name = "Jindong Compose"
         description = "Declarative Haptic Feedback Library using Compose Runtime for Kotlin Multiplatform"
         inceptionYear = "2026"
         url = "https://github.com/compose-jindong/jindong"

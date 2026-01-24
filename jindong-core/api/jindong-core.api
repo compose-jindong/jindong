@@ -1,0 +1,201 @@
+public final class io/github/compose/jindong/core/DurationExtensionsKt {
+	public static final fun getMs (I)J
+	public static final fun getMs (J)J
+}
+
+public final class io/github/compose/jindong/core/HapticManager {
+	public static final field INSTANCE Lio/github/compose/jindong/core/HapticManager;
+	public final fun cancel ()V
+	public final fun execute (Lio/github/compose/jindong/core/model/HapticPattern;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public final fun executeAsync (Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/executor/HapticHandle;
+	public final fun initialize (Ljava/lang/Object;)V
+	public static synthetic fun initialize$default (Lio/github/compose/jindong/core/HapticManager;Ljava/lang/Object;ILjava/lang/Object;)V
+	public final fun isSupported ()Z
+	public final fun release ()V
+}
+
+public final class io/github/compose/jindong/core/HapticManagerKt {
+	public static final fun play (Lio/github/compose/jindong/core/model/HapticPattern;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public static final fun playAsync (Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/executor/HapticHandle;
+	public static final fun playHaptic (Lkotlin/jvm/functions/Function1;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+}
+
+public abstract interface annotation class io/github/compose/jindong/core/dsl/HapticDslMarker : java/lang/annotation/Annotation {
+}
+
+public final class io/github/compose/jindong/core/dsl/HapticPatternScope {
+	public final fun delay-LRDsOJo (J)V
+	public final fun haptic-KLykuaI (JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)V
+	public static synthetic fun haptic-KLykuaI$default (Lio/github/compose/jindong/core/dsl/HapticPatternScope;JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILjava/lang/Object;)V
+	public final fun include (Lio/github/compose/jindong/core/model/HapticPattern;)V
+	public final fun repeat (ILkotlin/jvm/functions/Function1;)V
+	public final fun repeatWithIndex (ILkotlin/jvm/functions/Function2;)V
+	public final fun sequence (Lkotlin/jvm/functions/Function1;)V
+}
+
+public final class io/github/compose/jindong/core/dsl/HapticPatternScopeKt {
+	public static final fun buildHapticPattern (Lkotlin/jvm/functions/Function1;)Lio/github/compose/jindong/core/model/HapticPattern;
+}
+
+public final class io/github/compose/jindong/core/element/DelayElement : io/github/compose/jindong/core/element/HapticElement {
+	public fun <init> (J)V
+	public fun collectEvents (J)Ljava/util/List;
+	public fun getChildren ()Ljava/util/List;
+	public final fun getDurationMs ()J
+	public fun totalDurationMs (J)J
+}
+
+public abstract interface class io/github/compose/jindong/core/element/HapticElement {
+	public abstract fun collectEvents (J)Ljava/util/List;
+	public abstract fun getChildren ()Ljava/util/List;
+	public abstract fun totalDurationMs (J)J
+}
+
+public final class io/github/compose/jindong/core/element/PatternElement : io/github/compose/jindong/core/element/HapticElement {
+	public fun <init> (Lio/github/compose/jindong/core/model/HapticPattern;)V
+	public fun collectEvents (J)Ljava/util/List;
+	public fun getChildren ()Ljava/util/List;
+	public final fun getPattern ()Lio/github/compose/jindong/core/model/HapticPattern;
+	public fun totalDurationMs (J)J
+}
+
+public final class io/github/compose/jindong/core/element/RepeatElement : io/github/compose/jindong/core/element/HapticElement {
+	public fun <init> (I)V
+	public fun collectEvents (J)Ljava/util/List;
+	public fun getChildren ()Ljava/util/List;
+	public final fun getCount ()I
+	public fun totalDurationMs (J)J
+}
+
+public final class io/github/compose/jindong/core/element/SequenceElement : io/github/compose/jindong/core/element/HapticElement {
+	public fun <init> ()V
+	public fun collectEvents (J)Ljava/util/List;
+	public fun getChildren ()Ljava/util/List;
+	public fun totalDurationMs (J)J
+}
+
+public final class io/github/compose/jindong/core/element/VibrationElement : io/github/compose/jindong/core/element/HapticElement {
+	public fun <init> (JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)V
+	public synthetic fun <init> (JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun collectEvents (J)Ljava/util/List;
+	public fun getChildren ()Ljava/util/List;
+	public final fun getDurationMs ()J
+	public final fun getIntensity ()Lio/github/compose/jindong/core/model/HapticIntensity;
+	public final fun getIosParameters ()Lio/github/compose/jindong/core/model/IosHapticParameters;
+	public fun totalDurationMs (J)J
+}
+
+public abstract interface class io/github/compose/jindong/core/executor/HapticExecutor {
+	public abstract fun execute (Lio/github/compose/jindong/core/model/HapticPattern;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
+	public abstract fun executeAsync (Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/executor/HapticHandle;
+	public abstract fun isSupported ()Z
+	public abstract fun release ()V
+}
+
+public final class io/github/compose/jindong/core/executor/HapticExecutor_androidKt {
+	public static final fun createHapticExecutor (Ljava/lang/Object;)Lio/github/compose/jindong/core/executor/HapticExecutor;
+	public static synthetic fun createHapticExecutor$default (Ljava/lang/Object;ILjava/lang/Object;)Lio/github/compose/jindong/core/executor/HapticExecutor;
+}
+
+public abstract interface class io/github/compose/jindong/core/executor/HapticHandle {
+	public abstract fun cancel ()V
+	public abstract fun isActive ()Z
+}
+
+public abstract class io/github/compose/jindong/core/model/HapticIntensity {
+	public synthetic fun <init> (FLkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun getValue ()F
+}
+
+public final class io/github/compose/jindong/core/model/HapticIntensity$Custom : io/github/compose/jindong/core/model/HapticIntensity {
+	public fun <init> (F)V
+	public final fun copy (F)Lio/github/compose/jindong/core/model/HapticIntensity$Custom;
+	public static synthetic fun copy$default (Lio/github/compose/jindong/core/model/HapticIntensity$Custom;FILjava/lang/Object;)Lio/github/compose/jindong/core/model/HapticIntensity$Custom;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/HapticIntensity$HIGH : io/github/compose/jindong/core/model/HapticIntensity {
+	public static final field INSTANCE Lio/github/compose/jindong/core/model/HapticIntensity$HIGH;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/HapticIntensity$LIGHT : io/github/compose/jindong/core/model/HapticIntensity {
+	public static final field INSTANCE Lio/github/compose/jindong/core/model/HapticIntensity$LIGHT;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/HapticIntensity$MEDIUM : io/github/compose/jindong/core/model/HapticIntensity {
+	public static final field INSTANCE Lio/github/compose/jindong/core/model/HapticIntensity$MEDIUM;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/HapticIntensity$STRONG : io/github/compose/jindong/core/model/HapticIntensity {
+	public static final field INSTANCE Lio/github/compose/jindong/core/model/HapticIntensity$STRONG;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/HapticPattern {
+	public static final field Companion Lio/github/compose/jindong/core/model/HapticPattern$Companion;
+	public fun <init> (Ljava/util/List;Lio/github/compose/jindong/core/element/HapticElement;)V
+	public synthetic fun <init> (Ljava/util/List;Lio/github/compose/jindong/core/element/HapticElement;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()Ljava/util/List;
+	public final fun copy (Ljava/util/List;Lio/github/compose/jindong/core/element/HapticElement;)Lio/github/compose/jindong/core/model/HapticPattern;
+	public static synthetic fun copy$default (Lio/github/compose/jindong/core/model/HapticPattern;Ljava/util/List;Lio/github/compose/jindong/core/element/HapticElement;ILjava/lang/Object;)Lio/github/compose/jindong/core/model/HapticPattern;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getEvents ()Ljava/util/List;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/HapticPattern$Companion {
+	public final fun getEmpty ()Lio/github/compose/jindong/core/model/HapticPattern;
+}
+
+public final class io/github/compose/jindong/core/model/IosHapticParameters {
+	public synthetic fun <init> (FLkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public synthetic fun <init> (FLkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Boolean;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()F
+	public final fun component2-FghU774 ()Lkotlin/time/Duration;
+	public final fun component3-FghU774 ()Lkotlin/time/Duration;
+	public final fun component4-FghU774 ()Lkotlin/time/Duration;
+	public final fun component5 ()Ljava/lang/Boolean;
+	public final fun copy-IUEzx5o (FLkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Boolean;)Lio/github/compose/jindong/core/model/IosHapticParameters;
+	public static synthetic fun copy-IUEzx5o$default (Lio/github/compose/jindong/core/model/IosHapticParameters;FLkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Boolean;ILjava/lang/Object;)Lio/github/compose/jindong/core/model/IosHapticParameters;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getAttackTime-FghU774 ()Lkotlin/time/Duration;
+	public final fun getDecayTime-FghU774 ()Lkotlin/time/Duration;
+	public final fun getReleaseTime-FghU774 ()Lkotlin/time/Duration;
+	public final fun getSharpness ()F
+	public final fun getSustained ()Ljava/lang/Boolean;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/ScheduledHapticEvent {
+	public fun <init> (JJLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)V
+	public synthetic fun <init> (JJLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public final fun component1 ()J
+	public final fun component2 ()J
+	public final fun component3 ()Lio/github/compose/jindong/core/model/HapticIntensity;
+	public final fun component4 ()Lio/github/compose/jindong/core/model/IosHapticParameters;
+	public final fun copy (JJLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)Lio/github/compose/jindong/core/model/ScheduledHapticEvent;
+	public static synthetic fun copy$default (Lio/github/compose/jindong/core/model/ScheduledHapticEvent;JJLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILjava/lang/Object;)Lio/github/compose/jindong/core/model/ScheduledHapticEvent;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getDurationMs ()J
+	public final fun getIntensity ()Lio/github/compose/jindong/core/model/HapticIntensity;
+	public final fun getIosParameters ()Lio/github/compose/jindong/core/model/IosHapticParameters;
+	public final fun getStartTimeMs ()J
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
