@@ -21,15 +21,15 @@ package io.github.compose.jindong.core.executor
  * Returned by [HapticExecutor.executeAsync] to allow explicit cancellation
  * of haptic patterns.
  */
-public interface HapticHandle {
+interface HapticHandle {
   /**
    * Cancels the ongoing haptic execution.
    * If the execution has already completed, this is a no-op.
    */
-  public fun cancel()
+  fun cancel()
 
   /**
    * Returns true if the haptic execution is still active (not completed or cancelled).
    */
-  public val isActive: Boolean
+  val isActive: Boolean
 }

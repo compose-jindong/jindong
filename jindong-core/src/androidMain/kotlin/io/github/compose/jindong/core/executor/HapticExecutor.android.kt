@@ -26,6 +26,7 @@ import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import kotlinx.coroutines.delay
+import java.util.concurrent.atomic.AtomicBoolean
 
 /**
  * Android implementation of [HapticExecutor] using [VibrationEffect.createWaveform].
@@ -152,13 +153,13 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 
 internal class AndroidHapticHandle(private var vibrator: Vibrator?) : HapticHandle {
 
-  override var isActive: Boolean = vibrator != null
-    private set
+  private val _isActive = AtomicBoolean(vibrator != null)
+  override val isActive: Boolean
+    get() = _isActive.get()
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun cancel() {
-    if (!isActive) return
-    isActive = false
+    if (!_isActive.compareAndSet(true, false)) return
     vibrator?.cancel()
     vibrator = null
   }
@@ -172,7 +173,7 @@ internal class AndroidHapticHandle(private var vibrator: Vibrator?) : HapticHand
  * @throws IllegalArgumentException if context is null or not a Context
  */
 @RequiresApi(Build.VERSION_CODES.O)
-public actual fun createHapticExecutor(context: Any?): HapticExecutor {
+actual fun createHapticExecutor(context: Any?): HapticExecutor {
   requireNotNull(context) { "Context is required for Android HapticExecutor" }
   require(context is Context) { "Context must be android.content.Context" }
   return DefaultAndroidHapticExecutor(context)
