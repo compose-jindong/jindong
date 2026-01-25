@@ -30,7 +30,6 @@ class HapticManagerTest :
     lateinit var fakeExecutor: FakeHapticExecutor
 
     beforeEach {
-      HapticManager.release()
       fakeExecutor = FakeHapticExecutor()
       HapticManager.initializeExecutor(fakeExecutor)
     }
