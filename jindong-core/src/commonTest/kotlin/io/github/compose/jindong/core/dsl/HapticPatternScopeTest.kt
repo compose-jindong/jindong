@@ -42,7 +42,7 @@ class HapticPatternScopeTest :
         with(pattern.events.single()) {
           startTimeMs shouldBe 0
           durationMs shouldBe 100
-          intensity shouldBe HapticIntensity.MEDIUM // default
+          intensity shouldBe HapticIntensity.MEDIUM
         }
       }
     }
