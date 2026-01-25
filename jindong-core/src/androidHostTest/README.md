@@ -6,10 +6,10 @@ Robolectric-based Android tests that run on JVM without requiring an emulator.
 
 ```bash
 # Run Android host tests only
-./gradlew :jindong-compose:testAndroidHostTest
+./gradlew :jindong-core:testAndroidHostTest
 
 # Run all tests (including commonTest, iosTest, etc.)
-./gradlew :jindong-compose:allTests
+./gradlew :jindong-core:allTests
 ```
 
 > **Note**: Use `--rerun-tasks` when you need to re-run tests that Gradle considers up-to-date (e.g., after changing test configuration or debugging flaky tests).
