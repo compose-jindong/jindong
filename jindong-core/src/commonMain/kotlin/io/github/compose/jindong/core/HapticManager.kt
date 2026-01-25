@@ -99,7 +99,7 @@ object HapticManager {
   fun initialize(context: Any? = null) {
     withStateLockBlocking {
       if (executor == null) {
-        executor = createHapticExecutor(context)
+        initializeExecutor(createHapticExecutor(context))
       }
     }
   }
@@ -169,6 +169,12 @@ object HapticManager {
       currentHandle = null
       executor?.release()
       executor = null
+    }
+  }
+
+  internal fun initializeExecutor(executor: HapticExecutor) {
+    withStateLockBlocking {
+      this.executor = executor
     }
   }
 
