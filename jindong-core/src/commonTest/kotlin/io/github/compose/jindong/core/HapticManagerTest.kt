@@ -32,7 +32,7 @@ class HapticManagerTest :
     beforeEach {
       HapticManager.release()
       fakeExecutor = FakeHapticExecutor()
-      HapticManager.initialize(executor = fakeExecutor)
+      HapticManager.initializeExecutor(fakeExecutor)
     }
 
     afterEach {
@@ -44,7 +44,7 @@ class HapticManagerTest :
     }
 
     test("isSupported should return false when executor does not support haptics") {
-      HapticManager.initialize(executor = (FakeHapticExecutor(isSupported = false)))
+      HapticManager.initializeExecutor(FakeHapticExecutor(isSupported = false))
 
       HapticManager.isSupported shouldBe false
     }
@@ -135,11 +135,11 @@ class HapticManagerTest :
 
     test("should allow reuse after release") {
       val firstExecutor = FakeHapticExecutor()
-      HapticManager.initialize(executor = firstExecutor)
+      HapticManager.initializeExecutor(firstExecutor)
       HapticManager.release()
 
       val secondExecutor = FakeHapticExecutor()
-      HapticManager.initialize(executor = secondExecutor)
+      HapticManager.initializeExecutor(secondExecutor)
       val pattern = buildHapticPattern { haptic(100.ms) }
       HapticManager.executeAsync(pattern)
 
