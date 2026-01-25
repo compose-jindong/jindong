@@ -6,6 +6,7 @@ plugins {
     alias(libs.plugins.vanniktech.mavenPublish) apply false
     alias(libs.plugins.spotless) apply false
     alias(libs.plugins.binaryCompatibilityValidator) apply false
+    alias(libs.plugins.kover) apply false
 }
 
 subprojects {

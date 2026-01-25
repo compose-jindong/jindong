@@ -15,6 +15,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: write
 
 jobs:
   check:
@@ -59,3 +60,27 @@ jobs:
       uses: gradle/gradle-build-action@ce999babab2de1c4b649dc15f0ee67e6246c994f
       with:
         arguments: allTests
+    - name: Generate Kover Coverage Report
+      uses: gradle/gradle-build-action@ce999babab2de1c4b649dc15f0ee67e6246c994f
+      with:
+        arguments: :jindong-core:koverXmlReport
+    - name: Generate Kover HTML Report
+      uses: gradle/gradle-build-action@ce999babab2de1c4b649dc15f0ee67e6246c994f
+      with:
+        arguments: :jindong-core:koverHtmlReport
+    - name: Upload Coverage Report
+      uses: actions/upload-artifact@v4
+      with:
+        name: coverage-report
+        path: jindong-core/build/reports/kover/html
+    - name: Add coverage report to PR
+      id: kover
+      if: github.event_name == 'pull_request'
+      uses: mi-kas/kover-report@v1
+      with:
+        path: ${{ github.workspace }}/jindong-core/build/reports/kover/report.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title: Jindong Core Test Coverage Report
+        update-comment: true
+        min-coverage-overall: 0
+        min-coverage-changed-files: 0

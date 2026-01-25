@@ -22,6 +22,7 @@ plugins {
   alias(libs.plugins.kotest)
   alias(libs.plugins.ksp)
   alias(libs.plugins.binaryCompatibilityValidator)
+  alias(libs.plugins.kover)
 }
 
 apiValidation {
@@ -47,6 +48,10 @@ kotlin {
         }
       }
     }
+
+    withHostTest {
+      isIncludeAndroidResources = true
+    }
   }
   iosX64()
   iosArm64()
@@ -65,6 +70,15 @@ kotlin {
       implementation(libs.kotest.framework.engine)
       implementation(libs.kotest.assertions.core)
     }
+
+    named("androidHostTest").dependencies {
+        implementation(libs.robolectric)
+        implementation(libs.androidx.test.core)
+        implementation(libs.androidx.test.runner)
+        implementation(libs.kotest.assertions.core)
+        implementation(libs.kotlinx.coroutines.test)
+        implementation(libs.kotest.runner.junit5)
+      }
   }
 }
 
@@ -100,6 +114,23 @@ mavenPublishing {
       url = "https://github.com/compose-jindong/jindong"
       connection = "scm:git:git://github.com/compose-jindong/jindong.git"
       developerConnection = "scm:git:ssh://github.com/compose-jindong/jindong.git"
+    }
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  useJUnitPlatform()
+}
+
+kover {
+  reports {
+    total {
+      html {
+        onCheck = true
+      }
+      xml {
+        onCheck = true
+      }
     }
   }
 }
