@@ -48,9 +48,6 @@ kotlin {
                 }
             }
         }
-        withHostTest {
-            isIncludeAndroidResources = true
-        }
     }
     iosX64()
     iosArm64()
@@ -72,14 +69,6 @@ kotlin {
         commonTest.dependencies {
             implementation(libs.kotest.framework.engine)
             implementation(libs.kotest.assertions.core)
-        }
-
-        named("androidHostTest").dependencies {
-            implementation(libs.robolectric)
-            implementation(libs.androidx.test.core)
-            implementation(libs.androidx.test.runner)
-            implementation(libs.kotest.assertions.core)
-            implementation(libs.kotlinx.coroutines.test)
         }
     }
 }

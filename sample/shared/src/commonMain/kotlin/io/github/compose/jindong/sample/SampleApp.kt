@@ -26,11 +26,11 @@ import androidx.compose.ui.unit.dp
 import io.github.compose.jindong.Jindong
 import io.github.compose.jindong.JindongProvider
 import io.github.compose.jindong.JindongScope
+import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Repeat
 import io.github.compose.jindong.dsl.Sequence
-import io.github.compose.jindong.model.HapticIntensity
 import org.jetbrains.compose.resources.stringResource
 import kotlin.time.Duration.Companion.milliseconds
 

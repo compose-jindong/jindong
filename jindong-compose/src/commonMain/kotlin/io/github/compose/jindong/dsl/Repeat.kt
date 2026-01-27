@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.node.RepeatNode
+import io.github.compose.jindong.core.element.RepeatElement
 
 /**
  * Repeats the content [count] times.
@@ -47,8 +47,8 @@ fun JindongScope.Repeat(
   count: Int,
   content: @Composable JindongScope.() -> Unit,
 ) {
-  ComposeNode<RepeatNode, JindongApplier>(
-    factory = { RepeatNode(count) },
+  ComposeNode<RepeatElement, JindongApplier>(
+    factory = { RepeatElement(count) },
     update = { },
     content = { content() },
   )

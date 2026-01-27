@@ -18,10 +18,10 @@
 package io.github.compose.jindong.compose
 
 import androidx.compose.runtime.ExperimentalComposeApi
-import io.github.compose.jindong.model.HapticIntensity
-import io.github.compose.jindong.node.HapticEventNode
-import io.github.compose.jindong.node.HapticNode
-import io.github.compose.jindong.node.SequenceNode
+import io.github.compose.jindong.core.element.HapticElement
+import io.github.compose.jindong.core.element.SequenceElement
+import io.github.compose.jindong.core.element.VibrationElement
+import io.github.compose.jindong.core.model.HapticIntensity
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
@@ -33,206 +33,206 @@ import io.kotest.matchers.shouldBe
  *
  * Verifies correct tree manipulation operations:
  * - Insert (top-down and bottom-up)
- * - Remove (single and multiple nodes)
- * - Move (forward, backward, multiple nodes)
+ * - Remove (single and multiple elements)
+ * - Move (forward, backward, multiple elements)
  * - Clear
  * - Navigation (down/up)
  */
 class JindongApplierTest :
   FunSpec({
 
-    fun createNode(durationMs: Long): HapticEventNode = HapticEventNode(durationMs = durationMs, intensity = HapticIntensity.HIGH)
+    fun createElement(durationMs: Long): VibrationElement = VibrationElement(durationMs = durationMs, intensity = HapticIntensity.HIGH)
 
-    lateinit var root: HapticNode
+    lateinit var root: HapticElement
     lateinit var applier: JindongApplier
 
     beforeEach {
-      root = SequenceNode()
+      root = SequenceElement()
       applier = JindongApplier(root)
     }
 
     context("JindongApplier insertTopDown") {
-      test("should add node at index 0") {
-        val node = createNode(100)
+      test("should add element at index 0") {
+        val element = createElement(100)
 
-        applier.insertTopDown(0, node)
+        applier.insertTopDown(0, element)
 
-        root.children shouldContainExactly listOf(node)
+        root.children shouldContainExactly listOf(element)
       }
 
-      test("should insert at beginning and push existing nodes") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
+      test("should insert at beginning and push existing elements") {
+        val element1 = createElement(100)
+        val element2 = createElement(200)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(0, node2) // Push node1 to index 1
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(0, element2) // Push element1 to index 1
 
-        root.children shouldContainExactly listOf(node2, node1)
+        root.children shouldContainExactly listOf(element2, element1)
       }
 
       test("should insert in the middle") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
-        val node3 = createNode(300)
+        val element1 = createElement(100)
+        val element2 = createElement(200)
+        val element3 = createElement(300)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(1, node2)
-        applier.insertTopDown(1, node3) // Insert between node1 and node2
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(1, element2)
+        applier.insertTopDown(1, element3) // Insert between element1 and element2
 
-        root.children shouldContainExactly listOf(node1, node3, node2)
+        root.children shouldContainExactly listOf(element1, element3, element2)
       }
 
       test("should append to end") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
+        val element1 = createElement(100)
+        val element2 = createElement(200)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(1, node2)
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(1, element2)
 
-        root.children shouldContainExactly listOf(node1, node2)
+        root.children shouldContainExactly listOf(element1, element2)
       }
     }
 
     context("JindongApplier remove") {
-      test("should remove single node at index") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
-        val node3 = createNode(300)
+      test("should remove single element at index") {
+        val element1 = createElement(100)
+        val element2 = createElement(200)
+        val element3 = createElement(300)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(1, node2)
-        applier.insertTopDown(2, node3)
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(1, element2)
+        applier.insertTopDown(2, element3)
 
         applier.remove(index = 1, count = 1)
 
-        root.children shouldContainExactly listOf(node1, node3)
+        root.children shouldContainExactly listOf(element1, element3)
       }
 
-      test("should remove multiple consecutive nodes") {
-        val nodes = (1..5).map { createNode(it * 100L) }
-        nodes.forEach { applier.insertTopDown(root.children.size, it) }
+      test("should remove multiple consecutive elements") {
+        val elements = (1..5).map { createElement(it * 100L) }
+        elements.forEach { applier.insertTopDown(root.children.size, it) }
 
         applier.remove(index = 1, count = 3)
 
-        root.children shouldContainExactly listOf(nodes[0], nodes[4])
+        root.children shouldContainExactly listOf(elements[0], elements[4])
       }
 
       test("should remove from start") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
+        val element1 = createElement(100)
+        val element2 = createElement(200)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(1, node2)
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(1, element2)
 
         applier.remove(index = 0, count = 1)
 
-        root.children shouldContainExactly listOf(node2)
+        root.children shouldContainExactly listOf(element2)
       }
 
       test("should remove from end") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
+        val element1 = createElement(100)
+        val element2 = createElement(200)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(1, node2)
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(1, element2)
 
         applier.remove(index = 1, count = 1)
 
-        root.children shouldContainExactly listOf(node1)
+        root.children shouldContainExactly listOf(element1)
       }
     }
 
     context("JindongApplier move") {
-      context("moving single node") {
-        test("should move node forward") {
-          val node1 = createNode(100)
-          val node2 = createNode(200)
-          val node3 = createNode(300)
+      context("moving single element") {
+        test("should move element forward") {
+          val element1 = createElement(100)
+          val element2 = createElement(200)
+          val element3 = createElement(300)
 
-          applier.insertTopDown(0, node1)
-          applier.insertTopDown(1, node2)
-          applier.insertTopDown(2, node3)
+          applier.insertTopDown(0, element1)
+          applier.insertTopDown(1, element2)
+          applier.insertTopDown(2, element3)
 
           applier.move(from = 0, to = 2, count = 1)
 
-          root.children shouldContainExactly listOf(node2, node3, node1)
+          root.children shouldContainExactly listOf(element2, element3, element1)
         }
 
-        test("should move node backward") {
-          val node1 = createNode(100)
-          val node2 = createNode(200)
-          val node3 = createNode(300)
+        test("should move element backward") {
+          val element1 = createElement(100)
+          val element2 = createElement(200)
+          val element3 = createElement(300)
 
-          applier.insertTopDown(0, node1)
-          applier.insertTopDown(1, node2)
-          applier.insertTopDown(2, node3)
+          applier.insertTopDown(0, element1)
+          applier.insertTopDown(1, element2)
+          applier.insertTopDown(2, element3)
 
           applier.move(from = 2, to = 0, count = 1)
 
-          root.children shouldContainExactly listOf(node3, node1, node2)
+          root.children shouldContainExactly listOf(element3, element1, element2)
         }
 
         test("should move to adjacent position") {
-          val node1 = createNode(100)
-          val node2 = createNode(200)
-          val node3 = createNode(300)
+          val element1 = createElement(100)
+          val element2 = createElement(200)
+          val element3 = createElement(300)
 
-          applier.insertTopDown(0, node1)
-          applier.insertTopDown(1, node2)
-          applier.insertTopDown(2, node3)
+          applier.insertTopDown(0, element1)
+          applier.insertTopDown(1, element2)
+          applier.insertTopDown(2, element3)
 
           applier.move(from = 0, to = 1, count = 1)
 
-          root.children shouldContainExactly listOf(node2, node1, node3)
+          root.children shouldContainExactly listOf(element2, element1, element3)
         }
 
         test("should do nothing when from equals to") {
-          val node1 = createNode(100)
-          val node2 = createNode(200)
+          val element1 = createElement(100)
+          val element2 = createElement(200)
 
-          applier.insertTopDown(0, node1)
-          applier.insertTopDown(1, node2)
+          applier.insertTopDown(0, element1)
+          applier.insertTopDown(1, element2)
 
           applier.move(from = 1, to = 1, count = 1)
 
-          root.children shouldContainExactly listOf(node1, node2)
+          root.children shouldContainExactly listOf(element1, element2)
         }
       }
 
-      context("moving multiple nodes") {
-        test("should move multiple nodes forward") {
-          val nodes = (1..5).map { createNode(it * 100L) }
-          nodes.forEach { applier.insertTopDown(root.children.size, it) }
+      context("moving multiple elements") {
+        test("should move multiple elements forward") {
+          val elements = (1..5).map { createElement(it * 100L) }
+          elements.forEach { applier.insertTopDown(root.children.size, it) }
 
           applier.move(from = 0, to = 3, count = 2)
 
           root.children shouldContainExactly listOf(
-            nodes[2],
-            nodes[3],
-            nodes[4],
-            nodes[0],
-            nodes[1],
+            elements[2],
+            elements[3],
+            elements[4],
+            elements[0],
+            elements[1],
           )
         }
 
-        test("should move multiple nodes backward") {
-          val nodes = (1..5).map { createNode(it * 100L) }
-          nodes.forEach { applier.insertTopDown(root.children.size, it) }
+        test("should move multiple elements backward") {
+          val elements = (1..5).map { createElement(it * 100L) }
+          elements.forEach { applier.insertTopDown(root.children.size, it) }
 
           applier.move(from = 3, to = 1, count = 2)
 
           root.children shouldContainExactly listOf(
-            nodes[0],
-            nodes[3],
-            nodes[4],
-            nodes[1],
-            nodes[2],
+            elements[0],
+            elements[3],
+            elements[4],
+            elements[1],
+            elements[2],
           )
         }
 
         test("should throw exception when target index is out of bounds") {
-          val nodes = (1..5).map { createNode(it * 100L) }
-          nodes.forEach { applier.insertTopDown(root.children.size, it) }
+          val elements = (1..5).map { createElement(it * 100L) }
+          elements.forEach { applier.insertTopDown(root.children.size, it) }
 
           shouldThrow<IndexOutOfBoundsException> {
             applier.move(from = 0, to = 10, count = 1)
@@ -242,8 +242,8 @@ class JindongApplierTest :
 
       context("complex move scenarios") {
         test("should handle sequential move operations correctly") {
-          val nodes = (1..7).map { createNode(it * 100L) }
-          nodes.forEach { applier.insertTopDown(root.children.size, it) }
+          val elements = (1..7).map { createElement(it * 100L) }
+          elements.forEach { applier.insertTopDown(root.children.size, it) }
 
           // Original: [0, 1, 2, 3, 4, 5, 6]
           applier.move(from = 0, to = 3, count = 2) // [2, 3, 4, 0, 1, 5, 6]
@@ -251,13 +251,13 @@ class JindongApplierTest :
           applier.move(from = 6, to = 0, count = 1) // [1, 2, 5, 6, 3, 4, 0]
 
           root.children shouldContainExactly listOf(
-            nodes[1],
-            nodes[2],
-            nodes[5],
-            nodes[6],
-            nodes[3],
-            nodes[4],
-            nodes[0],
+            elements[1],
+            elements[2],
+            elements[5],
+            elements[6],
+            elements[3],
+            elements[4],
+            elements[0],
           )
         }
       }
@@ -265,13 +265,13 @@ class JindongApplierTest :
 
     context("JindongApplier clear") {
       test("should remove all children from root") {
-        val node1 = createNode(100)
-        val node2 = createNode(200)
-        val node3 = createNode(300)
+        val element1 = createElement(100)
+        val element2 = createElement(200)
+        val element3 = createElement(300)
 
-        applier.insertTopDown(0, node1)
-        applier.insertTopDown(1, node2)
-        applier.insertTopDown(2, node3)
+        applier.insertTopDown(0, element1)
+        applier.insertTopDown(1, element2)
+        applier.insertTopDown(2, element3)
 
         root.children.size shouldBe 3
 
@@ -291,15 +291,15 @@ class JindongApplierTest :
 
     context("JindongApplier navigation") {
       test("should navigate down and up correctly") {
-        val containerNode = SequenceNode()
-        val leafNode = createNode(100)
+        val containerElement = SequenceElement()
+        val leafElement = createElement(100)
 
-        applier.insertTopDown(0, containerNode)
-        applier.down(containerNode)
-        applier.insertTopDown(0, leafNode)
+        applier.insertTopDown(0, containerElement)
+        applier.down(containerElement)
+        applier.insertTopDown(0, leafElement)
 
-        root.children shouldContainExactly listOf(containerNode)
-        containerNode.children shouldContainExactly listOf(leafNode)
+        root.children shouldContainExactly listOf(containerElement)
+        containerElement.children shouldContainExactly listOf(leafElement)
 
         applier.up()
 
@@ -307,26 +307,26 @@ class JindongApplierTest :
       }
 
       test("should build nested tree structure") {
-        val sequence1 = SequenceNode()
-        val sequence2 = SequenceNode()
-        val node1 = createNode(100)
-        val node2 = createNode(200)
-        val node3 = createNode(300)
+        val sequence1 = SequenceElement()
+        val sequence2 = SequenceElement()
+        val element1 = createElement(100)
+        val element2 = createElement(200)
+        val element3 = createElement(300)
 
-        // Build: root -> [sequence1 -> [node1, sequence2 -> [node2]], node3]
+        // Build: root -> [sequence1 -> [element1, sequence2 -> [element2]], element3]
         applier.insertTopDown(0, sequence1)
-        applier.insertTopDown(1, node3)
+        applier.insertTopDown(1, element3)
 
         applier.down(sequence1)
-        applier.insertTopDown(0, node1)
+        applier.insertTopDown(0, element1)
         applier.insertTopDown(1, sequence2)
 
         applier.down(sequence2)
-        applier.insertTopDown(0, node2)
+        applier.insertTopDown(0, element2)
 
-        root.children shouldContainExactly listOf(sequence1, node3)
-        sequence1.children shouldContainExactly listOf(node1, sequence2)
-        sequence2.children shouldContainExactly listOf(node2)
+        root.children shouldContainExactly listOf(sequence1, element3)
+        sequence1.children shouldContainExactly listOf(element1, sequence2)
+        sequence2.children shouldContainExactly listOf(element2)
       }
     }
 
@@ -340,10 +340,10 @@ class JindongApplierTest :
       }
 
       test("should maintain tree integrity after multiple operations") {
-        val nodes = (1..10).map { createNode(it * 100L) }
+        val elements = (1..10).map { createElement(it * 100L) }
 
-        // Add all nodes
-        nodes.forEach { applier.insertTopDown(root.children.size, it) }
+        // Add all elements
+        elements.forEach { applier.insertTopDown(root.children.size, it) }
         root.children.size shouldBe 10
 
         // Remove some
@@ -355,8 +355,8 @@ class JindongApplierTest :
         root.children.size shouldBe 7
 
         // Add more
-        val newNode = createNode(999)
-        applier.insertTopDown(0, newNode)
+        val newElement = createElement(999)
+        applier.insertTopDown(0, newElement)
         root.children.size shouldBe 8
 
         // Clear all

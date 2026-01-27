@@ -17,7 +17,7 @@ package io.github.compose.jindong
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import io.github.compose.jindong.model.HapticPattern
+import io.github.compose.jindong.core.model.HapticPattern
 
 /**
  * Compiles and memoizes a haptic DSL pattern.
