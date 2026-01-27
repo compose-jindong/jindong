@@ -28,7 +28,7 @@ import io.github.compose.jindong.core.element.HapticElement
  * - Clearing the tree ([onClear])
  *
  * The applier maintains a tree of [HapticElement]s which will be traversed
- * to collect [ScheduledHapticEvent]s for playback.
+ * to collect [io.github.compose.jindong.core.model.ScheduledHapticEvent]s for playback.
  *
  * @param root The root element of the composition tree
  */
