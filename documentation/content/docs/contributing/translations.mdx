@@ -1,0 +1,186 @@
+---
+title: Translations
+description: Guide for contributing translations to Jindong documentation
+---
+
+# Contributing Translations
+
+Thank you for helping make Jindong accessible to more developers!
+
+## How Translation Works
+
+Jindong uses a **dot parser** pattern for translations. Translation files are placed in the same directory as the original file with a language suffix.
+
+```
+content/docs/
+├── index.mdx           # English (default)
+├── index.ko.mdx        # Korean translation
+├── guide/
+│   ├── getting-started.mdx
+│   ├── getting-started.ko.mdx
+│   └── meta.json
+│   └── meta.ko.json    # Korean navigation
+```
+
+## Supported Languages
+
+| Code | Language | Status |
+|------|----------|--------|
+| `en` | English | Default |
+| `ko` | Korean | Accepting contributions |
+| `zh` | Chinese | Accepting contributions |
+| `ja` | Japanese | Accepting contributions |
+
+To add support for a new language, see [Adding a New Language](#adding-a-new-language).
+
+## Translating Documentation
+
+### Step 1: Choose a File
+
+Pick an untranslated file to work on. Priority files:
+
+1. `index.mdx` - Landing page
+2. `guide/getting-started.mdx` - First steps
+3. `guide/quick-start.mdx` - Basic usage
+4. `guide/why-jindong.mdx` - Motivation
+
+### Step 2: Create Translation File
+
+Create a new file with the language suffix:
+
+```bash
+# For Korean translation of getting-started.mdx
+cp content/docs/guide/getting-started.mdx content/docs/guide/getting-started.ko.mdx
+```
+
+### Step 3: Translate Content
+
+1. Keep the same frontmatter structure
+2. Translate `title` and `description`
+3. Translate all content
+4. Keep code examples unchanged (unless comments need translation)
+
+**Example:**
+
+```mdx
+---
+title: 시작하기
+description: Jindong 설치 및 설정 가이드
+---
+
+# 시작하기
+
+Jindong을 프로젝트에 추가하세요.
+```
+
+### Step 4: Translate Navigation (meta.json)
+
+Create `meta.{lang}.json` for translated section titles:
+
+```json
+{
+  "title": "가이드",
+  "pages": ["getting-started", "quick-start", "why-jindong"]
+}
+```
+
+<Callout type="info">
+The `pages` array uses the same file names (without language suffix). Fumadocs automatically matches the correct translation.
+</Callout>
+
+## Translation Guidelines
+
+### What to Translate
+
+- Page titles and descriptions
+- Headings and body text
+- Code comments (when helpful)
+- Alt text for images
+
+### What NOT to Translate
+
+- Code syntax and API names (`Jindong`, `Haptic`, `Delay`)
+- Technical terms when commonly used in English
+- URLs and file paths
+- Brand names
+
+### Style Tips
+
+- Use natural, fluent language for your locale
+- Keep the same tone as the original (friendly, technical)
+- Preserve formatting (headings, lists, code blocks)
+- Maintain consistent terminology throughout
+
+## Translating README
+
+The project README can also be translated:
+
+1. Create `README.{lang}.md` in the repository root
+2. Translate all content
+3. Update links to point to translated docs (if available)
+
+**Example:** `README.ko.md` for Korean.
+
+## Adding a New Language
+
+To enable a new language:
+
+1. Open `documentation/lib/i18n.ts`
+2. Add the language code to the `languages` array:
+
+```typescript
+export const i18n = defineI18n({
+  defaultLanguage: "en",
+  languages: ["en", "ko"], // Add your language code
+  hideLocale: "default-locale",
+});
+```
+
+3. Add the language name to `languageNames`:
+
+```typescript
+export const languageNames: Record<string, string> = {
+  en: "English",
+  ko: "한국어",
+  // Add your language
+};
+```
+
+4. Submit a PR with at least one translated page
+
+## Keeping Translations Updated
+
+When the original English content changes:
+
+1. Check for outdated translations
+2. Update the translation to match
+3. Consider adding a note at the top for major changes
+
+<Callout type="warn">
+Outdated translations can confuse users. If you notice a translation is out of date, please open an issue or submit an update.
+</Callout>
+
+## Testing Translations
+
+1. Add your language to `i18n.ts` (if not already added)
+2. Run `yarn dev`
+3. Visit `/{lang}/docs` to see your translation
+4. Verify navigation and links work correctly
+5. Run `yarn build` to ensure static export succeeds
+
+## PR Checklist
+
+Before submitting your translation:
+
+- [ ] File uses correct naming: `{name}.{lang}.mdx`
+- [ ] Frontmatter is translated (`title`, `description`)
+- [ ] All text content is translated
+- [ ] Code examples are preserved (with translated comments if needed)
+- [ ] `meta.{lang}.json` is created/updated for the section
+- [ ] Links work correctly
+- [ ] Tested with `yarn dev`
+- [ ] Build passes with `yarn build`
+
+## Questions?
+
+If you have questions about translations, please open an issue on GitHub with the `translation` label.

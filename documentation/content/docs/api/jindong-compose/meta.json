@@ -1,9 +1,9 @@
 {
-  "title": "Core",
+  "title": "jindong-compose",
   "pages": [
     "jindong",
     "jindong-provider",
     "jindong-scope",
-    "haptic-intensity"
+    "...composable-dsl"
   ]
 }

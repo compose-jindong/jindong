@@ -1,0 +1,271 @@
+---
+title: Core API
+description: Using Jindong without Compose Runtime
+---
+
+# Core API
+
+<Callout type="info">
+**Module**: `jindong-core` | **Package**: `io.github.compose.jindong.core`
+</Callout>
+
+The Core API allows you to use Jindong haptic patterns without Compose Runtime dependency. This is useful for:
+
+- Non-Compose Kotlin Multiplatform projects
+- ViewModel or Repository layer haptic triggers
+- Background services or workers
+
+## Installation
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.compose-jindong:jindong-core:<version>")
+        }
+    }
+}
+```
+
+## Building Patterns
+
+Use `buildHapticPattern` to create haptic patterns:
+
+```kotlin
+import io.github.compose.jindong.core.dsl.*
+import io.github.compose.jindong.core.model.HapticIntensity
+import kotlin.time.Duration.Companion.ms
+
+val tapPattern = buildHapticPattern {
+    haptic(50.ms)
+}
+
+val notificationPattern = buildHapticPattern {
+    haptic(50.ms, HapticIntensity.MEDIUM)
+    delay(50.ms)
+    haptic(100.ms, HapticIntensity.STRONG)
+}
+
+val alertPattern = buildHapticPattern {
+    repeat(3) {
+        haptic(80.ms, HapticIntensity.HIGH)
+        delay(50.ms)
+    }
+}
+```
+
+## Executing Patterns
+
+### Suspend Function (Recommended)
+
+Use `play()` to execute and wait for completion:
+
+```kotlin
+import io.github.compose.jindong.core.play
+
+suspend fun onButtonClick() {
+    tapPattern.play()
+}
+
+// In a coroutine scope
+lifecycleScope.launch {
+    notificationPattern.play()
+}
+```
+
+### Fire-and-Forget
+
+Use `playAsync()` when you don't need to wait:
+
+```kotlin
+import io.github.compose.jindong.core.playAsync
+
+fun onButtonClick() {
+    val handle = tapPattern.playAsync()
+
+    // Optionally cancel later
+    // handle.cancel()
+}
+```
+
+### Inline Execution
+
+Use `playHaptic` for one-off patterns:
+
+```kotlin
+import io.github.compose.jindong.core.playHaptic
+
+suspend fun onSuccess() {
+    playHaptic {
+        haptic(50.ms, HapticIntensity.MEDIUM)
+        delay(50.ms)
+        haptic(100.ms, HapticIntensity.STRONG)
+    }
+}
+```
+
+## HapticManager
+
+`HapticManager` is a singleton that manages haptic execution:
+
+```kotlin
+import io.github.compose.jindong.core.HapticManager
+
+// Check device support
+if (HapticManager.isSupported) {
+    // Execute pattern
+    HapticManager.executeAsync(pattern)
+}
+
+// Cancel ongoing haptic
+HapticManager.cancel()
+
+// Release resources (optional, auto-reinitializes on next use)
+HapticManager.release()
+```
+
+### Platform Initialization
+
+#### Android
+
+Automatic initialization via `JindongInitializer` ContentProvider. No manual setup needed.
+
+For multi-process apps, call manually:
+
+```kotlin
+// In Application.onCreate()
+HapticManager.initialize(applicationContext)
+```
+
+#### iOS
+
+No initialization required.
+
+## DSL Reference
+
+### haptic
+
+Creates a vibration event:
+
+```kotlin
+haptic(duration: Duration)
+haptic(duration: Duration, intensity: HapticIntensity)
+haptic(duration: Duration, intensity: HapticIntensity, iosParameters: IosHapticParameters?)
+```
+
+### delay
+
+Adds a pause between events:
+
+```kotlin
+delay(duration: Duration)
+```
+
+### repeat
+
+Repeats a block N times:
+
+```kotlin
+repeat(count: Int) {
+    haptic(50.ms)
+    delay(30.ms)
+}
+```
+
+### repeatWithIndex
+
+Repeats with index access for dynamic patterns:
+
+```kotlin
+repeatWithIndex(5) { index ->
+    val fade = HapticIntensity.Custom(1.0f - (index * 0.2f))
+    haptic(50.ms, fade)
+    delay(30.ms)
+}
+```
+
+### sequence
+
+Groups elements (optional, for organization):
+
+```kotlin
+sequence {
+    haptic(50.ms)
+    delay(30.ms)
+}
+```
+
+### include
+
+Includes an existing pattern:
+
+```kotlin
+val clickPattern = buildHapticPattern {
+    haptic(50.ms)
+}
+
+val composedPattern = buildHapticPattern {
+    include(clickPattern)
+    delay(100.ms)
+    include(clickPattern)
+}
+```
+
+## Examples
+
+### ViewModel Usage
+
+```kotlin
+class MyViewModel : ViewModel() {
+
+    private val successPattern = buildHapticPattern {
+        haptic(50.ms, HapticIntensity.MEDIUM)
+        delay(50.ms)
+        haptic(100.ms, HapticIntensity.STRONG)
+    }
+
+    fun onAction() {
+        viewModelScope.launch {
+            // Do work...
+            successPattern.play()
+        }
+    }
+}
+```
+
+### Repository Pattern
+
+```kotlin
+class HapticRepository {
+
+    val tapFeedback = buildHapticPattern {
+        haptic(50.ms, HapticIntensity.LIGHT)
+    }
+
+    val errorFeedback = buildHapticPattern {
+        repeat(3) {
+            haptic(80.ms, HapticIntensity.HIGH)
+            delay(50.ms)
+        }
+    }
+
+    suspend fun playTap() = tapFeedback.play()
+    suspend fun playError() = errorFeedback.play()
+}
+```
+
+## Comparison with Compose API
+
+| Feature | Core API | Compose API |
+|---------|----------|-------------|
+| Compose Runtime | Not required | Required |
+| Trigger mechanism | Manual (`play()`) | Key-based (like `LaunchedEffect`) |
+| Pattern definition | `buildHapticPattern {}` | `Jindong {}` composable |
+| DSL style | Regular functions | `@Composable` functions |
+| Use case | ViewModels, services | UI components |
+
+## See Also
+
+- [Getting Started](/docs/guide/getting-started) - Installation guide
+- [HapticIntensity](/docs/api/jindong-core/haptic-intensity) - Intensity levels
+- [Compose API](/docs/api/jindong-compose/jindong) - Compose-based API

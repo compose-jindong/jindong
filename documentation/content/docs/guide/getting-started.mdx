@@ -5,7 +5,26 @@ description: Installation and setup guide for Jindong
 
 # Getting Started
 
-This guide will help you add Jindong to your Compose Multiplatform project.
+This guide will help you add Jindong to your Kotlin Multiplatform project.
+
+## Module Architecture
+
+Jindong is split into two modules to support different use cases:
+
+| Module | Description | Compose Required |
+|--------|-------------|------------------|
+| `jindong-compose` | Declarative DSL with Compose Runtime | Yes |
+| `jindong-core` | Core API without Compose dependency | No |
+
+### Which Module Should I Use?
+
+- **Compose Multiplatform users**: Use `jindong-compose` (recommended for most users)
+- **Non-Compose projects**: Use `jindong-core`
+- **Both**: Just add `jindong-compose` (it includes `jindong-core` transitively)
+
+```
+jindong-compose ──depends on──▶ jindong-core
+```
 
 ## Requirements
 
@@ -19,21 +38,66 @@ This guide will help you add Jindong to your Compose Multiplatform project.
 ### Project Requirements
 
 - Kotlin 2.0+
-- Compose Multiplatform project (supports Android, iOS)
+- Compose Multiplatform (for `jindong-compose`)
 
 ## Installation
 
-Add Jindong to your `build.gradle.kts`:
+### For Compose Multiplatform Projects (Recommended)
+
+Add `jindong-compose` to your `build.gradle.kts`:
 
 ```kotlin
 kotlin {
     sourceSets {
         commonMain.dependencies {
-            implementation("io.github.compose-jindong:jindong:<version>")
+            implementation("io.github.compose-jindong:jindong-compose:<version>")
         }
     }
 }
 ```
+
+### For Non-Compose Projects
+
+If you don't use Compose Runtime, add `jindong-core`:
+
+```kotlin
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+            implementation("io.github.compose-jindong:jindong-core:<version>")
+        }
+    }
+}
+```
+
+## Migration from Previous Version
+
+<Callout type="warn">
+**Breaking Change**: The single `jindong` module has been split into `jindong-compose` and `jindong-core`.
+</Callout>
+
+### Dependency Update
+
+```diff
+kotlin {
+    sourceSets {
+        commonMain.dependencies {
+-           implementation("io.github.compose-jindong:jindong:<version>")
++           implementation("io.github.compose-jindong:jindong-compose:<version>")
+        }
+    }
+}
+```
+
+### Import Paths
+
+**Good news**: Import paths remain unchanged for Compose users.
+
+| API | Package | Changed? |
+|-----|---------|----------|
+| Compose API | `io.github.compose.jindong.*` | No change |
+| Compose DSL | `io.github.compose.jindong.dsl.*` | No change |
+| Core API | `io.github.compose.jindong.core.*` | New |
 
 ## Platform Setup
 
@@ -53,7 +117,7 @@ No additional setup required. Core Haptics is available on iOS 13+.
 Not all iOS devices support haptic feedback. Jindong gracefully handles devices without haptic capabilities.
 </Callout>
 
-## Basic Setup
+## Basic Setup (Compose)
 
 ### 1. Wrap with JindongProvider
 
@@ -92,6 +156,35 @@ fun MainScreen() {
     }
 }
 ```
+
+## Basic Setup (Core API)
+
+For non-Compose projects, use `HapticManager` and `buildHapticPattern`:
+
+```kotlin
+import io.github.compose.jindong.core.*
+import io.github.compose.jindong.core.dsl.*
+import kotlin.time.Duration.Companion.ms
+
+// Build a pattern
+val pattern = buildHapticPattern {
+    haptic(100.ms)
+    delay(50.ms)
+    haptic(100.ms)
+}
+
+// Execute (suspend function)
+suspend fun triggerHaptic() {
+    pattern.play()
+}
+
+// Or fire-and-forget
+fun triggerHapticAsync() {
+    pattern.playAsync()
+}
+```
+
+See [Core API Guide](/docs/api/core-api) for more details.
 
 ## Verifying Installation
 
@@ -140,5 +233,6 @@ Run on a physical device (haptics don't work on emulators/simulators) and tap th
 ## Next Steps
 
 - [Quick Start](/docs/guide/quick-start) - Build your first haptic pattern
-- [API Reference](/docs/api/core/jindong) - Explore all available APIs
-- [Composable DSL](/docs/api/composable-dsl) - Learn the DSL primitives
+- [API Reference](/docs/api/jindong-compose/jindong) - Explore all available APIs
+- [Composable DSL](/docs/api/jindong-compose/composable-dsl/haptic) - Learn the DSL primitives
+- [Core API Guide](/docs/api/jindong-core/core-api) - Use haptics without Compose

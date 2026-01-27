@@ -78,3 +78,5 @@ CLAUDE.md
 .claude/
 openspec/
 docs/
+!documentation/content/docs/
+!documentation/app/docs/

@@ -1,7 +1,19 @@
 {
   "title": "API Reference",
   "pages": [
-    "...core",
-    "...composable-dsl"
+    "---",
+    "---jindong-core---",
+    "jindong-core/core-api",
+    "jindong-core/haptic-intensity",
+    "---jindong-compose---",
+    "jindong-compose/jindong",
+    "jindong-compose/jindong-provider",
+    "jindong-compose/jindong-scope",
+    "---Composable DSL---",
+    "jindong-compose/composable-dsl/haptic",
+    "jindong-compose/composable-dsl/delay",
+    "jindong-compose/composable-dsl/sequence",
+    "jindong-compose/composable-dsl/repeat",
+    "jindong-compose/composable-dsl/repeat-with-index"
   ]
 }
