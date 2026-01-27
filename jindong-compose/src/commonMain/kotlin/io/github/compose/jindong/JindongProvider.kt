@@ -19,8 +19,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import io.github.compose.jindong.core.executor.createHapticExecutor
 import io.github.compose.jindong.executor.LocalHapticExecutor
-import io.github.compose.jindong.executor.createHapticExecutor
 
 /**
  * Provides [HapticExecutor] to the composition tree.

@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.node.DelayNode
+import io.github.compose.jindong.core.element.DelayElement
 import kotlin.time.Duration
 
 /**
@@ -37,8 +37,8 @@ import kotlin.time.Duration
  */
 @Composable
 fun JindongScope.Delay(duration: Duration) {
-  ComposeNode<DelayNode, JindongApplier>(
-    factory = { DelayNode(duration.inWholeMilliseconds) },
+  ComposeNode<DelayElement, JindongApplier>(
+    factory = { DelayElement(duration.inWholeMilliseconds) },
     update = { },
   )
 }

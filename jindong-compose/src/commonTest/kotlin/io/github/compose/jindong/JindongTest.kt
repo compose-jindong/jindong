@@ -15,12 +15,13 @@
  */
 package io.github.compose.jindong
 
+import io.github.compose.jindong.core.model.HapticIntensity
+import io.github.compose.jindong.core.ms
 import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Repeat
 import io.github.compose.jindong.dsl.RepeatWithIndex
 import io.github.compose.jindong.dsl.Sequence
-import io.github.compose.jindong.model.HapticIntensity
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty

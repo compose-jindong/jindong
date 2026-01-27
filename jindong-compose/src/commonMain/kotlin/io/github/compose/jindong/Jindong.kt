@@ -21,9 +21,9 @@ import androidx.compose.runtime.Composition
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Recomposer
 import io.github.compose.jindong.compose.JindongApplier
+import io.github.compose.jindong.core.element.SequenceElement
+import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.executor.LocalHapticExecutor
-import io.github.compose.jindong.model.HapticPattern
-import io.github.compose.jindong.node.SequenceNode
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
@@ -70,8 +70,8 @@ fun Jindong(
 private class JindongCompositionHost : AutoCloseable {
   private val clock = BroadcastFrameClock()
   private val coroutineScope = CoroutineScope(clock)
-  private val rootNode = SequenceNode()
-  private val applier = JindongApplier(rootNode)
+  private val rootElement = SequenceElement()
+  private val applier = JindongApplier(rootElement)
   private val recomposer = Recomposer(clock)
   private val composition = Composition(applier, recomposer)
 
@@ -97,7 +97,7 @@ private class JindongCompositionHost : AutoCloseable {
   }
 
   fun collectEvents(): HapticPattern {
-    val events = rootNode.collectEvents(0L)
+    val events = rootElement.collectEvents(0L)
     return HapticPattern(events)
   }
 

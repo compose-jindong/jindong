@@ -16,31 +16,31 @@
 package io.github.compose.jindong.compose
 
 import androidx.compose.runtime.AbstractApplier
-import io.github.compose.jindong.node.HapticNode
+import io.github.compose.jindong.core.element.HapticElement
 
 /**
- * Applier that manages the haptic node tree for Compose Runtime.
+ * Applier that manages the haptic element tree for Compose Runtime.
  *
  * This applier is responsible for:
- * - Adding nodes to the tree ([insertTopDown], [insertBottomUp])
- * - Removing nodes from the tree ([remove])
- * - Moving nodes within the tree ([move])
+ * - Adding elements to the tree ([insertTopDown], [insertBottomUp])
+ * - Removing elements from the tree ([remove])
+ * - Moving elements within the tree ([move])
  * - Clearing the tree ([onClear])
  *
- * The applier maintains a tree of [io.github.jindong.node.HapticNode]s which will be traversed
- * to collect [ScheduledHapticEvent]s for playback.
+ * The applier maintains a tree of [HapticElement]s which will be traversed
+ * to collect [io.github.compose.jindong.core.model.ScheduledHapticEvent]s for playback.
  *
- * @param root The root node of the composition tree
+ * @param root The root element of the composition tree
  */
 internal class JindongApplier(
-  root: HapticNode,
-) : AbstractApplier<HapticNode>(root) {
+  root: HapticElement,
+) : AbstractApplier<HapticElement>(root) {
 
-  override fun insertTopDown(index: Int, instance: HapticNode) {
+  override fun insertTopDown(index: Int, instance: HapticElement) {
     current.children.add(index, instance)
   }
 
-  override fun insertBottomUp(index: Int, instance: HapticNode) {
+  override fun insertBottomUp(index: Int, instance: HapticElement) {
     // Insertion is already handled in insertTopDown
   }
 

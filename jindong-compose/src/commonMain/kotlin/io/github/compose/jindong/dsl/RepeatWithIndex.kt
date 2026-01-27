@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.node.SequenceNode
+import io.github.compose.jindong.core.element.SequenceElement
 
 /**
  * Repeats the content [count] times, providing the 0-based iteration index to the content block.
@@ -45,8 +45,8 @@ fun JindongScope.RepeatWithIndex(
   count: Int,
   content: @Composable JindongScope.(index: Int) -> Unit,
 ) {
-  ComposeNode<SequenceNode, JindongApplier>(
-    factory = { SequenceNode() },
+  ComposeNode<SequenceElement, JindongApplier>(
+    factory = { SequenceElement() },
     update = { },
     content = {
       repeat(count) { index ->

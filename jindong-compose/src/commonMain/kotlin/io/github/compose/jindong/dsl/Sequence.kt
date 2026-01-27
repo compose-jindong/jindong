@@ -19,7 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
-import io.github.compose.jindong.node.SequenceNode
+import io.github.compose.jindong.core.element.SequenceElement
 
 /**
  * Groups events to run one after another.
@@ -41,8 +41,8 @@ import io.github.compose.jindong.node.SequenceNode
  */
 @Composable
 fun JindongScope.Sequence(content: @Composable JindongScope.() -> Unit) {
-  ComposeNode<SequenceNode, JindongApplier>(
-    factory = { SequenceNode() },
+  ComposeNode<SequenceElement, JindongApplier>(
+    factory = { SequenceElement() },
     update = { },
     content = { content() },
   )

@@ -16,6 +16,7 @@
 package io.github.compose.jindong.executor
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import io.github.compose.jindong.core.executor.HapticExecutor
 
 /**
  * CompositionLocal for providing [HapticExecutor] to the composition tree.
