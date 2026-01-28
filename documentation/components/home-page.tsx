@@ -66,15 +66,14 @@ function Hero() {
         >
           {/* Install Command - Full Width on Mobile, Auto on Desktop */}
           <div className="group relative w-full max-w-2xl rounded-xl bg-gradient-to-b from-zinc-200 to-zinc-50 p-[1px] dark:from-zinc-700 dark:to-zinc-900">
-             <div className="relative flex h-full w-full items-center justify-between rounded-xl bg-white px-6 py-4 dark:bg-zinc-950">
-                <code className="font-mono text-sm text-zinc-600 dark:text-zinc-400 whitespace-nowrap overflow-x-auto no-scrollbar">
-                  <span className="text-purple-600 dark:text-purple-400">implementation</span>(
-                  <span className="text-lime-600 dark:text-lime-400">"io.github.compose-jindong:jindong:&lt;version&gt;"</span>
-                  )
+             <div className="relative flex h-full w-full items-start justify-between rounded-xl bg-white px-6 py-4 dark:bg-zinc-950">
+                <code className="font-mono text-sm text-zinc-600 dark:text-zinc-400 text-left">
+                  <div><span className="text-purple-600 dark:text-purple-400">implementation</span>(<span className="text-lime-600 dark:text-lime-400">"io.github.compose-jindong:jindong-core:&lt;version&gt;"</span>)</div>
+                  <div><span className="text-purple-600 dark:text-purple-400">implementation</span>(<span className="text-lime-600 dark:text-lime-400">"io.github.compose-jindong:jindong-compose:&lt;version&gt;"</span>)</div>
                 </code>
-                <button 
-                  className="ml-3 shrink-0 rounded p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
-                  onClick={() => navigator.clipboard.writeText('implementation("io.github.compose-jindong:jindong:<version>")')}
+                <button
+                  className="shrink-0 rounded p-2 text-zinc-500 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                  onClick={() => navigator.clipboard.writeText('implementation("io.github.compose-jindong:jindong-core:<version>")\nimplementation("io.github.compose-jindong:jindong-compose:<version>")')}
                 >
                   <CopyIcon />
                 </button>
