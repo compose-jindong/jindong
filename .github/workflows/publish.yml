@@ -16,7 +16,7 @@ jobs:
           distribution: 'zulu'
           java-version: 17
       - name: Publish to MavenCentral
-        run: ./gradlew publishToMavenCentral --no-configuration-cache
+        run: ./gradlew :jindong-core:publishToMavenCentral :jindong-compose:publishToMavenCentral --no-configuration-cache
         env:
           ORG_GRADLE_PROJECT_mavenCentralUsername: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
           ORG_GRADLE_PROJECT_mavenCentralPassword: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
