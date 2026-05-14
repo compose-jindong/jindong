@@ -91,7 +91,7 @@ For full documentation, visit [compose-jindong.github.io/jindong](https://compos
 - [Why Jindong](https://compose-jindong.github.io/jindong/docs/guide/why-jindong) - Motivation and benefits
 - [Getting Started](https://compose-jindong.github.io/jindong/docs/guide/getting-started) - Installation and setup
 - [Quick Start](https://compose-jindong.github.io/jindong/docs/guide/quick-start) - Build your first haptic pattern
-- [API Reference](https://compose-jindong.github.io/jindong/docs/api/core/jindong) - Complete API documentation
+- [API Reference](https://compose-jindong.github.io/jindong/docs/api/jindong-compose/jindong) - Complete API documentation
 
 ## License
 
