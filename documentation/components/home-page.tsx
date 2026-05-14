@@ -92,7 +92,7 @@ function Hero() {
             </Link>
             
             <Link
-              href="/docs/api/core/jindong"
+              href="/docs/api/jindong-compose/jindong"
                className="inline-flex h-12 items-center justify-center rounded-xl border border-zinc-200 bg-white px-8 font-medium text-zinc-900 transition-all hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-950 dark:text-zinc-100 dark:hover:bg-zinc-900"
             >
               API Reference
