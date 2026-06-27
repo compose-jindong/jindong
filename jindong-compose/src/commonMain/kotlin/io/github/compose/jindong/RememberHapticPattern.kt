@@ -22,6 +22,10 @@ import io.github.compose.jindong.core.model.HapticPattern
 /**
  * Compiles and memoizes a haptic DSL pattern.
  *
+ * The pattern is recompiled whenever any of [keys] change, so a [content] block that captures
+ * mutable state stays in sync with that state instead of returning a stale first-compile result.
+ *
+ * @param keys Inputs that invalidate the memoized pattern when changed
  * @param content DSL block defining the haptic pattern
  * @return The compiled [HapticPattern]
  *
@@ -30,7 +34,8 @@ import io.github.compose.jindong.core.model.HapticPattern
  */
 @Composable
 internal fun rememberHapticPattern(
+  vararg keys: Any?,
   content: @Composable JindongScope.() -> Unit,
-): HapticPattern = remember {
+): HapticPattern = remember(*keys) {
   compilePattern(content)
 }
