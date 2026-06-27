@@ -78,6 +78,8 @@ kotlin {
         implementation(libs.kotest.assertions.core)
         implementation(libs.kotlinx.coroutines.test)
         implementation(libs.kotest.runner.junit5)
+        // JUnit4 Robolectric tests run under the JUnit Platform via the vintage engine.
+        runtimeOnly(libs.junit.vintage.engine)
       }
   }
 }
