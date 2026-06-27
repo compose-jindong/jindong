@@ -190,8 +190,10 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
-    // [100ms event1] + [50ms gap] + [100ms event2] + [1ms end]
-    shadowVibrator.pattern shouldBe longArrayOf(100, 50, 100, 1)
+    // On an amplitude-capable (LRA) actuator, the active->gap boundary gets a fall ramp borrowed
+    // from the gap front: the 50ms gap becomes [8ms ramp @ HIGH/2][42ms gap]. Total span unchanged.
+    // [100ms event1] + [8ms ramp] + [42ms gap] + [100ms event2] + [1ms end]
+    shadowVibrator.pattern shouldBe longArrayOf(100, 8, 42, 100, 1)
   }
 
   @Test
@@ -220,8 +222,93 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe true
-    // [100ms event1] + [50ms gap1] + [100ms event2] + [50ms gap2] + [100ms event3] + [1ms end]
-    shadowVibrator.pattern shouldBe longArrayOf(100, 50, 100, 50, 100, 1)
+    // LRA fall ramps soften both internal active->gap boundaries: each 50ms gap becomes
+    // [8ms ramp][42ms gap]. Total span unchanged (ramp borrowed from the gap front).
+    // [100 e1][8 ramp][42 gap1][100 e2][8 ramp][42 gap2][100 e3][1 end]
+    shadowVibrator.pattern shouldBe longArrayOf(100, 8, 42, 100, 8, 42, 100, 1)
+  }
+
+  @Test
+  fun `should insert a fall ramp at an active-to-gap boundary on an LRA actuator`() = runTest {
+    // setup() already enabled amplitude control (LRA). A single active->gap boundary.
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 100,
+          intensity = HapticIntensity.STRONG,
+        ),
+        ScheduledHapticEvent(
+          startTimeMs = 150, // 100ms + 50ms gap
+          durationMs = 50,
+          intensity = HapticIntensity.STRONG,
+        ),
+      ),
+    )
+
+    executor.execute(pattern)
+
+    shadowVibrator.isVibrating shouldBe true
+    // The 50ms gap is split into an 8ms ramp + 42ms gap; the active segments are untouched.
+    // ShadowVibrator only exposes timings (getPattern), so amplitude precision is asserted in
+    // InsertFallRampsTest; here we verify the timeline was reshaped by the ramp.
+    // [100 active][8 ramp][42 gap][50 active][1 end]
+    shadowVibrator.pattern shouldBe longArrayOf(100, 8, 42, 50, 1)
+  }
+
+  @Test
+  fun `should not insert a fall ramp on an ERM actuator without amplitude control`() = runTest {
+    val context: Context = ApplicationProvider.getApplicationContext()
+    // Disable amplitude control BEFORE the executor evaluates its lazy hasAmplitudeControl.
+    shadowVibrator.setHasAmplitudeControl(false)
+    val ermExecutor = createHapticExecutor(context)
+
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 100,
+          intensity = HapticIntensity.HIGH,
+        ),
+        ScheduledHapticEvent(
+          startTimeMs = 150, // 100ms + 50ms gap
+          durationMs = 100,
+          intensity = HapticIntensity.MEDIUM,
+        ),
+      ),
+    )
+
+    ermExecutor.execute(pattern)
+
+    shadowVibrator.isVibrating shouldBe true
+    // No ramp on ERM (amplitude would round up anyway): original gap shape preserved.
+    shadowVibrator.pattern shouldBe longArrayOf(100, 50, 100, 1)
+  }
+
+  @Test
+  fun `should serialize overlapping events keeping higher intensity`() = runTest {
+    // Overlap: [0,100)@HIGH overlaps [50,150)@MEDIUM.
+    // Merged serial timeline: [0,50)@HIGH, [50,100)@HIGH (winner), [100,150)@MEDIUM.
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 100,
+          intensity = HapticIntensity.HIGH,
+        ),
+        ScheduledHapticEvent(
+          startTimeMs = 50,
+          durationMs = 100,
+          intensity = HapticIntensity.MEDIUM,
+        ),
+      ),
+    )
+
+    executor.execute(pattern)
+
+    shadowVibrator.isVibrating shouldBe true
+    // [50ms HIGH] + [50ms HIGH] + [50ms MEDIUM] + [1ms end], total span 150ms.
+    shadowVibrator.pattern shouldBe longArrayOf(50, 50, 50, 1)
   }
 
   @Test

@@ -24,7 +24,6 @@ import android.os.VibratorManager
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.core.model.HapticPattern
-import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
 
@@ -55,8 +54,9 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     vibrator.hasVibrator()
   }
 
-  // ERM actuators round any non-zero amplitude up to 100%, so per-level intensity is indistinguishable;
-  // callers read this to warn that LIGHT/MEDIUM/STRONG/HIGH feel identical on such devices.
+  // ERM actuators round any non-zero amplitude up to 100%, so per-level intensity is indistinguishable:
+  // callers read this to warn that LIGHT/MEDIUM/STRONG/HIGH feel identical, and toWaveform() gates the
+  // fall ramp on it (a ramp would be lost when every non-zero amplitude rounds up to full).
   override val hasAmplitudeControl: Boolean by lazy {
     vibrator.hasAmplitudeControl()
   }
@@ -66,7 +66,9 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     if (!isSupported || pattern.events.isEmpty()) return
 
     vibratePattern(pattern)
-    val totalDurationMs = pattern.events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
+    // Await the merged serial timeline only; the 1-2ms primer/trailing segments are excluded
+    // (conservative wait so we never under-delay the user-perceived vibration).
+    val totalDurationMs = mergeToSerial(pattern.events).sumOf { it.durationMs }
     delay(totalDurationMs)
   }
 
@@ -91,49 +93,52 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   }
 
   /**
-   * Converts [HapticPattern] to Android waveform format with alternating off/on segments.
-   * Note: Some devices require at least one gap in the middle of the waveform to function properly.
+   * Converts [HapticPattern] to an Android waveform in stages:
+   * 1. [mergeToSerial] flattens overlapping events into a single serial timeline.
+   * 2. [insertFallRamps] softens active->gap drops on amplitude-capable (LRA) actuators only.
+   * 3. quantize each [HapticSegment] into (timing, amplitude) pairs.
+   * 4. [applyDeviceCompat] adds the Samsung primer and trailing gap that some devices require.
    */
   private fun HapticPattern.toWaveform(): Waveform {
-    val sortedEvents = events.sortedBy { it.startTimeMs }
-    val isSingleEvent = sortedEvents.size == 1
+    val serial = mergeToSerial(events)
+    val segments = if (hasAmplitudeControl) insertFallRamps(serial) else serial
     val timings = mutableListOf<Long>()
     val amplitudes = mutableListOf<Int>()
-    var currentTime = 0L
 
-    for (event in sortedEvents) {
-      val gap = event.startTimeMs - currentTime
-
-      // Add gap if there's delay before this event
-      if (gap > 0) {
-        timings += gap
-        amplitudes += 0
-      }
-
-      // Add the haptic event
-      timings += event.durationMs
-      amplitudes += event.toAmplitude()
-
-      // Single-event patterns are split with a 1ms primer vibration at the end of the main vibration.
-      // This is to ensure vibration support on Samsung devices.
-      if (isSingleEvent) {
-        timings += 1L
-        amplitudes += 0
-        timings += 1L
-        amplitudes += 1
-      }
-
-      currentTime = event.startTimeMs + event.durationMs
+    for (segment in segments) {
+      timings += segment.durationMs
+      // Gaps stay at amplitude 0; coerceIn would otherwise floor them to 1 and turn a pause into a buzz.
+      // An active event with 0f intensity (Custom(0.0)) is not a gap and still floors to amplitude 1.
+      amplitudes += if (segment.isGap) 0 else segment.toAmplitude()
     }
 
-    // Add trailing segment to ensure proper termination
+    return applyDeviceCompat(timings, amplitudes, isSingleEvent = events.size == 1)
+  }
+
+  /**
+   * Post-processes the quantized waveform with device-compat segments:
+   * single-event patterns get a 1ms off + 1ms on primer (Samsung), and every pattern gets a
+   * trailing 1ms gap so the waveform terminates cleanly.
+   */
+  private fun applyDeviceCompat(
+    timings: MutableList<Long>,
+    amplitudes: MutableList<Int>,
+    isSingleEvent: Boolean,
+  ): Waveform {
+    if (isSingleEvent) {
+      timings += 1L
+      amplitudes += 0
+      timings += 1L
+      amplitudes += 1
+    }
+
     timings += 1L
     amplitudes += 0
 
     return Waveform(timings.toLongArray(), amplitudes.toIntArray())
   }
 
-  private fun ScheduledHapticEvent.toAmplitude(): Int = (intensity.value * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
+  private fun HapticSegment.toAmplitude(): Int = (intensity * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
 
   private data class Waveform(
     val timings: LongArray,
