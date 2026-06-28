@@ -129,8 +129,8 @@ Jindong(trigger) {
 
 | Platform | Implementation |
 |----------|----------------|
-| Android | `VibrationEffect.createOneShot()` |
-| iOS | `CHHapticEvent` with `HapticTransient` or `HapticContinuous` |
+| Android | `VibrationEffect.createWaveform()` |
+| iOS | `CHHapticEvent` (`HapticContinuous`) played via `CHHapticEngine` |
 
 ## Notes
 

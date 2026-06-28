@@ -166,7 +166,7 @@ RepeatWithIndex(5) { index ->
 ## Notes
 
 - `count` of 0 produces no output
-- If count is negative, it can cause app crash.
+- A negative `count` throws `IllegalArgumentException` (it must be non-negative)
 - Each iteration runs sequentially
 - Content block is evaluated `count` times at composition
 - All iterations have the same pattern
