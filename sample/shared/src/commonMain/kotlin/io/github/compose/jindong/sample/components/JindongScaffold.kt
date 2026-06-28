@@ -23,11 +23,18 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.WindowInsetsSides
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawing
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -70,7 +77,16 @@ fun JindongScaffold(
   content: @Composable ColumnScope.() -> Unit,
 ) {
   val colors = JindongTheme.colors
-  Column(modifier = modifier.fillMaxSize().background(colors.bg)) {
+  // Horizontal cutout insets (landscape notch / iOS side safe area) apply to the whole frame; the
+  // status-bar inset is consumed by the app bar and the navigation-bar inset by the scrolling body,
+  // so each edge is padded exactly once.
+  Column(
+    modifier =
+    modifier
+      .fillMaxSize()
+      .background(colors.bg)
+      .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Horizontal)),
+  ) {
     AppBar(
       screen = screen,
       isDark = isDark,
@@ -82,6 +98,7 @@ fun JindongScaffold(
       Modifier
         .fillMaxWidth()
         .verticalScroll(rememberScrollState())
+        .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
         .padding(
           start = Dimens.screenPadH,
           end = Dimens.screenPadH,
@@ -102,12 +119,15 @@ private fun AppBar(
 ) {
   val colors = JindongTheme.colors
   val strokePx = with(LocalDensity.current) { Dimens.stroke.toPx() }
+  // Background fills behind the status bar; the status-bar inset then pushes the 56dp bar content
+  // below it, and the bottom border draws at the visible bottom of that content.
   Box(
     modifier =
     Modifier
       .fillMaxWidth()
-      .height(Dimens.appBarHeight)
       .background(colors.bg)
+      .windowInsetsPadding(WindowInsets.statusBars.only(WindowInsetsSides.Top))
+      .height(Dimens.appBarHeight)
       .drawBehind {
         drawLine(
           color = colors.border,
