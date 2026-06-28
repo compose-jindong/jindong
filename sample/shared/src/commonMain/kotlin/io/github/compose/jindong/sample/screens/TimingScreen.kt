@@ -26,7 +26,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +53,7 @@ import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.sample.components.HapticTimeline
+import io.github.compose.jindong.sample.components.JindongIcons
 import io.github.compose.jindong.sample.components.PlayButton
 import io.github.compose.jindong.sample.components.ScreenDescription
 import io.github.compose.jindong.sample.components.TimelineMapper
@@ -145,7 +148,7 @@ fun TimingScreen(modifier: Modifier = Modifier) {
 
     VGap(18.dp)
 
-    PlayButton(onClick = { playTrigger++ }, text = "▶ Play sequence")
+    PlayButton(onClick = { playTrigger++ }, text = "Play sequence")
   }
 
   // VIBRATION PATH (stale pre-#84; see SingleHapticScreen for the rationale). The timeline above is
@@ -252,7 +255,12 @@ private fun NodeEditorCard(
             modifier = Modifier.defaultMinSize(minWidth = Dimens.minTouch, minHeight = Dimens.minTouch).clickable(onClick = onDelete),
             contentAlignment = Alignment.Center,
           ) {
-            Text(text = "✕", style = JindongTheme.typography.bodySmall, color = colors.text3)
+            Icon(
+              imageVector = JindongIcons.Close,
+              contentDescription = "Delete node",
+              tint = colors.text3,
+              modifier = Modifier.size(14.dp),
+            )
           }
         }
       }

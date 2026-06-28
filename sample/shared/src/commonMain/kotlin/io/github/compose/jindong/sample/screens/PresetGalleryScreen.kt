@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -51,6 +52,7 @@ import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.sample.components.HapticTimeline
+import io.github.compose.jindong.sample.components.JindongIcons
 import io.github.compose.jindong.sample.components.ScreenDescription
 import io.github.compose.jindong.sample.components.TimelineMapper
 import io.github.compose.jindong.sample.components.VGap
@@ -150,11 +152,11 @@ private fun PresetCard(
         )
       }
       PresetPlayChip(onClick = onPlay)
-      Text(
-        text = "⌄",
-        style = JindongTheme.typography.bodySmall,
-        color = colors.text3,
-        modifier = Modifier.rotate(caretRotation),
+      Icon(
+        imageVector = JindongIcons.CaretDown,
+        contentDescription = if (expanded) "Collapse" else "Expand",
+        tint = colors.text3,
+        modifier = Modifier.size(16.dp).rotate(caretRotation),
       )
     }
 
@@ -186,7 +188,7 @@ private fun PresetTimeline(
   )
 }
 
-/** Small bordered "▶" affordance on each preset header (>= 48dp hit area). */
+/** Small bordered play affordance on each preset header (>= 48dp hit area). */
 @Composable
 private fun PresetPlayChip(onClick: () -> Unit) {
   val colors = JindongTheme.colors
@@ -203,10 +205,11 @@ private fun PresetPlayChip(onClick: () -> Unit) {
         .padding(horizontal = 13.dp, vertical = 7.dp),
       contentAlignment = Alignment.Center,
     ) {
-      Text(
-        text = "▶",
-        style = JindongTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-        color = colors.text2,
+      Icon(
+        imageVector = JindongIcons.Play,
+        contentDescription = "Play",
+        tint = colors.text2,
+        modifier = Modifier.size(13.dp),
       )
     }
   }

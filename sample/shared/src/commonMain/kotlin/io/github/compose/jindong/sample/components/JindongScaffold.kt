@@ -38,6 +38,7 @@ import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -50,7 +51,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import io.github.compose.jindong.sample.nav.Screen
 import io.github.compose.jindong.sample.theme.Dimens
 import io.github.compose.jindong.sample.theme.JindongTheme
@@ -149,7 +149,12 @@ private fun AppBar(
           .semantics { contentDescription = "Back" },
         contentAlignment = Alignment.Center,
       ) {
-        Text(text = "‹", fontSize = 20.sp, color = colors.text2)
+        Icon(
+          imageVector = JindongIcons.ChevronLeft,
+          contentDescription = "Back",
+          tint = colors.text2,
+          modifier = Modifier.size(22.dp),
+        )
       }
     }
 
@@ -203,7 +208,12 @@ private fun ThemeToggle(
         .border(Dimens.stroke, colors.border, RoundedCornerShape(Dimens.radiusIcon)),
       contentAlignment = Alignment.Center,
     ) {
-      Text(text = if (isDark) "☀" else "☾", fontSize = 13.sp, color = colors.text2)
+      Icon(
+        imageVector = if (isDark) JindongIcons.Sun else JindongIcons.Moon,
+        contentDescription = null,
+        tint = colors.text2,
+        modifier = Modifier.size(15.dp),
+      )
     }
   }
 }

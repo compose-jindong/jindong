@@ -29,6 +29,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
@@ -56,6 +57,7 @@ import io.github.compose.jindong.dsl.Delay
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.Sequence
 import io.github.compose.jindong.sample.components.HapticTimeline
+import io.github.compose.jindong.sample.components.JindongIcons
 import io.github.compose.jindong.sample.components.PlayButton
 import io.github.compose.jindong.sample.components.ScreenDescription
 import io.github.compose.jindong.sample.components.TimelineMapper
@@ -116,7 +118,7 @@ fun IntensityLabScreen(modifier: Modifier = Modifier) {
 
     VGap(16.dp)
 
-    PlayButton(onClick = { playAll++ }, text = "▶ Play all (ascending)")
+    PlayButton(onClick = { playAll++ }, text = "Play all (ascending)")
 
     VGap(18.dp)
 
@@ -266,7 +268,7 @@ private fun CustomCard(
   }
 }
 
-/** Small bordered "▶" affordance used on the rows and the custom card (>= 48dp hit area). */
+/** Small bordered play affordance used on the rows and the custom card (>= 48dp hit area). */
 @Composable
 private fun PlayChip(onClick: () -> Unit) {
   val colors = JindongTheme.colors
@@ -283,10 +285,11 @@ private fun PlayChip(onClick: () -> Unit) {
         .padding(horizontal = 14.dp, vertical = 7.dp),
       contentAlignment = Alignment.Center,
     ) {
-      Text(
-        text = "▶",
-        style = JindongTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-        color = colors.text2,
+      Icon(
+        imageVector = JindongIcons.Play,
+        contentDescription = "Play",
+        tint = colors.text2,
+        modifier = Modifier.size(13.dp),
       )
     }
   }

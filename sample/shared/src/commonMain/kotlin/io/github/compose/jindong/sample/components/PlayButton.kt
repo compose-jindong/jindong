@@ -17,11 +17,15 @@ package io.github.compose.jindong.sample.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -32,14 +36,15 @@ import io.github.compose.jindong.sample.theme.Dimens
 import io.github.compose.jindong.sample.theme.JindongTheme
 
 /**
- * Full-width primary action button. Inverted ink/white surface ([JindongColors.btnBg] /
- * [JindongColors.btnText]) — not accent — per the handoff. Wrapped to a >= 48dp hit area.
+ * Full-width primary action button: a [JindongIcons.Play] glyph plus [text] label. Inverted ink/white
+ * surface ([JindongColors.btnBg] / [JindongColors.btnText]) — not accent — per the handoff. Wrapped
+ * to a >= 48dp hit area.
  */
 @Composable
 fun PlayButton(
   onClick: () -> Unit,
   modifier: Modifier = Modifier,
-  text: String = "▶ Play",
+  text: String = "Play",
 ) {
   Box(
     modifier =
@@ -52,10 +57,21 @@ fun PlayButton(
       .padding(14.dp),
     contentAlignment = Alignment.Center,
   ) {
-    Text(
-      text = text,
-      style = JindongTheme.typography.cardTitle,
-      color = JindongTheme.colors.btnText,
-    )
+    Row(
+      horizontalArrangement = Arrangement.spacedBy(6.dp),
+      verticalAlignment = Alignment.CenterVertically,
+    ) {
+      Icon(
+        imageVector = JindongIcons.Play,
+        contentDescription = null,
+        tint = JindongTheme.colors.btnText,
+        modifier = Modifier.size(15.dp),
+      )
+      Text(
+        text = text,
+        style = JindongTheme.typography.cardTitle,
+        color = JindongTheme.colors.btnText,
+      )
+    }
   }
 }
