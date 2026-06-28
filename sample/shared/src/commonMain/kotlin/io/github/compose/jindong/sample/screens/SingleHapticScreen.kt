@@ -179,11 +179,10 @@ fun SingleHapticScreen(modifier: Modifier = Modifier) {
     PlayButton(onClick = { playTrigger++ })
   }
 
-  // VIBRATION PATH (buggy until PR #84): every relevant state value is a key so the executor re-runs
-  // on any change; the play-trigger key covers the explicit Play tap. Pre-#84 rememberHapticPattern
-  // caches the first compile and replays stale params here — the timeline above stays correct, and
-  // the moment #84 merges this path self-heals with zero changes to this screen.
-  Jindong(playTrigger, sgDur, sgChip, sgInt) {
+  // VIBRATION PATH: key only on playTrigger so this stays an explicit-play screen (Reactive is the
+  // auto-firing one). The block reads live sgDur/resolvedIntensity, so Play always uses the current
+  // values. The timeline above is driven separately from state and stays live regardless of #84.
+  Jindong(playTrigger) {
     Haptic(sgDur.ms, resolvedIntensity)
   }
 }
