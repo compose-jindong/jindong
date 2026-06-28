@@ -38,11 +38,10 @@ import io.github.compose.jindong.sample.theme.JindongTheme
  * bar back chevron returns to Home. The theme follows the system preference unless [darkOverride] is
  * set by the app-bar toggle.
  *
- * Back handling: the app-bar back chevron (in [JindongScaffold]) is the sole back affordance. In
- * Compose Multiplatform 1.10 the only commonMain back API is the deprecated, `@ExperimentalComposeUiApi`
- * `androidx.compose.ui.backhandler.BackHandler`, which also requires a navigation-event dispatcher
- * owner that `ComposeUIViewController` does not provide on iOS (it would `error(...)` at runtime).
- * Relying on the chevron keeps both targets safe without pulling in the new navigation-event artifact.
+ * Back handling: on a module screen the Android system back gesture/button returns to Home via
+ * [PlatformBackHandler] (a no-op on iOS, where the app-bar chevron is the affordance). This avoids
+ * the deprecated `androidx.compose.ui.backhandler.BackHandler`, which on iOS requires a
+ * navigation-event dispatcher owner that `ComposeUIViewController` does not provide.
  */
 @Composable
 fun AppRoot() {
@@ -51,6 +50,8 @@ fun AppRoot() {
   }
   var darkOverride by rememberSaveable { mutableStateOf<Boolean?>(null) }
   val dark = darkOverride ?: isSystemInDarkTheme()
+
+  PlatformBackHandler(enabled = current != Screen.Home) { current = Screen.Home }
 
   JindongTheme(darkTheme = dark) {
     JindongScaffold(
