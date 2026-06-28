@@ -253,6 +253,25 @@ Jindong(buttonClickCount) { ... }
 Jindong(System.currentTimeMillis()) { ... }
 ```
 
+### Reactive Patterns
+
+When a key changes, the content block is recompiled with the current state, so a
+value the block captures must also be one of the keys for the pattern to reflect it:
+
+```kotlin
+var level by remember { mutableStateOf(1) }
+
+// `level` is captured AND a key, so the pattern grows as `level` changes
+Jindong(level) {
+    RepeatWithIndex(level) { index ->
+        Haptic(50.ms, HapticIntensity.Custom(1f - index * 0.1f))
+    }
+}
+```
+
+If a captured value is not in the keys, the pattern keeps the value from the last
+key change instead of updating.
+
 ## Next Steps
 
 - [Jindong API](/docs/api/jindong-compose/jindong) - Deep dive into the main API

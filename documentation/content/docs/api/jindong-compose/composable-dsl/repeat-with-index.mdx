@@ -167,7 +167,7 @@ RepeatWithIndex(5) { i -> Haptic((50 + i * 10).ms) }
 
 - Index is 0-based (0 to count-1)
 - Each iteration generates a separate node
-- `count` must be a positive value.
+- A `count` of 0 or less simply produces no output
 - The index can be used in any expression within the content block
 
 ## See Also
