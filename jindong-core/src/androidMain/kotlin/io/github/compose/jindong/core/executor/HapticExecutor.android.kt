@@ -26,6 +26,7 @@ import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.core.model.HapticPattern
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
 
 /**
  * Android implementation of [HapticExecutor] using [VibrationEffect.createWaveform].
@@ -68,7 +69,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     // Await the exact waveform that was played, including the primer/trailing compat segments,
     // so the caller resumes when the vibration truly ends rather than a few ms early.
     val waveform = vibratePattern(pattern) ?: return
-    delay(waveform.timings.sum())
+    delay(waveform.timings.sum().milliseconds)
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
@@ -94,29 +95,58 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   }
 
   /**
-   * Converts [HapticPattern] to an Android waveform in stages, or returns null when the merged
-   * timeline has no active segment (e.g. zero-duration or all-gap input), so a silent pattern
-   * never emits a compat-only buzz.
-   * 1. [mergeToSerial] flattens overlapping events into a single serial timeline.
-   * 2. [insertFallRamps] softens active->gap drops on amplitude-capable (LRA) actuators only.
-   * 3. quantize each [HapticSegment] into (timing, amplitude) pairs.
-   * 4. [applyDeviceCompat] adds the Samsung primer and trailing gap that some devices require.
+   * Translates a [HapticPattern] (events on a timeline) into the two parallel arrays Android's
+   * [VibrationEffect.createWaveform] expects: `timings` (how long each slice lasts) and `amplitudes`
+   * (how hard the motor buzzes during it, 0 = off). Android plays one amplitude at a time, so the
+   * pattern's overlapping, intensity-bearing events must first be flattened into a single serial
+   * track of non-overlapping slices.
+   *
+   * Worked example — `Haptic(100ms, STRONG) + Delay(50ms) + Haptic(100ms, MEDIUM)` on an LRA:
+   * ```
+   * events        STRONG |##########|      MEDIUM |##########|     two overlapping/spaced events
+   *                       0        100  150       250            with intensities, on a timeline
+   *
+   * 1. mergeToSerial   -> [100 @0.75][50 @gap][100 @0.5]         one serial track, gaps explicit;
+   *                                                              overlaps would resolve to the
+   *                                                              louder event (max, not sum)
+   *
+   * 2. insertFallRamps -> [100 @0.75][8 @0.38][42 @gap][100 @0.5]  the 50ms gap lends its first 8ms
+   *                                  \_ramp_/                       to a fade-down step, so a hard
+   *                                                                 drop to 0 doesn't ring (LRA only)
+   *
+   * 3. quantize        timings  = [100,  8, 42, 100]             intensity 0..1 -> amplitude 0..255;
+   *                    amplitudes=[191, 95,  0, 127]             a real gap stays 0, an active slice
+   *                                                              floors to 1 (never silent-by-rounding)
+   *
+   * 4. applyDeviceCompat timings  = [100, 8, 42, 100, 1]         trailing 1ms-off terminates the
+   *                      amplitudes=[191,95,  0, 127, 0]         waveform cleanly; a single-event
+   *                                                              pattern also gets a Samsung primer
+   * ```
+   *
+   * Returns null (so the caller plays nothing) when [mergeToSerial] yields no active slice — i.e.
+   * an empty, zero-duration, or all-gap pattern. Without this guard step 4 would still append the
+   * compat segments, making the motor buzz for a pattern the user meant to be silent.
    */
   private fun HapticPattern.toWaveform(): Waveform? {
+    // 1. Flatten overlapping events into one serial timeline of [HapticSegment]s.
     val serial = mergeToSerial(events)
     if (serial.none { !it.isGap }) return null
 
+    // 2. Soften active->gap amplitude drops, but only where the motor can render the in-between
+    //    levels (LRA); on ERM every non-zero amplitude rounds up to full, so a ramp is pointless.
     val segments = if (hasAmplitudeControl) insertFallRamps(serial) else serial
+
+    // 3. Quantize each segment into a (timing, amplitude) pair.
     val timings = mutableListOf<Long>()
     val amplitudes = mutableListOf<Int>()
-
     for (segment in segments) {
       timings += segment.durationMs
-      // Gaps stay at amplitude 0; coerceIn would otherwise floor them to 1 and turn a pause into a buzz.
-      // An active event with 0f intensity (Custom(0.0)) is not a gap and still floors to amplitude 1.
+      // A real gap stays at 0; an active slice floors to 1 via coerceIn, so an event with
+      // 0f intensity (Custom(0.0)) still registers as the faintest buzz rather than silence.
       amplitudes += if (segment.isGap) 0 else segment.toAmplitude()
     }
 
+    // 4. Append the device-compat segments (Samsung primer + clean trailing termination).
     return applyDeviceCompat(timings, amplitudes, isSingleEvent = events.size == 1)
   }
 
