@@ -65,11 +65,10 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   override suspend fun execute(pattern: HapticPattern) {
     if (!isSupported || pattern.events.isEmpty()) return
 
-    vibratePattern(pattern)
-    // Await the merged serial timeline only; the 1-2ms primer/trailing segments are excluded
-    // (conservative wait so we never under-delay the user-perceived vibration).
-    val totalDurationMs = mergeToSerial(pattern.events).sumOf { it.durationMs }
-    delay(totalDurationMs)
+    // Await the exact waveform that was played, including the primer/trailing compat segments,
+    // so the caller resumes when the vibration truly ends rather than a few ms early.
+    val waveform = vibratePattern(pattern)
+    delay(waveform.timings.sum())
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
@@ -86,10 +85,11 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   override fun release() = vibrator.cancel()
 
   @RequiresPermission(Manifest.permission.VIBRATE)
-  private fun vibratePattern(pattern: HapticPattern) {
+  private fun vibratePattern(pattern: HapticPattern): Waveform {
     val waveform = pattern.toWaveform()
     val vibrationEffect = VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
     vibrator.vibrate(vibrationEffect)
+    return waveform
   }
 
   /**
