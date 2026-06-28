@@ -61,6 +61,7 @@ import io.github.compose.jindong.sample.components.formatFixed
 import io.github.compose.jindong.sample.components.timelineAccentColor
 import io.github.compose.jindong.sample.theme.Dimens
 import io.github.compose.jindong.sample.theme.JindongTheme
+import kotlin.math.roundToLong
 
 /**
  * Reactive / State-driven (handoff 07): the one differentiator — moving a control re-fires the
@@ -114,7 +115,11 @@ private fun ThresholdCard() {
   val accent = timelineAccentColor()
   val pattern = remember(intensity) { singleBar(start = 20L, dur = 120L, intensity = intensity) }
   val bars = TimelineMapper.toBars(pattern, 600L) { accent }
-  val expectedActual = if (strong) "tall bar (0.90)" else "short bar (0.30)"
+  // EXPECTED comes from the control logic; ACTUAL is read back from the rendered bar, so the two
+  // diverge if singleBar / TimelineMapper ever stops tracking state (a real regression oracle).
+  val expected = if (strong) "tall bar (0.90)" else "short bar (0.30)"
+  val actualHeight = bars.firstOrNull()?.let { barIntensity(it) } ?: 0f
+  val actual = (if (actualHeight >= 0.5f) "tall bar (" else "short bar (") + formatFixed(actualHeight, 2) + ")"
 
   CaseCard(
     title = "Threshold branch",
@@ -124,8 +129,8 @@ private fun ThresholdCard() {
     bars = bars,
     topRight = if (strong) "STRONG" else "soft",
     maxLabel = "600",
-    expected = expectedActual,
-    actual = expectedActual,
+    expected = expected,
+    actual = actual,
     controls = {
       LabeledSlider(
         label = "Value",
@@ -152,7 +157,9 @@ private fun CountCard() {
   val window = 700L // (60 + 80) * 5
   val pattern = remember(rxCount) { reactiveCountPattern(rxCount) }
   val bars = TimelineMapper.toBars(pattern, window) { accent }
-  val expectedActual = "$rxCount bars"
+  // ACTUAL counts the rendered bars, not the slider value, so a mapping regression would show up.
+  val expected = "$rxCount bars"
+  val actual = "${bars.size} bars"
 
   CaseCard(
     title = "Count reaction",
@@ -162,8 +169,8 @@ private fun CountCard() {
     bars = bars,
     topRight = "× $rxCount",
     maxLabel = window.toString(),
-    expected = expectedActual,
-    actual = expectedActual,
+    expected = expected,
+    actual = actual,
     controls = {
       LabeledSlider(
         label = "Repeat count",
@@ -191,9 +198,16 @@ private fun MultiInputCard() {
   var rxDur by remember { mutableIntStateOf(160) }
   var rxInt by remember { mutableFloatStateOf(0.6f) }
   val accent = timelineAccentColor()
+  val window = 600L
   val pattern = remember(rxDur, rxInt) { singleBar(start = 20L, dur = rxDur.toLong(), intensity = rxInt) }
-  val bars = TimelineMapper.toBars(pattern, 600L) { accent }
-  val expectedActual = "width ${rxDur}ms, height ${formatFixed(rxInt, 1)}"
+  val bars = TimelineMapper.toBars(pattern, window) { accent }
+  // ACTUAL is reconstructed from the rendered bar fractions (width*window, height/0.98), so it only
+  // matches EXPECTED while the bar genuinely tracks both faders.
+  val expected = "width ${rxDur}ms, height ${formatFixed(rxInt, 1)}"
+  val actual =
+    bars.firstOrNull()?.let { bar ->
+      "width ${(bar.widthFraction * window).roundToLong()}ms, height ${formatFixed(barIntensity(bar), 1)}"
+    } ?: "no bar"
 
   CaseCard(
     title = "Multiple inputs",
@@ -202,9 +216,9 @@ private fun MultiInputCard() {
     flashKey = rxDur * 1000 + (rxInt * 100).toInt(),
     bars = bars,
     topRight = "${rxDur}ms · ${formatFixed(rxInt, 1)}",
-    maxLabel = "600",
-    expected = expectedActual,
-    actual = expectedActual,
+    maxLabel = window.toString(),
+    expected = expected,
+    actual = actual,
     controls = {
       LabeledSlider(
         label = "Duration",
@@ -355,6 +369,13 @@ private inline fun androidx.compose.ui.text.AnnotatedString.Builder.withStyleSem
     ),
   ) { block() }
 }
+
+/**
+ * Reconstructs an event intensity from a rendered [TimelineBar]. Inverse of `TimelineMapper`'s
+ * `heightFraction = max(0.06, intensity * 0.98)`; used by the Reactive cards so ACTUAL is read from
+ * the rendered bar rather than re-derived from the same state as EXPECTED.
+ */
+internal fun barIntensity(bar: io.github.compose.jindong.sample.components.TimelineBar): Float = (bar.heightFraction / 0.98f).coerceIn(0f, 1f)
 
 /** A one-bar pattern at [start]/[dur]/[intensity] (Cards A and C). */
 internal fun singleBar(

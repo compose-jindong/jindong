@@ -32,6 +32,7 @@ import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.Dp
 import io.github.compose.jindong.sample.theme.Dimens
 import io.github.compose.jindong.sample.theme.JindongTheme
+import kotlin.math.roundToLong
 
 /**
  * Intro / description paragraph at the top of every module screen. 13sp, [text2], line-height 1.55.
@@ -86,7 +87,7 @@ fun formatFixed(
   value: Float,
   decimals: Int,
 ): String {
-  if (decimals <= 0) return value.toLong().toString()
+  if (decimals <= 0) return value.roundToLong().toString()
   var scale = 1
   repeat(decimals) { scale *= 10 }
   val scaled = (value * scale + if (value >= 0f) 0.5f else -0.5f).toLong()
