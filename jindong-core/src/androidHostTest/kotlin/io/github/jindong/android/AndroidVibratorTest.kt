@@ -286,6 +286,55 @@ class AndroidVibratorTest {
   }
 
   @Test
+  fun `should leave a sub-threshold gap unramped on an LRA actuator`() = runTest {
+    // setup() enabled amplitude control (LRA). The gap (4ms) is not greater than MIN_RAMP_MS,
+    // so insertFallRamps must leave it intact rather than splitting it into a ramp.
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 100,
+          intensity = HapticIntensity.HIGH,
+        ),
+        ScheduledHapticEvent(
+          startTimeMs = 104, // 100ms + 4ms gap (== MIN_RAMP_MS, not greater)
+          durationMs = 50,
+          intensity = HapticIntensity.HIGH,
+        ),
+      ),
+    )
+
+    executor.execute(pattern)
+
+    shadowVibrator.isVibrating shouldBe true
+    // Gap stays whole: [100 active][4 gap][50 active][1 end]; no ramp inserted.
+    shadowVibrator.pattern shouldBe longArrayOf(100, 4, 50, 1)
+  }
+
+  @Test
+  fun `should await the full played waveform length including compat segments`() = runTest {
+    // A single 100ms event plays as [100 active][1 gap][1 primer][1 end] = 103ms (the primer is
+    // single-event only). execute() must delay for the whole 103ms, not the bare 100ms merged span,
+    // so the caller resumes when the vibration truly ends.
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 100,
+          intensity = HapticIntensity.HIGH,
+        ),
+      ),
+    )
+
+    val before = testScheduler.currentTime
+    executor.execute(pattern)
+    val elapsed = testScheduler.currentTime - before
+
+    elapsed shouldBe shadowVibrator.pattern.sum()
+    elapsed shouldBe 103L
+  }
+
+  @Test
   fun `should serialize overlapping events keeping higher intensity`() = runTest {
     // Overlap: [0,100)@HIGH overlaps [50,150)@MEDIUM.
     // Merged serial timeline: [0,50)@HIGH, [50,100)@HIGH (winner), [100,150)@MEDIUM.
