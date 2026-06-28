@@ -22,37 +22,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.test.ExperimentalTestApi
 import androidx.compose.ui.test.runComposeUiTest
-import io.github.compose.jindong.core.executor.HapticExecutor
-import io.github.compose.jindong.core.executor.HapticHandle
-import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.ms
 import io.github.compose.jindong.dsl.Haptic
 import io.github.compose.jindong.dsl.RepeatWithIndex
 import io.github.compose.jindong.executor.LocalHapticExecutor
+import io.github.compose.jindong.executor.RecordingHapticExecutor
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
-
-/**
- * Records executed patterns so a test can inspect what [Jindong] played for a given key.
- */
-private class RecordingHapticExecutor : HapticExecutor {
-  override val isSupported: Boolean = true
-
-  val executedPatterns = mutableListOf<HapticPattern>()
-
-  override suspend fun execute(pattern: HapticPattern) {
-    executedPatterns += pattern
-  }
-
-  override fun executeAsync(pattern: HapticPattern): HapticHandle = NoopHapticHandle
-
-  override fun release() = Unit
-
-  private object NoopHapticHandle : HapticHandle {
-    override val isActive: Boolean = false
-    override fun cancel() = Unit
-  }
-}
 
 class JindongReactiveTest :
   FunSpec({
