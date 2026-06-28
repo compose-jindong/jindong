@@ -17,9 +17,19 @@ package io.github.compose.jindong.core.executor
 
 import io.kotest.assertions.assertSoftly
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.collections.shouldContainAll
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.floats.plusOrMinus
+import io.kotest.matchers.longs.shouldBeGreaterThan
 import io.kotest.matchers.shouldBe
+import io.kotest.property.Arb
+import io.kotest.property.arbitrary.arbitrary
+import io.kotest.property.arbitrary.bind
+import io.kotest.property.arbitrary.boolean
+import io.kotest.property.arbitrary.float
+import io.kotest.property.arbitrary.int
+import io.kotest.property.arbitrary.long
+import io.kotest.property.checkAll
 
 private fun active(startTimeMs: Long, durationMs: Long, intensity: Float): HapticSegment = HapticSegment(startTimeMs = startTimeMs, durationMs = durationMs, intensity = intensity, sharpness = 0.5f, isGap = false)
 
@@ -142,4 +152,49 @@ class InsertFallRampsTest :
 
       insertFallRamps(input) shouldBe input
     }
+
+    // Property tests over randomly built timelines. The duration-conservation invariant must hold
+    // regardless of gap parity, so odd gaps (where ramp splitting has an integer-division remainder
+    // the leftover gap must absorb) are exercised alongside even ones.
+    test("duration is conserved for any timeline") {
+      checkAll(timelines()) { input ->
+        insertFallRamps(input).sumOf { it.durationMs } shouldBe input.sumOf { it.durationMs }
+      }
+    }
+
+    test("active segments are preserved and ramp steps stay within their gap") {
+      checkAll(timelines()) { input ->
+        val output = insertFallRamps(input)
+        // Every original active segment survives untouched (ramps only ever borrow from gaps).
+        output.filter { !it.isGap && it in input } shouldContainAll input.filter { !it.isGap }
+        // Output stays contiguous and non-negative: no ramp ever overruns its gap.
+        output.forEach { it.durationMs shouldBeGreaterThan 0L }
+        output.zipWithNext { a, b -> b.startTimeMs shouldBe a.startTimeMs + a.durationMs }
+      }
+    }
   })
+
+/**
+ * Generates merge-to-serial-shaped timelines: contiguous segments alternating active/gap with
+ * cumulative start times, mixing even and odd gap durations and gaps below/above [MIN_RAMP_MS].
+ */
+private fun timelines(): Arb<List<HapticSegment>> = arbitrary { rs ->
+  val count = Arb.int(1..6).bind()
+  var cursor = 0L
+  var wasGap = true // so the first segment can be active
+  buildList {
+    repeat(count) {
+      val makeGap = if (wasGap) false else Arb.boolean().bind()
+      val durationMs = Arb.long(1L..60L).bind()
+      add(
+        if (makeGap) {
+          gap(startTimeMs = cursor, durationMs = durationMs)
+        } else {
+          active(startTimeMs = cursor, durationMs = durationMs, intensity = Arb.float(0f..1f).bind())
+        },
+      )
+      cursor += durationMs
+      wasGap = makeGap
+    }
+  }
+}
