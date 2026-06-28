@@ -25,6 +25,7 @@ import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import io.kotest.assertions.throwables.shouldNotThrow
+import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.test.runTest
 import org.junit.Before
@@ -327,6 +328,9 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
+    // isVibrating alone could pass even if a short compat-only waveform briefly played and ended;
+    // assert no waveform was ever handed to the vibrator, proving execute() was a true no-op.
+    shadowVibrator.pattern.shouldBeNull()
     shadowVibrator.isVibrating shouldBe false
   }
 
@@ -484,7 +488,8 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    // Should not crash, but also should not vibrate
+    // Should not crash, and no waveform should ever reach the vibrator.
+    shadowVibrator.pattern.shouldBeNull()
     shadowVibrator.isVibrating shouldBe false
   }
 
