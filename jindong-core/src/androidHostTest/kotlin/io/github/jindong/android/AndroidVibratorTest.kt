@@ -312,6 +312,52 @@ class AndroidVibratorTest {
   }
 
   @Test
+  fun `should not vibrate a zero-duration event`() = runTest {
+    // A zero-duration event produces no active segment, so it must be a no-op rather than
+    // emitting the compat-only primer/trailing buzz.
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 0,
+          intensity = HapticIntensity.HIGH,
+        ),
+      ),
+    )
+
+    executor.execute(pattern)
+
+    shadowVibrator.isVibrating shouldBe false
+  }
+
+  @Test
+  fun `should await the merged duration for overlapping events`() = runTest {
+    // Overlap [0,100)@HIGH + [50,150)@MEDIUM merges to a 150ms span; execute() must suspend for
+    // the played waveform (150ms span + 1ms trailing = 151ms), not the raw maxOf of the events.
+    val pattern = HapticPattern(
+      listOf(
+        ScheduledHapticEvent(
+          startTimeMs = 0,
+          durationMs = 100,
+          intensity = HapticIntensity.HIGH,
+        ),
+        ScheduledHapticEvent(
+          startTimeMs = 50,
+          durationMs = 100,
+          intensity = HapticIntensity.MEDIUM,
+        ),
+      ),
+    )
+
+    val before = testScheduler.currentTime
+    executor.execute(pattern)
+    val elapsed = testScheduler.currentTime - before
+
+    elapsed shouldBe shadowVibrator.pattern.sum()
+    elapsed shouldBe 151L
+  }
+
+  @Test
   fun `should await the full played waveform length including compat segments`() = runTest {
     // A single 100ms event plays as [100 active][1 gap][1 primer][1 end] = 103ms (the primer is
     // single-event only). execute() must delay for the whole 103ms, not the bare 100ms merged span,
