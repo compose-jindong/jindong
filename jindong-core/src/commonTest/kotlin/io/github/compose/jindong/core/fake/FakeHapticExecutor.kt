@@ -27,6 +27,7 @@ import kotlinx.coroutines.delay
  */
 class FakeHapticExecutor(
   override val isSupported: Boolean = true,
+  override val hasAmplitudeControl: Boolean = true,
 ) : HapticExecutor {
 
   private val _executedPatterns = mutableListOf<HapticPattern>()

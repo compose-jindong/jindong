@@ -55,6 +55,10 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
     CHHapticEngine.capabilitiesForHardware().supportsHaptics()
   }
 
+  // Core Haptics applies intensity as a continuous float on every event, so amplitude is
+  // always full-fidelity; there is no discrete/ERM-style gating on iOS.
+  override val hasAmplitudeControl: Boolean = true
+
   override suspend fun execute(pattern: HapticPattern) {
     if (!isSupported || pattern.events.isEmpty()) return
 

@@ -88,6 +88,7 @@ public final class io/github/compose/jindong/core/element/VibrationElement : io/
 public abstract interface class io/github/compose/jindong/core/executor/HapticExecutor {
 	public abstract fun execute (Lio/github/compose/jindong/core/model/HapticPattern;Lkotlin/coroutines/Continuation;)Ljava/lang/Object;
 	public abstract fun executeAsync (Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/executor/HapticHandle;
+	public abstract fun getHasAmplitudeControl ()Z
 	public abstract fun isSupported ()Z
 	public abstract fun release ()V
 }

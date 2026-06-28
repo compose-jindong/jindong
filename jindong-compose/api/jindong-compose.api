@@ -1,3 +1,31 @@
+public final class io/github/compose/jindong/HapticCapabilities {
+	public static final field $stable I
+	public fun <init> (ZZLio/github/compose/jindong/HapticPlatform;)V
+	public final fun component1 ()Z
+	public final fun component2 ()Z
+	public final fun component3 ()Lio/github/compose/jindong/HapticPlatform;
+	public final fun copy (ZZLio/github/compose/jindong/HapticPlatform;)Lio/github/compose/jindong/HapticCapabilities;
+	public static synthetic fun copy$default (Lio/github/compose/jindong/HapticCapabilities;ZZLio/github/compose/jindong/HapticPlatform;ILjava/lang/Object;)Lio/github/compose/jindong/HapticCapabilities;
+	public fun equals (Ljava/lang/Object;)Z
+	public final fun getHasAmplitudeControl ()Z
+	public final fun getPlatform ()Lio/github/compose/jindong/HapticPlatform;
+	public fun hashCode ()I
+	public final fun isSupported ()Z
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/HapticCapabilitiesKt {
+	public static final fun rememberHapticCapabilities (Landroidx/compose/runtime/Composer;I)Lio/github/compose/jindong/HapticCapabilities;
+}
+
+public final class io/github/compose/jindong/HapticPlatform : java/lang/Enum {
+	public static final field Android Lio/github/compose/jindong/HapticPlatform;
+	public static final field Ios Lio/github/compose/jindong/HapticPlatform;
+	public static fun getEntries ()Lkotlin/enums/EnumEntries;
+	public static fun valueOf (Ljava/lang/String;)Lio/github/compose/jindong/HapticPlatform;
+	public static fun values ()[Lio/github/compose/jindong/HapticPlatform;
+}
+
 public final class io/github/compose/jindong/JindongKt {
 	public static final fun Jindong ([Ljava/lang/Object;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
 }
