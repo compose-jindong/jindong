@@ -208,7 +208,11 @@ private fun IntendedPreviewCard(intensities: List<Float>) {
   }
 }
 
-/** Builds the RepeatWithIndex timeline pattern: count bars, dur 70, start i*140+10, ramp intensity. */
+/**
+ * Builds the RepeatWithIndex timeline pattern: count bars, dur 70, start i*140, ramp intensity.
+ * Start times mirror the replayed `RepeatWithIndex { Haptic(70); Delay(70) }` (first pulse at 0ms)
+ * so the compiled preview lines up with what the screen actually plays.
+ */
 internal fun repeatIndexPattern(
   count: Int,
   dir: RampDirection,
@@ -216,7 +220,7 @@ internal fun repeatIndexPattern(
   val events =
     (0 until count).map { i ->
       ScheduledHapticEvent(
-        startTimeMs = (i * 140L + 10L),
+        startTimeMs = i * 140L,
         durationMs = 70L,
         intensity = HapticIntensity.Custom(ramp(i, count, dir)),
       )

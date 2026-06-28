@@ -164,12 +164,15 @@ private fun UnitPreviewCard() {
   }
 }
 
-/** Builds the Repeat timeline pattern: count bars, dur 60, intensity 0.7, start i*150+10. */
+/**
+ * Builds the Repeat timeline pattern: count bars, dur 60, intensity 0.7, start i*150. Start times
+ * mirror the replayed `Repeat { Haptic(60); Delay(90) }` (first pulse at 0ms) so the preview matches.
+ */
 internal fun repeatPattern(count: Int): HapticPattern {
   val events =
     (0 until count).map { i ->
       ScheduledHapticEvent(
-        startTimeMs = (i * 150L + 10L),
+        startTimeMs = i * 150L,
         durationMs = 60L,
         intensity = HapticIntensity.Custom(UNIT_INTENSITY),
       )

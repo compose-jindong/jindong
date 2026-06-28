@@ -143,20 +143,21 @@ fun IntensityLabScreen(modifier: Modifier = Modifier) {
     )
   }
 
-  // VIBRATION PATH (stale pre-#84; see SingleHapticScreen for the rationale). The timeline above is
-  // always live; these executor calls self-heal once #84 lands.
+  // VIBRATION PATH: key only on the explicit play triggers so moving a control never auto-fires
+  // (Reactive is the auto-firing screen). Each block reads live state when its trigger bumps.
   Jindong(playAll) {
     Sequence {
-      ascendingPresets.forEach { intensity ->
+      // Match the rendered staircase exactly: 100ms pulses with a 20ms lead-in then 80ms gaps.
+      ascendingPresets.forEachIndexed { i, intensity ->
+        if (i == 0) Delay(20.ms) else Delay(80.ms)
         Haptic(100.ms, intensity)
-        Delay(120.ms)
       }
     }
   }
-  Jindong(rowTrigger, rowIntensity) {
+  Jindong(rowTrigger) {
     Haptic(100.ms, rowIntensity)
   }
-  Jindong(customTrigger, ilCustom) {
+  Jindong(customTrigger) {
     Haptic(100.ms, HapticIntensity.Custom(ilCustom))
   }
 }
@@ -272,26 +273,23 @@ private fun CustomCard(
 @Composable
 private fun PlayChip(onClick: () -> Unit) {
   val colors = JindongTheme.colors
+  // min-touch + clickable on the same node as the bordered pill so the full hit area is tappable.
   Box(
-    modifier = Modifier.defaultMinSize(minHeight = Dimens.minTouch),
+    modifier =
+    Modifier
+      .defaultMinSize(minWidth = Dimens.minTouch, minHeight = Dimens.minTouch)
+      .clip(RoundedCornerShape(Dimens.radiusSmall))
+      .border(Dimens.stroke, colors.border2, RoundedCornerShape(Dimens.radiusSmall))
+      .clickable(onClick = onClick)
+      .padding(horizontal = 14.dp, vertical = 7.dp),
     contentAlignment = Alignment.Center,
   ) {
-    Box(
-      modifier =
-      Modifier
-        .clip(RoundedCornerShape(Dimens.radiusSmall))
-        .border(Dimens.stroke, colors.border2, RoundedCornerShape(Dimens.radiusSmall))
-        .clickable(onClick = onClick)
-        .padding(horizontal = 14.dp, vertical = 7.dp),
-      contentAlignment = Alignment.Center,
-    ) {
-      Icon(
-        imageVector = JindongIcons.Play,
-        contentDescription = "Play",
-        tint = colors.text2,
-        modifier = Modifier.size(13.dp),
-      )
-    }
+    Icon(
+      imageVector = JindongIcons.Play,
+      contentDescription = "Play",
+      tint = colors.text2,
+      modifier = Modifier.size(13.dp),
+    )
   }
 }
 
