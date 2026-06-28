@@ -50,7 +50,7 @@ fun SegmentedToggle(
 ) {
   val colors = JindongTheme.colors
   Row(
-    modifier = modifier.fillMaxWidth().defaultMinSize(minHeight = Dimens.minTouch),
+    modifier = modifier.fillMaxWidth(),
     horizontalArrangement = Arrangement.spacedBy(Dimens.rowGapSmall),
     verticalAlignment = Alignment.CenterVertically,
   ) {
@@ -59,10 +59,12 @@ fun SegmentedToggle(
       val borderColor = if (selected) colors.accent else colors.border2
       val contentColor = if (selected) colors.accent else colors.text2
       val bgColor = if (selected) colors.accentBg else Color.Transparent
+      // 48dp min-touch on the same node as clickable so each segment is independently tappable.
       Box(
         modifier =
         Modifier
           .weight(1f)
+          .defaultMinSize(minHeight = Dimens.minTouch)
           .clip(RoundedCornerShape(Dimens.radiusChip))
           .background(bgColor)
           .border(Dimens.stroke, borderColor, RoundedCornerShape(Dimens.radiusChip))

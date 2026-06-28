@@ -56,8 +56,14 @@ fun PresetChip(
   val labelColor = if (selected) colors.accent else colors.text2
   val bgColor = if (selected) colors.accentBg else Color.Transparent
 
+  // Click + 48dp min-touch live on the same (outer) node so the whole hit area is tappable; the
+  // inner content keeps the compact chip visuals (8/11 padding).
   Box(
-    modifier = modifier.defaultMinSize(minHeight = Dimens.minTouch),
+    modifier =
+    modifier
+      .defaultMinSize(minHeight = Dimens.minTouch)
+      .clip(RoundedCornerShape(Dimens.radiusChip))
+      .clickable(onClick = onClick),
     contentAlignment = Alignment.Center,
   ) {
     Column(
@@ -66,7 +72,6 @@ fun PresetChip(
         .clip(RoundedCornerShape(Dimens.radiusChip))
         .background(bgColor)
         .border(Dimens.stroke, borderColor, RoundedCornerShape(Dimens.radiusChip))
-        .clickable(onClick = onClick)
         .padding(horizontal = 11.dp, vertical = 8.dp),
       horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -103,7 +108,11 @@ fun NodeChip(
   val markerColor = if (isTap) colors.accent else colors.border2
 
   Box(
-    modifier = modifier.defaultMinSize(minHeight = Dimens.minTouch),
+    modifier =
+    modifier
+      .defaultMinSize(minHeight = Dimens.minTouch)
+      .clip(RoundedCornerShape(Dimens.radiusChip))
+      .clickable(onClick = onClick),
     contentAlignment = Alignment.Center,
   ) {
     Row(
@@ -112,7 +121,6 @@ fun NodeChip(
         .clip(RoundedCornerShape(Dimens.radiusChip))
         .background(bgColor)
         .border(Dimens.stroke, borderColor, RoundedCornerShape(Dimens.radiusChip))
-        .clickable(onClick = onClick)
         .padding(horizontal = 11.dp, vertical = 8.dp),
       horizontalArrangement = Arrangement.spacedBy(Dimens.rowGapSmall),
       verticalAlignment = Alignment.CenterVertically,

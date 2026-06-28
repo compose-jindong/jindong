@@ -47,6 +47,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -145,13 +146,13 @@ private fun AppBar(
           .align(Alignment.CenterStart)
           .size(Dimens.minTouch)
           .clip(RoundedCornerShape(Dimens.radiusSmall))
-          .clickable(onClick = onBack)
+          .clickable(onClick = onBack, role = Role.Button)
           .semantics { contentDescription = "Back" },
         contentAlignment = Alignment.Center,
       ) {
         Icon(
           imageVector = JindongIcons.ChevronLeft,
-          contentDescription = "Back",
+          contentDescription = null,
           tint = colors.text2,
           modifier = Modifier.size(22.dp),
         )
@@ -196,7 +197,7 @@ private fun ThemeToggle(
     Modifier
       .size(Dimens.minTouch)
       .clip(RoundedCornerShape(Dimens.radiusSmall))
-      .clickable(onClick = onToggleTheme)
+      .clickable(onClick = onToggleTheme, role = Role.Button)
       .semantics { contentDescription = if (isDark) "Switch to light theme" else "Switch to dark theme" },
     contentAlignment = Alignment.Center,
   ) {

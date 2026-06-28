@@ -188,25 +188,22 @@ private fun AddNodeButton(
   onClick: () -> Unit,
 ) {
   val colors = JindongTheme.colors
+  // min-touch + clickable on the same node as the bordered pill so the full hit area is tappable.
   Box(
-    modifier = Modifier.defaultMinSize(minHeight = Dimens.minTouch),
+    modifier =
+    Modifier
+      .defaultMinSize(minHeight = Dimens.minTouch)
+      .clip(RoundedCornerShape(Dimens.radiusChip))
+      .border(Dimens.stroke, colors.border2, RoundedCornerShape(Dimens.radiusChip))
+      .clickable(onClick = onClick)
+      .padding(horizontal = 11.dp, vertical = 8.dp),
     contentAlignment = Alignment.Center,
   ) {
-    Box(
-      modifier =
-      Modifier
-        .clip(RoundedCornerShape(Dimens.radiusChip))
-        .border(Dimens.stroke, colors.border2, RoundedCornerShape(Dimens.radiusChip))
-        .clickable(onClick = onClick)
-        .padding(horizontal = 11.dp, vertical = 8.dp),
-      contentAlignment = Alignment.Center,
-    ) {
-      Text(
-        text = label,
-        style = JindongTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
-        color = colors.text2,
-      )
-    }
+    Text(
+      text = label,
+      style = JindongTheme.typography.bodySmall.copy(fontWeight = FontWeight.SemiBold),
+      color = colors.text2,
+    )
   }
 }
 

@@ -192,25 +192,22 @@ private fun PresetTimeline(
 @Composable
 private fun PresetPlayChip(onClick: () -> Unit) {
   val colors = JindongTheme.colors
+  // min-touch + clickable on the same node as the bordered pill so the full hit area is tappable.
   Box(
-    modifier = Modifier.defaultMinSize(minHeight = Dimens.minTouch),
+    modifier =
+    Modifier
+      .defaultMinSize(minWidth = Dimens.minTouch, minHeight = Dimens.minTouch)
+      .clip(RoundedCornerShape(Dimens.radiusSmall))
+      .border(Dimens.stroke, colors.border2, RoundedCornerShape(Dimens.radiusSmall))
+      .clickable(onClick = onClick)
+      .padding(horizontal = 13.dp, vertical = 7.dp),
     contentAlignment = Alignment.Center,
   ) {
-    Box(
-      modifier =
-      Modifier
-        .clip(RoundedCornerShape(Dimens.radiusSmall))
-        .border(Dimens.stroke, colors.border2, RoundedCornerShape(Dimens.radiusSmall))
-        .clickable(onClick = onClick)
-        .padding(horizontal = 13.dp, vertical = 7.dp),
-      contentAlignment = Alignment.Center,
-    ) {
-      Icon(
-        imageVector = JindongIcons.Play,
-        contentDescription = "Play",
-        tint = colors.text2,
-        modifier = Modifier.size(13.dp),
-      )
-    }
+    Icon(
+      imageVector = JindongIcons.Play,
+      contentDescription = "Play",
+      tint = colors.text2,
+      modifier = Modifier.size(13.dp),
+    )
   }
 }
