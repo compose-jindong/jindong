@@ -29,7 +29,15 @@ interface HapticHandle {
   fun cancel()
 
   /**
-   * Returns true if the haptic execution is still active (not completed or cancelled).
+   * Returns true while the haptic execution is still considered active, i.e. neither cancelled nor
+   * completed.
+   *
+   * Completion is a **best-effort estimate** based on the pattern's expected playback duration, not
+   * an OS completion notification (neither Android's `Vibrator` nor iOS' base
+   * `CHHapticPatternPlayerProtocol` reports per-effect completion). As a result:
+   * - Natural completion may be off by tens of milliseconds (OS scheduling, Doze, throttling).
+   * - [cancel] flips this to `false` immediately and exactly.
+   * - A silent or empty pattern is never active (this is `false` from the start).
    */
   val isActive: Boolean
 }

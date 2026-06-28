@@ -27,6 +27,7 @@ import io.github.compose.jindong.core.model.HapticPattern
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
 import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 /**
  * Android implementation of [HapticExecutor] using [VibrationEffect.createWaveform].
@@ -74,11 +75,14 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun executeAsync(pattern: HapticPattern): HapticHandle = when {
-    !isSupported || pattern.events.isEmpty() -> AndroidHapticHandle(null)
+    !isSupported || pattern.events.isEmpty() -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
 
-    else -> {
-      val played = vibratePattern(pattern) != null
-      AndroidHapticHandle(if (played) vibrator else null)
+    else -> when (val waveform = vibratePattern(pattern)) {
+      // Use the exact waveform length (primer/trailing compat segments included), matching execute(),
+      // so isActive estimates completion against what actually played.
+      null -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
+
+      else -> AndroidHapticHandle(vibrator = vibrator, totalDurationMs = waveform.timings.sum())
     }
   }
 
@@ -197,15 +201,22 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   }
 }
 
-internal class AndroidHapticHandle(private var vibrator: Vibrator?) : HapticHandle {
+internal class AndroidHapticHandle(
+  private var vibrator: Vibrator?,
+  totalDurationMs: Long,
+  timeSource: TimeSource = TimeSource.Monotonic,
+) : HapticHandle {
 
-  private val _isActive = AtomicBoolean(vibrator != null)
+  // executeAsync may be called off the main thread, so cancel() can race the reader; keep it atomic.
+  private val cancelled = AtomicBoolean(false)
+  private val expiry = HandleExpiry(totalDurationMs, timeSource)
+
   override val isActive: Boolean
-    get() = _isActive.get()
+    get() = !cancelled.get() && !expiry.isExpired
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun cancel() {
-    if (!_isActive.compareAndSet(true, false)) return
+    if (!cancelled.compareAndSet(false, true)) return
     vibrator?.cancel()
     vibrator = null
   }
