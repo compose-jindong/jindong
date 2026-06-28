@@ -67,7 +67,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 
     // Await the exact waveform that was played, including the primer/trailing compat segments,
     // so the caller resumes when the vibration truly ends rather than a few ms early.
-    val waveform = vibratePattern(pattern)
+    val waveform = vibratePattern(pattern) ?: return
     delay(waveform.timings.sum())
   }
 
@@ -76,31 +76,36 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     !isSupported || pattern.events.isEmpty() -> AndroidHapticHandle(null)
 
     else -> {
-      vibratePattern(pattern)
-      AndroidHapticHandle(vibrator)
+      val played = vibratePattern(pattern) != null
+      AndroidHapticHandle(if (played) vibrator else null)
     }
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun release() = vibrator.cancel()
 
+  /** Plays [pattern] and returns the played waveform, or null when there is nothing to vibrate. */
   @RequiresPermission(Manifest.permission.VIBRATE)
-  private fun vibratePattern(pattern: HapticPattern): Waveform {
-    val waveform = pattern.toWaveform()
+  private fun vibratePattern(pattern: HapticPattern): Waveform? {
+    val waveform = pattern.toWaveform() ?: return null
     val vibrationEffect = VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
     vibrator.vibrate(vibrationEffect)
     return waveform
   }
 
   /**
-   * Converts [HapticPattern] to an Android waveform in stages:
+   * Converts [HapticPattern] to an Android waveform in stages, or returns null when the merged
+   * timeline has no active segment (e.g. zero-duration or all-gap input), so a silent pattern
+   * never emits a compat-only buzz.
    * 1. [mergeToSerial] flattens overlapping events into a single serial timeline.
    * 2. [insertFallRamps] softens active->gap drops on amplitude-capable (LRA) actuators only.
    * 3. quantize each [HapticSegment] into (timing, amplitude) pairs.
    * 4. [applyDeviceCompat] adds the Samsung primer and trailing gap that some devices require.
    */
-  private fun HapticPattern.toWaveform(): Waveform {
+  private fun HapticPattern.toWaveform(): Waveform? {
     val serial = mergeToSerial(events)
+    if (serial.none { !it.isGap }) return null
+
     val segments = if (hasAmplitudeControl) insertFallRamps(serial) else serial
     val timings = mutableListOf<Long>()
     val amplitudes = mutableListOf<Int>()
