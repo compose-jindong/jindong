@@ -13,19 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.sample
+package io.github.compose.jindong.core.executor
 
-import androidx.compose.runtime.Composable
-import io.github.compose.jindong.JindongProvider
-import io.github.compose.jindong.sample.nav.AppRoot
+import io.github.compose.jindong.core.fake.FakeHapticExecutor
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
-/**
- * Sample entry point. [JindongProvider] sits at the root, once, OUTSIDE the theme/nav switch so the
- * haptic executor survives navigation; [AppRoot] owns the theme and the single-level nav host.
- */
-@Composable
-fun SampleApp() {
-  JindongProvider {
-    AppRoot()
-  }
-}
+class HapticExecutorCapabilityTest :
+  FunSpec({
+    test("hasAmplitudeControl defaults to true") {
+      FakeHapticExecutor().hasAmplitudeControl shouldBe true
+    }
+
+    test("hasAmplitudeControl can be overridden via constructor") {
+      FakeHapticExecutor(hasAmplitudeControl = false).hasAmplitudeControl shouldBe false
+    }
+  })

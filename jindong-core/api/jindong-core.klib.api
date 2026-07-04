@@ -21,6 +21,8 @@ abstract interface io.github.compose.jindong.core.element/HapticElement { // io.
 abstract interface io.github.compose.jindong.core.executor/HapticExecutor { // io.github.compose.jindong.core.executor/HapticExecutor|null[0]
     abstract val isSupported // io.github.compose.jindong.core.executor/HapticExecutor.isSupported|{}isSupported[0]
         abstract fun <get-isSupported>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticExecutor.isSupported.<get-isSupported>|<get-isSupported>(){}[0]
+    open val hasAmplitudeControl // io.github.compose.jindong.core.executor/HapticExecutor.hasAmplitudeControl|{}hasAmplitudeControl[0]
+        open fun <get-hasAmplitudeControl>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticExecutor.hasAmplitudeControl.<get-hasAmplitudeControl>|<get-hasAmplitudeControl>(){}[0]
 
     abstract fun executeAsync(io.github.compose.jindong.core.model/HapticPattern): io.github.compose.jindong.core.executor/HapticHandle // io.github.compose.jindong.core.executor/HapticExecutor.executeAsync|executeAsync(io.github.compose.jindong.core.model.HapticPattern){}[0]
     abstract fun release() // io.github.compose.jindong.core.executor/HapticExecutor.release|release(){}[0]

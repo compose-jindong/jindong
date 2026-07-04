@@ -13,19 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.sample
+package io.github.compose.jindong.sample.nav
 
 import androidx.compose.runtime.Composable
-import io.github.compose.jindong.JindongProvider
-import io.github.compose.jindong.sample.nav.AppRoot
 
-/**
- * Sample entry point. [JindongProvider] sits at the root, once, OUTSIDE the theme/nav switch so the
- * haptic executor survives navigation; [AppRoot] owns the theme and the single-level nav host.
- */
+// iOS has no system back gesture in this single-view host; the app-bar chevron is the back affordance.
 @Composable
-fun SampleApp() {
-  JindongProvider {
-    AppRoot()
-  }
-}
+actual fun PlatformBackHandler(
+  enabled: Boolean,
+  onBack: () -> Unit,
+) = Unit

@@ -55,6 +55,11 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
     CHHapticEngine.capabilitiesForHardware().supportsHaptics()
   }
 
+  // Core Haptics renders intensity as a continuous float on supported devices; gate on support so we
+  // never report amplitude control on a device that has no haptics at all (e.g. the simulator).
+  override val hasAmplitudeControl: Boolean
+    get() = isSupported
+
   override suspend fun execute(pattern: HapticPattern) {
     if (!isSupported || pattern.events.isEmpty()) return
 

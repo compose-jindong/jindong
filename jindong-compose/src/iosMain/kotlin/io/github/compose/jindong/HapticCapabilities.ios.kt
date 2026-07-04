@@ -13,19 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.sample
+package io.github.compose.jindong
 
-import androidx.compose.runtime.Composable
-import io.github.compose.jindong.JindongProvider
-import io.github.compose.jindong.sample.nav.AppRoot
-
-/**
- * Sample entry point. [JindongProvider] sits at the root, once, OUTSIDE the theme/nav switch so the
- * haptic executor survives navigation; [AppRoot] owns the theme and the single-level nav host.
- */
-@Composable
-fun SampleApp() {
-  JindongProvider {
-    AppRoot()
-  }
-}
+internal actual fun hapticPlatform(): HapticPlatform = HapticPlatform.Ios

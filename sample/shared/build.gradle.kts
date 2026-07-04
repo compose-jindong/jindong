@@ -58,6 +58,10 @@ kotlin {
       implementation(compose.ui)
       implementation(compose.components.resources)
     }
+    androidMain.dependencies {
+      // System back handling on Android (PlatformBackHandler actual).
+      implementation(libs.androidx.activity.compose)
+    }
   }
 }
 

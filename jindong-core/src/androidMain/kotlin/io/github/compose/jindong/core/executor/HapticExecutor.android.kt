@@ -55,6 +55,12 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     vibrator.hasVibrator()
   }
 
+  // ERM actuators round any non-zero amplitude up to 100%, so per-level intensity is indistinguishable;
+  // callers read this to warn that LIGHT/MEDIUM/STRONG/HIGH feel identical on such devices.
+  override val hasAmplitudeControl: Boolean by lazy {
+    vibrator.hasAmplitudeControl()
+  }
+
   @RequiresPermission(Manifest.permission.VIBRATE)
   override suspend fun execute(pattern: HapticPattern) {
     if (!isSupported || pattern.events.isEmpty()) return

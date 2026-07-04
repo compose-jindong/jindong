@@ -35,6 +35,22 @@ interface HapticExecutor {
   val isSupported: Boolean
 
   /**
+   * Whether the actuator can render intermediate (non-binary) amplitudes.
+   *
+   * - **Android**: reflects `Vibrator.hasAmplitudeControl()`. ERM motors round every non-zero
+   *   amplitude up to 100%, so they report `false` and effects like fall ramps are lost; LRA
+   *   motors report `true`.
+   * - **iOS**: Core Haptics renders continuous intensity whenever haptics are supported, so this
+   *   tracks [isSupported]. The "discrete vs. continuous" distinction is platform-specific; read
+   *   the platform alongside this flag if the label matters (see the Compose `HapticCapabilities`).
+   *
+   * Defaults to `false` so existing third-party [HapticExecutor] implementations remain
+   * source- and binary-compatible without having to declare it.
+   */
+  val hasAmplitudeControl: Boolean
+    get() = false
+
+  /**
    * Executes haptic pattern. Cancellable via coroutine cancellation.
    * When cancelled, the ongoing vibration is stopped immediately.
    *

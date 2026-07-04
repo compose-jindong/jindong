@@ -13,19 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.sample
+package io.github.compose.jindong.sample.components
 
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import io.github.compose.jindong.JindongProvider
-import io.github.compose.jindong.sample.nav.AppRoot
+import androidx.compose.ui.Modifier
+import io.github.compose.jindong.sample.theme.JindongTheme
 
 /**
- * Sample entry point. [JindongProvider] sits at the root, once, OUTSIDE the theme/nav switch so the
- * haptic executor survives navigation; [AppRoot] owns the theme and the single-level nav host.
+ * Uppercase mono section label (e.g. `DEVICE CAPABILITY`, `MODULES`). Renders [text] uppercased in
+ * the [JindongTypography.sectionLabel] role with [JindongColors.text3].
  */
 @Composable
-fun SampleApp() {
-  JindongProvider {
-    AppRoot()
-  }
+fun MonoLabel(
+  text: String,
+  modifier: Modifier = Modifier,
+) {
+  Text(
+    text = text.uppercase(),
+    style = JindongTheme.typography.sectionLabel,
+    color = JindongTheme.colors.text3,
+    modifier = modifier,
+  )
 }

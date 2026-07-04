@@ -10,7 +10,39 @@ open annotation class io.github.compose.jindong/JindongScopeMarker : kotlin/Anno
     constructor <init>() // io.github.compose.jindong/JindongScopeMarker.<init>|<init>(){}[0]
 }
 
+final enum class io.github.compose.jindong/HapticPlatform : kotlin/Enum<io.github.compose.jindong/HapticPlatform> { // io.github.compose.jindong/HapticPlatform|null[0]
+    enum entry Android // io.github.compose.jindong/HapticPlatform.Android|null[0]
+    enum entry Ios // io.github.compose.jindong/HapticPlatform.Ios|null[0]
+
+    final val entries // io.github.compose.jindong/HapticPlatform.entries|#static{}entries[0]
+        final fun <get-entries>(): kotlin.enums/EnumEntries<io.github.compose.jindong/HapticPlatform> // io.github.compose.jindong/HapticPlatform.entries.<get-entries>|<get-entries>#static(){}[0]
+
+    final fun valueOf(kotlin/String): io.github.compose.jindong/HapticPlatform // io.github.compose.jindong/HapticPlatform.valueOf|valueOf#static(kotlin.String){}[0]
+    final fun values(): kotlin/Array<io.github.compose.jindong/HapticPlatform> // io.github.compose.jindong/HapticPlatform.values|values#static(){}[0]
+}
+
 abstract interface io.github.compose.jindong/JindongScope // io.github.compose.jindong/JindongScope|null[0]
+
+final class io.github.compose.jindong/HapticCapabilities { // io.github.compose.jindong/HapticCapabilities|null[0]
+    constructor <init>(kotlin/Boolean, kotlin/Boolean, io.github.compose.jindong/HapticPlatform) // io.github.compose.jindong/HapticCapabilities.<init>|<init>(kotlin.Boolean;kotlin.Boolean;io.github.compose.jindong.HapticPlatform){}[0]
+
+    final val hasAmplitudeControl // io.github.compose.jindong/HapticCapabilities.hasAmplitudeControl|{}hasAmplitudeControl[0]
+        final fun <get-hasAmplitudeControl>(): kotlin/Boolean // io.github.compose.jindong/HapticCapabilities.hasAmplitudeControl.<get-hasAmplitudeControl>|<get-hasAmplitudeControl>(){}[0]
+    final val isSupported // io.github.compose.jindong/HapticCapabilities.isSupported|{}isSupported[0]
+        final fun <get-isSupported>(): kotlin/Boolean // io.github.compose.jindong/HapticCapabilities.isSupported.<get-isSupported>|<get-isSupported>(){}[0]
+    final val platform // io.github.compose.jindong/HapticCapabilities.platform|{}platform[0]
+        final fun <get-platform>(): io.github.compose.jindong/HapticPlatform // io.github.compose.jindong/HapticCapabilities.platform.<get-platform>|<get-platform>(){}[0]
+
+    final fun component1(): kotlin/Boolean // io.github.compose.jindong/HapticCapabilities.component1|component1(){}[0]
+    final fun component2(): kotlin/Boolean // io.github.compose.jindong/HapticCapabilities.component2|component2(){}[0]
+    final fun component3(): io.github.compose.jindong/HapticPlatform // io.github.compose.jindong/HapticCapabilities.component3|component3(){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Boolean = ..., io.github.compose.jindong/HapticPlatform = ...): io.github.compose.jindong/HapticCapabilities // io.github.compose.jindong/HapticCapabilities.copy|copy(kotlin.Boolean;kotlin.Boolean;io.github.compose.jindong.HapticPlatform){}[0]
+    final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong/HapticCapabilities.equals|equals(kotlin.Any?){}[0]
+    final fun hashCode(): kotlin/Int // io.github.compose.jindong/HapticCapabilities.hashCode|hashCode(){}[0]
+    final fun toString(): kotlin/String // io.github.compose.jindong/HapticCapabilities.toString|toString(){}[0]
+}
+
+final val io.github.compose.jindong/io_github_compose_jindong_HapticCapabilities$stableprop // io.github.compose.jindong/io_github_compose_jindong_HapticCapabilities$stableprop|#static{}io_github_compose_jindong_HapticCapabilities$stableprop[0]
 
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Delay(kotlin.time/Duration, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong.dsl/Delay|Delay@io.github.compose.jindong.JindongScope(kotlin.time.Duration;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Haptic(kotlin.time/Duration, io.github.compose.jindong.core.model/HapticIntensity?, androidx.compose.runtime/Composer?, kotlin/Int, kotlin/Int) // io.github.compose.jindong.dsl/Haptic|Haptic@io.github.compose.jindong.JindongScope(kotlin.time.Duration;io.github.compose.jindong.core.model.HapticIntensity?;androidx.compose.runtime.Composer?;kotlin.Int;kotlin.Int){}[0]
@@ -19,3 +51,5 @@ final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl
 final fun (io.github.compose.jindong/JindongScope).io.github.compose.jindong.dsl/Sequence(kotlin/Function3<io.github.compose.jindong/JindongScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong.dsl/Sequence|Sequence@io.github.compose.jindong.JindongScope(kotlin.Function3<io.github.compose.jindong.JindongScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun io.github.compose.jindong/Jindong(kotlin/Array<out kotlin/Any?>..., kotlin/Function3<io.github.compose.jindong/JindongScope, androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong/Jindong|Jindong(kotlin.Array<out|kotlin.Any?>...;kotlin.Function3<io.github.compose.jindong.JindongScope,androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
 final fun io.github.compose.jindong/JindongProvider(kotlin/Function2<androidx.compose.runtime/Composer, kotlin/Int, kotlin/Unit>, androidx.compose.runtime/Composer?, kotlin/Int) // io.github.compose.jindong/JindongProvider|JindongProvider(kotlin.Function2<androidx.compose.runtime.Composer,kotlin.Int,kotlin.Unit>;androidx.compose.runtime.Composer?;kotlin.Int){}[0]
+final fun io.github.compose.jindong/io_github_compose_jindong_HapticCapabilities$stableprop_getter(): kotlin/Int // io.github.compose.jindong/io_github_compose_jindong_HapticCapabilities$stableprop_getter|io_github_compose_jindong_HapticCapabilities$stableprop_getter(){}[0]
+final fun io.github.compose.jindong/rememberHapticCapabilities(androidx.compose.runtime/Composer?, kotlin/Int): io.github.compose.jindong/HapticCapabilities // io.github.compose.jindong/rememberHapticCapabilities|rememberHapticCapabilities(androidx.compose.runtime.Composer?;kotlin.Int){}[0]

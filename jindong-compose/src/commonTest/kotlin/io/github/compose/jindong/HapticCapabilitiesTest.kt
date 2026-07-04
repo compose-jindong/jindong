@@ -13,19 +13,25 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.sample
+package io.github.compose.jindong
 
-import androidx.compose.runtime.Composable
-import io.github.compose.jindong.JindongProvider
-import io.github.compose.jindong.sample.nav.AppRoot
+import io.kotest.assertions.assertSoftly
+import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.shouldBe
 
-/**
- * Sample entry point. [JindongProvider] sits at the root, once, OUTSIDE the theme/nav switch so the
- * haptic executor survives navigation; [AppRoot] owns the theme and the single-level nav host.
- */
-@Composable
-fun SampleApp() {
-  JindongProvider {
-    AppRoot()
-  }
-}
+class HapticCapabilitiesTest :
+  FunSpec({
+    test("HapticCapabilities holds the supplied values") {
+      val capabilities = HapticCapabilities(
+        isSupported = true,
+        hasAmplitudeControl = false,
+        platform = HapticPlatform.Android,
+      )
+
+      assertSoftly(capabilities) {
+        isSupported shouldBe true
+        hasAmplitudeControl shouldBe false
+        platform shouldBe HapticPlatform.Android
+      }
+    }
+  })
