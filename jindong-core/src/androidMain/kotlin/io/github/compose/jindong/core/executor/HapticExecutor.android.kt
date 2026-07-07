@@ -130,6 +130,10 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
    * Returns null (so the caller plays nothing) when [mergeToSerial] yields no active slice — i.e.
    * an empty, zero-duration, or all-gap pattern. Without this guard step 4 would still append the
    * compat segments, making the motor buzz for a pattern the user meant to be silent.
+   *
+   * Fall ramps (step 2) only soften `active -> gap` transitions where a real gap follows, not the
+   * pattern's final active slice: that trailing drop to 0 is handled by the compat 1ms-off segment
+   * (step 4), which lets the driver's active braking settle the actuator rather than a ramp.
    */
   private fun HapticPattern.toWaveform(): Waveform? {
     // 1. Flatten overlapping events into one serial timeline of [HapticSegment]s.
@@ -158,6 +162,11 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
    * Post-processes the quantized waveform with device-compat segments:
    * single-event patterns get a 1ms off + 1ms on primer (Samsung), and every pattern gets a
    * trailing 1ms gap so the waveform terminates cleanly.
+   *
+   * The primer exists so devices that drop a single-segment [VibrationEffect.createWaveform]
+   * (they need an off-segment to recognize it as a real pattern) still fire — it is a recognition
+   * aid, not a motor warm-up, so it is appended after the active slice rather than prepended. A
+   * leading pair would add a perceptible pre-buzz; the 1ms tail here is imperceptible.
    */
   private fun applyDeviceCompat(
     timings: MutableList<Long>,
