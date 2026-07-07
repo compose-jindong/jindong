@@ -75,8 +75,7 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       player.startAtTime(0.0, errorPtr.ptr)
       if (errorPtr.value != null) return
 
-      val totalDurationMs = pattern.events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
-      delay(totalDurationMs)
+      delay(pattern.playbackDurationMs())
 
       player.stopAtTime(0.0, errorPtr.ptr)
     }
@@ -102,9 +101,7 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
         return@memScoped IosHapticHandle(player = null, totalDurationMs = 0L)
       }
 
-      // Same total-duration formula as execute(): the pattern's latest event end.
-      val totalDurationMs = pattern.events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
-      IosHapticHandle(player = player, totalDurationMs = totalDurationMs)
+      IosHapticHandle(player = player, totalDurationMs = pattern.playbackDurationMs())
     }
   }
 
@@ -146,6 +143,11 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       }
     }
   }
+
+  // Signature is asymmetric with Android's playbackDurationMs() on purpose: playback length is derived
+  // from a different input per platform (iOS = the pattern, Android = the waveform actually played).
+  // Core Haptics has no compat segments, so the pattern's raw span already is its playback length.
+  private fun HapticPattern.playbackDurationMs(): Long = rawSpanMs()
 
   private fun HapticPattern.toCHHapticPattern(): CHHapticPattern? {
     val hapticEvents = events.map { it.toCHHapticEvent() }

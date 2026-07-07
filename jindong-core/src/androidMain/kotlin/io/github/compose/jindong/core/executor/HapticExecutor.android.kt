@@ -70,7 +70,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     // Await the exact waveform that was played, including the primer/trailing compat segments,
     // so the caller resumes when the vibration truly ends rather than a few ms early.
     val waveform = vibratePattern(pattern) ?: return
-    delay(waveform.timings.sum().milliseconds)
+    delay(waveform.playbackDurationMs().milliseconds)
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
@@ -82,7 +82,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
       // so isActive estimates completion against what actually played.
       null -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
 
-      else -> AndroidHapticHandle(vibrator = vibrator, totalDurationMs = waveform.timings.sum())
+      else -> AndroidHapticHandle(vibrator = vibrator, totalDurationMs = waveform.playbackDurationMs())
     }
   }
 
@@ -187,6 +187,11 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   }
 
   private fun HapticSegment.toAmplitude(): Int = (intensity * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
+
+  // The played waveform's length is the sum of its slice timings (compat segments included). Signature
+  // is asymmetric with iOS's playbackDurationMs() on purpose: playback length is derived from a
+  // different input per platform (Android = the waveform actually played, iOS = the pattern).
+  private fun Waveform.playbackDurationMs(): Long = timings.sum()
 
   private data class Waveform(
     val timings: LongArray,
