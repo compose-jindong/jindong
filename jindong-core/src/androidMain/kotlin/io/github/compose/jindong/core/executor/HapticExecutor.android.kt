@@ -24,9 +24,10 @@ import android.os.VibratorManager
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.core.model.HapticPattern
-import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import kotlinx.coroutines.delay
 import java.util.concurrent.atomic.AtomicBoolean
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TimeSource
 
 /**
  * Android implementation of [HapticExecutor] using [VibrationEffect.createWaveform].
@@ -55,8 +56,9 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     vibrator.hasVibrator()
   }
 
-  // ERM actuators round any non-zero amplitude up to 100%, so per-level intensity is indistinguishable;
-  // callers read this to warn that LIGHT/MEDIUM/STRONG/HIGH feel identical on such devices.
+  // ERM actuators round any non-zero amplitude up to 100%, so per-level intensity is indistinguishable:
+  // callers read this to warn that LIGHT/MEDIUM/STRONG/HIGH feel identical, and toWaveform() gates the
+  // fall ramp on it (a ramp would be lost when every non-zero amplitude rounds up to full).
   override val hasAmplitudeControl: Boolean by lazy {
     vibrator.hasAmplitudeControl()
   }
@@ -65,75 +67,131 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   override suspend fun execute(pattern: HapticPattern) {
     if (!isSupported || pattern.events.isEmpty()) return
 
-    vibratePattern(pattern)
-    val totalDurationMs = pattern.events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
-    delay(totalDurationMs)
+    // Await the exact waveform that was played, including the primer/trailing compat segments,
+    // so the caller resumes when the vibration truly ends rather than a few ms early.
+    val waveform = vibratePattern(pattern) ?: return
+    delay(waveform.playbackDurationMs().milliseconds)
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun executeAsync(pattern: HapticPattern): HapticHandle = when {
-    !isSupported || pattern.events.isEmpty() -> AndroidHapticHandle(null)
+    !isSupported || pattern.events.isEmpty() -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
 
-    else -> {
-      vibratePattern(pattern)
-      AndroidHapticHandle(vibrator)
+    else -> when (val waveform = vibratePattern(pattern)) {
+      // Use the exact waveform length (primer/trailing compat segments included), matching execute(),
+      // so isActive estimates completion against what actually played.
+      null -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
+
+      else -> AndroidHapticHandle(vibrator = vibrator, totalDurationMs = waveform.playbackDurationMs())
     }
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun release() = vibrator.cancel()
 
+  /** Plays [pattern] and returns the played waveform, or null when there is nothing to vibrate. */
   @RequiresPermission(Manifest.permission.VIBRATE)
-  private fun vibratePattern(pattern: HapticPattern) {
-    val waveform = pattern.toWaveform()
+  private fun vibratePattern(pattern: HapticPattern): Waveform? {
+    val waveform = pattern.toWaveform() ?: return null
     val vibrationEffect = VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
     vibrator.vibrate(vibrationEffect)
+    return waveform
   }
 
   /**
-   * Converts [HapticPattern] to Android waveform format with alternating off/on segments.
-   * Note: Some devices require at least one gap in the middle of the waveform to function properly.
+   * Translates a [HapticPattern] (events on a timeline) into the two parallel arrays Android's
+   * [VibrationEffect.createWaveform] expects: `timings` (how long each slice lasts) and `amplitudes`
+   * (how hard the motor buzzes during it, 0 = off). Android plays one amplitude at a time, so the
+   * pattern's overlapping, intensity-bearing events must first be flattened into a single serial
+   * track of non-overlapping slices.
+   *
+   * Worked example — `Haptic(100ms, STRONG) + Delay(50ms) + Haptic(100ms, MEDIUM)` on an LRA:
+   * ```
+   * events        STRONG |##########|      MEDIUM |##########|     two overlapping/spaced events
+   *                       0        100  150       250            with intensities, on a timeline
+   *
+   * 1. mergeToSerial   -> [100 @0.75][50 @gap][100 @0.5]         one serial track, gaps explicit;
+   *                                                              overlaps would resolve to the
+   *                                                              louder event (max, not sum)
+   *
+   * 2. insertFallRamps -> [100 @0.75][8 @0.38][42 @gap][100 @0.5]  the 50ms gap lends its first 8ms
+   *                                  \_ramp_/                       to a fade-down step, so a hard
+   *                                                                 drop to 0 doesn't ring (LRA only)
+   *
+   * 3. quantize        timings  = [100,  8, 42, 100]             intensity 0..1 -> amplitude 0..255;
+   *                    amplitudes=[191, 95,  0, 127]             a real gap stays 0, an active slice
+   *                                                              floors to 1 (never silent-by-rounding)
+   *
+   * 4. applyDeviceCompat timings  = [100, 8, 42, 100, 1]         trailing 1ms-off terminates the
+   *                      amplitudes=[191,95,  0, 127, 0]         waveform cleanly; a single-event
+   *                                                              pattern also gets a Samsung primer
+   * ```
+   *
+   * Returns null (so the caller plays nothing) when [mergeToSerial] yields no active slice — i.e.
+   * an empty, zero-duration, or all-gap pattern. Without this guard step 4 would still append the
+   * compat segments, making the motor buzz for a pattern the user meant to be silent.
+   *
+   * Fall ramps (step 2) only soften `active -> gap` transitions where a real gap follows, not the
+   * pattern's final active slice: that trailing drop to 0 is handled by the compat 1ms-off segment
+   * (step 4), which lets the driver's active braking settle the actuator rather than a ramp.
    */
-  private fun HapticPattern.toWaveform(): Waveform {
-    val sortedEvents = events.sortedBy { it.startTimeMs }
-    val isSingleEvent = sortedEvents.size == 1
+  private fun HapticPattern.toWaveform(): Waveform? {
+    // 1. Flatten overlapping events into one serial timeline of [HapticSegment]s.
+    val serial = mergeToSerial(events)
+    if (serial.none { !it.isGap }) return null
+
+    // 2. Soften active->gap amplitude drops, but only where the motor can render the in-between
+    //    levels (LRA); on ERM every non-zero amplitude rounds up to full, so a ramp is pointless.
+    val segments = if (hasAmplitudeControl) insertFallRamps(serial) else serial
+
+    // 3. Quantize each segment into a (timing, amplitude) pair.
     val timings = mutableListOf<Long>()
     val amplitudes = mutableListOf<Int>()
-    var currentTime = 0L
-
-    for (event in sortedEvents) {
-      val gap = event.startTimeMs - currentTime
-
-      // Add gap if there's delay before this event
-      if (gap > 0) {
-        timings += gap
-        amplitudes += 0
-      }
-
-      // Add the haptic event
-      timings += event.durationMs
-      amplitudes += event.toAmplitude()
-
-      // Single-event patterns are split with a 1ms primer vibration at the end of the main vibration.
-      // This is to ensure vibration support on Samsung devices.
-      if (isSingleEvent) {
-        timings += 1L
-        amplitudes += 0
-        timings += 1L
-        amplitudes += 1
-      }
-
-      currentTime = event.startTimeMs + event.durationMs
+    for (segment in segments) {
+      timings += segment.durationMs
+      // A real gap stays at 0; an active slice floors to 1 via coerceIn, so an event with
+      // 0f intensity (Custom(0.0)) still registers as the faintest buzz rather than silence.
+      amplitudes += if (segment.isGap) 0 else segment.toAmplitude()
     }
 
-    // Add trailing segment to ensure proper termination
+    // 4. Append the device-compat segments (Samsung primer + clean trailing termination).
+    return applyDeviceCompat(timings, amplitudes, isSingleEvent = events.size == 1)
+  }
+
+  /**
+   * Post-processes the quantized waveform with device-compat segments:
+   * single-event patterns get a 1ms off + 1ms on primer (Samsung), and every pattern gets a
+   * trailing 1ms gap so the waveform terminates cleanly.
+   *
+   * The primer exists so devices that drop a single-segment [VibrationEffect.createWaveform]
+   * (they need an off-segment to recognize it as a real pattern) still fire — it is a recognition
+   * aid, not a motor warm-up, so it is appended after the active slice rather than prepended. A
+   * leading pair would add a perceptible pre-buzz; the 1ms tail here is imperceptible.
+   */
+  private fun applyDeviceCompat(
+    timings: MutableList<Long>,
+    amplitudes: MutableList<Int>,
+    isSingleEvent: Boolean,
+  ): Waveform {
+    if (isSingleEvent) {
+      timings += 1L
+      amplitudes += 0
+      timings += 1L
+      amplitudes += 1
+    }
+
     timings += 1L
     amplitudes += 0
 
     return Waveform(timings.toLongArray(), amplitudes.toIntArray())
   }
 
-  private fun ScheduledHapticEvent.toAmplitude(): Int = (intensity.value * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
+  private fun HapticSegment.toAmplitude(): Int = (intensity * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
+
+  // The played waveform's length is the sum of its slice timings (compat segments included). Signature
+  // is asymmetric with iOS's playbackDurationMs() on purpose: playback length is derived from a
+  // different input per platform (Android = the waveform actually played, iOS = the pattern).
+  private fun Waveform.playbackDurationMs(): Long = timings.sum()
 
   private data class Waveform(
     val timings: LongArray,
@@ -157,15 +215,22 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   }
 }
 
-internal class AndroidHapticHandle(private var vibrator: Vibrator?) : HapticHandle {
+internal class AndroidHapticHandle(
+  private var vibrator: Vibrator?,
+  totalDurationMs: Long,
+  timeSource: TimeSource = TimeSource.Monotonic,
+) : HapticHandle {
 
-  private val _isActive = AtomicBoolean(vibrator != null)
+  // executeAsync may be called off the main thread, so cancel() can race the reader; keep it atomic.
+  private val cancelled = AtomicBoolean(false)
+  private val expiry = HandleExpiry(totalDurationMs, timeSource)
+
   override val isActive: Boolean
-    get() = _isActive.get()
+    get() = !cancelled.get() && !expiry.isExpired
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun cancel() {
-    if (!_isActive.compareAndSet(true, false)) return
+    if (!cancelled.compareAndSet(false, true)) return
     vibrator?.cancel()
     vibrator = null
   }

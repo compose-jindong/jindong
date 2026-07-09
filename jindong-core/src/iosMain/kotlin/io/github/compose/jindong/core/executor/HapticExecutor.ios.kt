@@ -38,6 +38,7 @@ import platform.CoreHaptics.CHHapticPatternPlayerProtocol
 import platform.Foundation.NSError
 import kotlin.concurrent.atomics.AtomicReference
 import kotlin.concurrent.atomics.ExperimentalAtomicApi
+import kotlin.time.TimeSource
 
 /**
  * iOS HapticExecutor implementation using Core Haptics.
@@ -74,8 +75,7 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       player.startAtTime(0.0, errorPtr.ptr)
       if (errorPtr.value != null) return
 
-      val totalDurationMs = pattern.events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
-      delay(totalDurationMs)
+      delay(pattern.playbackDurationMs())
 
       player.stopAtTime(0.0, errorPtr.ptr)
     }
@@ -83,25 +83,25 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
 
   override fun executeAsync(pattern: HapticPattern): HapticHandle {
     if (!isSupported || pattern.events.isEmpty()) {
-      return IosHapticHandle(null)
+      return IosHapticHandle(player = null, totalDurationMs = 0L)
     }
 
-    val currentEngine = ensureEngine() ?: return IosHapticHandle(null)
-    val hapticPattern = pattern.toCHHapticPattern() ?: return IosHapticHandle(null)
+    val currentEngine = ensureEngine() ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
+    val hapticPattern = pattern.toCHHapticPattern() ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
 
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
       val player = currentEngine.createPlayerWithPattern(hapticPattern, errorPtr.ptr)
       if (errorPtr.value != null || player == null) {
-        return@memScoped IosHapticHandle(null)
+        return@memScoped IosHapticHandle(player = null, totalDurationMs = 0L)
       }
 
       player.startAtTime(0.0, errorPtr.ptr)
       if (errorPtr.value != null) {
-        return@memScoped IosHapticHandle(null)
+        return@memScoped IosHapticHandle(player = null, totalDurationMs = 0L)
       }
 
-      IosHapticHandle(player)
+      IosHapticHandle(player = player, totalDurationMs = pattern.playbackDurationMs())
     }
   }
 
@@ -143,6 +143,11 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
       }
     }
   }
+
+  // Signature is asymmetric with Android's playbackDurationMs() on purpose: playback length is derived
+  // from a different input per platform (iOS = the pattern, Android = the waveform actually played).
+  // Core Haptics has no compat segments, so the pattern's raw span already is its playback length.
+  private fun HapticPattern.playbackDurationMs(): Long = rawSpanMs()
 
   private fun HapticPattern.toCHHapticPattern(): CHHapticPattern? {
     val hapticEvents = events.map { it.toCHHapticEvent() }
@@ -188,16 +193,20 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
 @OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 internal class IosHapticHandle(
   private var player: CHHapticPatternPlayerProtocol?,
+  totalDurationMs: Long,
+  timeSource: TimeSource = TimeSource.Monotonic,
 ) : HapticHandle {
 
-  private var _isActive = player != null
+  // iOS executeAsync/cancel run on the same thread, so a plain flag is sufficient here.
+  private var cancelled = false
+  private val expiry = HandleExpiry(totalDurationMs, timeSource)
 
   override val isActive: Boolean
-    get() = _isActive
+    get() = !cancelled && !expiry.isExpired
 
   override fun cancel() {
-    if (!_isActive) return
-    _isActive = false
+    if (cancelled) return
+    cancelled = true
 
     memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()

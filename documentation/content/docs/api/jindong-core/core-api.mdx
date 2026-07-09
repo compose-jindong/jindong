@@ -211,6 +211,17 @@ val composedPattern = buildHapticPattern {
 }
 ```
 
+If included patterns overlap in time, they are not summed. A single vibration motor
+plays one amplitude at a time, so at each instant the strongest active event wins:
+
+```kotlin
+val composed = buildHapticPattern {
+    include(strongPattern)  // e.g. 0-100ms at HIGH
+    include(softPattern)    // e.g. 50-150ms at LIGHT
+}
+// 0-100ms plays at HIGH (it dominates the overlap), then 100-150ms plays at LIGHT.
+```
+
 ## Examples
 
 ### ViewModel Usage
