@@ -1,0 +1,105 @@
+---
+title: Clip
+description: DSL function to place a prebuilt pattern on the timeline
+---
+
+# Clip
+
+<Callout type="info">
+**Module**: `jindong-compose` | **Package**: `io.github.compose.jindong.dsl`
+</Callout>
+
+Places a prebuilt `HapticPattern` on the timeline at the current position.
+
+## Signature
+
+```kotlin
+@Composable
+fun JindongScope.Clip(pattern: HapticPattern)
+```
+
+## Parameters
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `pattern` | `HapticPattern` | The prebuilt pattern to place on the timeline |
+
+## Description
+
+`Clip` drops a self-contained pattern next to inline nodes. It is the bridge between a `HapticPattern` value, typically an algebra result built with `buildHapticPattern`, and the composable DSL. The clip's events are offset by the nodes that precede it, so it schedules relative to its position like any other node.
+
+```kotlin
+val heartbeat = buildHapticPattern {
+    haptic(60.ms)
+    delay(80.ms)
+    haptic(40.ms)
+}
+
+Jindong(trigger) {
+    Clip(heartbeat)
+    Delay(200.ms)
+    Haptic(60.ms, HapticIntensity.MEDIUM)
+}
+```
+
+## Freezing and re-firing
+
+A clip captures its `pattern` at compile time. Because `Jindong` compiles content in a single pass with no recomposition (see [The Reactive Contract](/docs/guide/reactive-contract)), swapping the pattern in state alone does not update the clip. Thread the pattern through the trigger keys to make it live:
+
+```kotlin
+Jindong(pattern) { Clip(pattern) }
+```
+
+`HapticPattern` is a data class, so the key comparison is structural: an equal pattern does not re-fire, a different one does.
+
+<Callout type="warning">
+Do not add a `Jindong(pattern, vararg keys)` overload to skip the `Clip` call. `Jindong(p) { ... }` resolves to the existing `vararg keys` overload with `p` as a key, which compiles but plays the lambda instead of `p`. The `Jindong(pattern) { Clip(pattern) }` idiom is the supported way to embed a value.
+</Callout>
+
+## Usage
+
+### Composing with the pattern algebra
+
+Clips pair well with the pattern transforms, which return new `HapticPattern` values:
+
+```kotlin
+val base = buildHapticPattern {
+    haptic(50.ms)
+    delay(50.ms)
+    haptic(50.ms)
+}
+
+Jindong(speed) {
+    Clip(base.timeStretch(1f / speed))
+}
+```
+
+### Reusing a pattern across screens
+
+```kotlin
+private val confirm = buildHapticPattern {
+    haptic(50.ms)
+    delay(50.ms)
+    haptic(100.ms)
+}
+
+@Composable
+fun SaveButton(saved: Boolean) {
+    Jindong(saved) {
+        if (saved) Clip(confirm)
+    }
+}
+```
+
+## Notes
+
+- The pattern is captured when the node is inserted, not on every frame
+- Preceding `Delay` and `Haptic` nodes shift the clip's start time
+- `HapticPattern` equality is structural, which drives key comparison
+- An empty pattern (`HapticPattern.Empty`) places nothing
+
+## See Also
+
+- [The Reactive Contract](/docs/guide/reactive-contract)
+- [Sequence](/docs/api/jindong-compose/composable-dsl/sequence)
+- [Core API](/docs/api/jindong-core/core-api)

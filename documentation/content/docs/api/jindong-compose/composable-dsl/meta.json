@@ -5,6 +5,7 @@
     "delay",
     "sequence",
     "repeat",
-    "repeat-with-index"
+    "repeat-with-index",
+    "clip"
   ]
 }

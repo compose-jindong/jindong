@@ -16,6 +16,7 @@
     "api/jindong-compose/composable-dsl/sequence",
     "api/jindong-compose/composable-dsl/repeat",
     "api/jindong-compose/composable-dsl/repeat-with-index",
+    "api/jindong-compose/composable-dsl/clip",
     "---Contributing---",
     "...contributing"
   ]
