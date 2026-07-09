@@ -176,6 +176,25 @@ class HapticPatternScope internal constructor() {
     rootElement.children.add(PatternElement(pattern))
   }
 
+  /**
+   * Places a prebuilt [pattern] on the timeline at the current position.
+   *
+   * Alias for [include] that shares the vocabulary of the Compose `Clip` node, so a pattern reads the
+   * same whether it is assembled with the builder DSL or the Compose DSL.
+   *
+   * Example:
+   * ```kotlin
+   * val composedPattern = buildHapticPattern {
+   *     clip(clickPattern)
+   *     delay(100.ms)
+   *     clip(clickPattern)
+   * }
+   * ```
+   *
+   * @param pattern The pattern to place on the timeline
+   */
+  fun clip(pattern: HapticPattern) = include(pattern)
+
   internal fun build(): HapticPattern {
     val events = rootElement.collectEvents(startTimeMs = 0L)
     return HapticPattern(events = events, rootElement = rootElement)
