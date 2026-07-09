@@ -139,9 +139,7 @@ fun AlgebraScreen(modifier: Modifier = Modifier) {
     PlayButton(onClick = { resultPlay++ }, text = "Play result")
   }
 
-  // VIBRATION PATH (stale pre-#84; see SingleHapticScreen for the rationale). Playback goes through
-  // Clip with the pattern threaded into the trigger keys, so each press replays the live value; the
-  // buzz self-heals once #84 lands. The timelines above are always live.
+  // Playback threads the pattern into the trigger keys, so each press replays the live value.
   Jindong(basePlay, base) { Clip(base) }
   Jindong(resultPlay, transformed) { Clip(transformed) }
 }
