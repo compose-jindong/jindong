@@ -17,6 +17,7 @@ package io.github.compose.jindong.core.element
 
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
+import io.github.compose.jindong.core.model.spanMs
 
 /**
  * An element that includes an existing [HapticPattern].
@@ -52,12 +53,7 @@ class PatternElement(
     }
   }
 
-  override fun totalDurationMs(startTimeMs: Long): Long {
-    if (pattern.events.isEmpty()) return 0L
-
-    // Find the maximum end time of all events in the pattern
-    return pattern.events.maxOf { event ->
-      event.startTimeMs + event.durationMs
-    }
-  }
+  // An included pattern's own span is its duration; startTimeMs is the caller's offset and is not
+  // folded in here (unlike sequential tree-sum elements).
+  override fun totalDurationMs(startTimeMs: Long): Long = pattern.spanMs()
 }

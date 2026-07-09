@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package io.github.compose.jindong.core.executor
-
-import io.github.compose.jindong.core.model.HapticPattern
-import io.github.compose.jindong.core.model.spanMs
+package io.github.compose.jindong.core.model
 
 /**
- * The raw span of a pattern: the latest event end on its timeline, or 0 for an empty pattern.
+ * The span of a pattern: the latest event end on its timeline, or 0 for an empty pattern.
  *
- * This is the timeline extent of the scheduled events themselves, before any platform post-processing
- * (Android compat segments, actuator quirks). Each executor derives its own playback length from this
- * according to its physics — see the platform `playbackDurationMs()` helpers.
+ * This is the raw timeline extent of the scheduled events, independent of any tree structure or
+ * platform post-processing. It is the shared basis for [reversed] mirroring, [then] offsetting,
+ * executor playback length, and [io.github.compose.jindong.core.element.PatternElement] duration.
  */
-internal fun HapticPattern.rawSpanMs(): Long = spanMs()
+internal fun HapticPattern.spanMs(): Long = events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
