@@ -62,7 +62,7 @@ import io.github.compose.jindong.sample.theme.JindongTheme
  * App bar layout:
  * - left: back chevron `‹` (only when [screen] is not the hub) tapping [onBack].
  * - center: [Screen.title] (the Home title doubles as the wordmark).
- * - right: a mono counter (`진동` on Home, else `NN / 07`) plus a 30x30 theme toggle (`☾` light /
+ * - right: a mono counter (`진동` on Home, else `NN / <module count>`) plus a 30x30 theme toggle (`☾` light /
  *   `☀` dark) calling [onToggleTheme]. Both controls keep a >= 48dp hit area.
  *
  * The body uses [Dimens.screenPadH] horizontal padding, [Dimens.bodyTop] top and [Dimens.bodyBottom]
@@ -177,7 +177,7 @@ private fun AppBar(
       verticalAlignment = Alignment.CenterVertically,
     ) {
       Text(
-        text = if (screen.index == 0) "진동" else "${pad2(screen.index)} / 07",
+        text = if (screen.index == 0) "진동" else "${pad2(screen.index)} / ${pad2(Screen.modules.size)}",
         style = JindongTheme.typography.monoMicro.copy(fontWeight = FontWeight.Normal),
         color = colors.text3,
       )

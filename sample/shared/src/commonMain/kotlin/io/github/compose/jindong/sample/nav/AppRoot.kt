@@ -23,6 +23,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import io.github.compose.jindong.sample.components.JindongScaffold
+import io.github.compose.jindong.sample.screens.AlgebraScreen
 import io.github.compose.jindong.sample.screens.HomeScreen
 import io.github.compose.jindong.sample.screens.IntensityLabScreen
 import io.github.compose.jindong.sample.screens.PresetGalleryScreen
@@ -34,7 +35,7 @@ import io.github.compose.jindong.sample.screens.TimingScreen
 import io.github.compose.jindong.sample.theme.JindongTheme
 
 /**
- * Single-level navigation host. Home lists the seven modules; tapping one swaps [current], the app
+ * Single-level navigation host. Home lists the feature modules; tapping one swaps [current], the app
  * bar back chevron returns to Home. The theme follows the system preference unless [darkOverride] is
  * set by the app-bar toggle.
  *
@@ -69,6 +70,7 @@ fun AppRoot() {
         Screen.RepeatIdx -> RepeatWithIndexScreen()
         Screen.Preset -> PresetGalleryScreen()
         Screen.Reactive -> ReactiveScreen()
+        Screen.Algebra -> AlgebraScreen()
       }
     }
   }

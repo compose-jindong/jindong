@@ -16,8 +16,8 @@
 package io.github.compose.jindong.sample.nav
 
 /**
- * Harness destinations. [Home] is the hub (index 0); [modules] lists the seven feature screens that
- * Home links to, in display order. [index] doubles as the app-bar counter value ("NN / 07").
+ * Harness destinations. [Home] is the hub (index 0); [modules] lists the feature screens that
+ * Home links to, in display order. [index] doubles as the app-bar counter value ("NN / <count>").
  */
 sealed interface Screen {
   val routeId: String
@@ -81,8 +81,15 @@ sealed interface Screen {
     override val subtitle = "State-driven · no buttons ★"
   }
 
+  data object Algebra : Screen {
+    override val routeId = "algebra"
+    override val title = "Algebra"
+    override val index = 8
+    override val subtitle = "Transform a pattern, see the diff"
+  }
+
   companion object {
     val modules: List<Screen> =
-      listOf(Single, Intensity, Timing, Repeat, RepeatIdx, Preset, Reactive)
+      listOf(Single, Intensity, Timing, Repeat, RepeatIdx, Preset, Reactive, Algebra)
   }
 }

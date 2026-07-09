@@ -16,9 +16,15 @@
 package io.github.compose.jindong.sample.screens
 
 import androidx.compose.ui.graphics.Color
+import io.github.compose.jindong.core.dsl.buildHapticPattern
 import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
+import io.github.compose.jindong.core.model.repeated
+import io.github.compose.jindong.core.model.reversed
+import io.github.compose.jindong.core.model.scaleIntensity
+import io.github.compose.jindong.core.model.timeStretch
+import io.github.compose.jindong.core.ms
 import kotlin.math.ceil
 
 // Pure, side-effect-free logic shared across the harness screens. Kept out of the composables so the
@@ -172,3 +178,54 @@ internal fun Preset.toPattern(): HapticPattern = HapticPattern(
     )
   },
 )
+
+/** The pure timeline extent of a pattern (latest event end), mirroring the library-internal spanMs. */
+internal fun HapticPattern.spanEndMs(): Long = events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
+
+/**
+ * The fixed base pattern for the Algebra screen (handoff 08): an asymmetric strong→weak ramp with
+ * widening gaps. Front-loaded and lopsided so that [reversed] visibly flips it and [timeStretch] /
+ * [scaleIntensity] read at a glance on the timeline.
+ */
+internal fun algebraBasePattern(): HapticPattern = buildHapticPattern {
+  haptic(70.ms, HapticIntensity.Custom(0.9f))
+  delay(80.ms)
+  haptic(50.ms, HapticIntensity.Custom(0.6f))
+  delay(150.ms)
+  haptic(40.ms, HapticIntensity.Custom(0.3f))
+}
+
+/** A single algebra transform the demo can toggle on top of the base pattern (handoff 08). */
+internal enum class AlgebraTransform(
+  val label: String,
+  val expr: String,
+) {
+  None("Identity", "base"),
+  Scale("scaleIntensity", "base.scaleIntensity(0.5)"),
+  Stretch("timeStretch", "base.timeStretch(2.0)"),
+  Reverse("reversed", "base.reversed()"),
+  Repeat("repeated", "base.repeated(3)"),
+}
+
+/** Applies [transform] to [base], returning the transformed pattern the second timeline renders. */
+internal fun AlgebraTransform.apply(base: HapticPattern): HapticPattern = when (this) {
+  AlgebraTransform.None -> base
+  AlgebraTransform.Scale -> base.scaleIntensity(SCALE_FACTOR)
+  AlgebraTransform.Stretch -> base.timeStretch(STRETCH_FACTOR)
+  AlgebraTransform.Reverse -> base.reversed()
+  AlgebraTransform.Repeat -> base.repeated(REPEAT_TIMES)
+}
+
+internal const val SCALE_FACTOR = 0.5f
+internal const val STRETCH_FACTOR = 2.0f
+internal const val REPEAT_TIMES = 3
+
+/**
+ * Timeline window shared by both Algebra timelines so base and result share one time axis and the
+ * transform reads as a change against a fixed scale: `max(600, ceil(maxSpan / 100) * 100)`, where
+ * [maxSpanMs] is the larger of the base and transformed spans.
+ */
+internal fun algebraWindow(maxSpanMs: Long): Long {
+  val rounded = ceil(maxOf(1L, maxSpanMs) / 100.0).toLong() * 100L
+  return maxOf(600L, rounded)
+}
