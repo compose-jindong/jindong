@@ -131,7 +131,7 @@ object HapticManager {
       // vibration stays reachable via currentHandle: only HapticHandle.cancel() stops the motor,
       // while a coroutine-cancelled executor.execute() would abort its delay but leave the actuator
       // buzzing. Publishing the handle lets a concurrent executeAsync/execute cancel-and-restart it
-      // instead of overlapping (issue #93).
+      // instead of overlapping.
       val handle = withStateLock {
         currentHandle?.cancel()
         val newHandle = getOrCreateExecutorLocked().executeAsync(pattern)
@@ -161,7 +161,7 @@ object HapticManager {
    */
   fun executeAsync(pattern: HapticPattern): HapticHandle = withStateLockBlocking {
     // Shares currentHandle with execute(), so an executeAsync landing mid-execute cancels the
-    // in-flight handle here before starting its own — the two paths never overlap (issue #93).
+    // in-flight handle here before starting its own, so the two paths never overlap.
     currentHandle?.cancel()
     val handle = getOrCreateExecutorLocked().executeAsync(pattern)
     currentHandle = handle

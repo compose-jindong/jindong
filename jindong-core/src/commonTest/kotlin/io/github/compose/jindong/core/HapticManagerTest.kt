@@ -58,7 +58,7 @@ class HapticManagerTest :
     test("execute should play pattern through the handle path and wait for completion") {
       runTest {
         // execute() drives playback via executeAsync so the in-flight vibration stays reachable via
-        // currentHandle (issue #93); it still suspends until the handle's playback window elapses.
+        // currentHandle; it still suspends until the handle's playback window elapses.
         val playbackMs = 10L
         val timedExecutor = FakeHapticExecutor(
           playbackDuration = playbackMs.milliseconds,
@@ -128,7 +128,7 @@ class HapticManagerTest :
     }
 
     test("executeAsync should cancel an execute() playback that is still in flight") {
-      // Regression for #93: while execute() is mid-playback, an executeAsync must find and cancel the
+      // Regression: while execute() is mid-playback, an executeAsync must find and cancel the
       // in-flight handle (the two share currentHandle) instead of firing a second overlapping
       // vibration. Reverting execute() to clear currentHandle before playback makes this RED.
       runTest {
