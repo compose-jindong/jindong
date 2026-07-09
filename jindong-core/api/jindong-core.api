@@ -186,6 +186,18 @@ public final class io/github/compose/jindong/core/model/IosHapticParameters {
 	public fun toString ()Ljava/lang/String;
 }
 
+public final class io/github/compose/jindong/core/model/RepeatedKt {
+	public static final fun repeated (Lio/github/compose/jindong/core/model/HapticPattern;I)Lio/github/compose/jindong/core/model/HapticPattern;
+}
+
+public final class io/github/compose/jindong/core/model/ReversedKt {
+	public static final fun reversed (Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/model/HapticPattern;
+}
+
+public final class io/github/compose/jindong/core/model/ScaleIntensityKt {
+	public static final fun scaleIntensity (Lio/github/compose/jindong/core/model/HapticPattern;F)Lio/github/compose/jindong/core/model/HapticPattern;
+}
+
 public final class io/github/compose/jindong/core/model/ScheduledHapticEvent {
 	public fun <init> (JJLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)V
 	public synthetic fun <init> (JJLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
@@ -202,5 +214,14 @@ public final class io/github/compose/jindong/core/model/ScheduledHapticEvent {
 	public final fun getStartTimeMs ()J
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;
+}
+
+public final class io/github/compose/jindong/core/model/ThenKt {
+	public static final fun plus (Lio/github/compose/jindong/core/model/HapticPattern;Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/model/HapticPattern;
+	public static final fun then (Lio/github/compose/jindong/core/model/HapticPattern;Lio/github/compose/jindong/core/model/HapticPattern;)Lio/github/compose/jindong/core/model/HapticPattern;
+}
+
+public final class io/github/compose/jindong/core/model/TimeStretchKt {
+	public static final fun timeStretch (Lio/github/compose/jindong/core/model/HapticPattern;F)Lio/github/compose/jindong/core/model/HapticPattern;
 }
 
