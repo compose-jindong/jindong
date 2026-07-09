@@ -29,12 +29,24 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
- * Composable that triggers haptic pattern execution when keys change.
+ * Composable that compiles the haptic pattern in [content] and plays it when [keys] change.
  *
- * This works similarly to [LaunchedEffect] - when any of the keys change,
- * the haptic pattern defined in [content] is compiled and executed.
+ * Like [LaunchedEffect], a change to any key restarts the effect: the pattern is recompiled and
+ * played. The reactive behavior follows three rules.
  *
- * Example:
+ * 1. Values read inside [content] are frozen at compile time. The pattern is compiled once per key
+ *    change through a single-shot composition that never recomposes (see [compilePattern]), so a
+ *    state value the block captures is read once and does not update on its own.
+ * 2. Keys are the playback trigger. Put a value in [keys] exactly when its change should fire
+ *    playback. A slider value passed as a key fires on every drag step; state that only shapes the
+ *    pattern belongs inside [content] as a parameter.
+ * 3. Cancel-and-restart is best effort. A key change cancels the in-flight playback before starting
+ *    the new one, ordered by the manager's state lock. The platform stop calls do not report
+ *    completion, so a few milliseconds of physical overlap are possible.
+ *
+ * To make a value both shape the pattern and re-fire when it changes, pass it as a key and read it
+ * inside the block:
+ *
  * ```
  * var count by remember { mutableStateOf(0) }
  *
@@ -46,6 +58,13 @@ import kotlinx.coroutines.launch
  * Button(onClick = { count++ }) {
  *     Text("Trigger Haptic")
  * }
+ * ```
+ *
+ * To embed a prebuilt pattern and re-fire when it changes, thread it through the keys and place it
+ * with [io.github.compose.jindong.dsl.Clip]:
+ *
+ * ```
+ * Jindong(pattern) { Clip(pattern) }
  * ```
  *
  * @param keys Keys that trigger re-execution when changed (like [LaunchedEffect])
