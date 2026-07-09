@@ -40,6 +40,10 @@ public abstract interface class io/github/compose/jindong/JindongScope {
 public abstract interface annotation class io/github/compose/jindong/JindongScopeMarker : java/lang/annotation/Annotation {
 }
 
+public final class io/github/compose/jindong/dsl/ClipKt {
+	public static final fun Clip (Lio/github/compose/jindong/JindongScope;Lio/github/compose/jindong/core/model/HapticPattern;Landroidx/compose/runtime/Composer;I)V
+}
+
 public final class io/github/compose/jindong/dsl/DelayKt {
 	public static final fun Delay-dWUq8MI (Lio/github/compose/jindong/JindongScope;JLandroidx/compose/runtime/Composer;I)V
 }

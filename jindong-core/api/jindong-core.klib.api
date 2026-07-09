@@ -37,6 +37,7 @@ abstract interface io.github.compose.jindong.core.executor/HapticHandle { // io.
 }
 
 final class io.github.compose.jindong.core.dsl/HapticPatternScope { // io.github.compose.jindong.core.dsl/HapticPatternScope|null[0]
+    final fun clip(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core.dsl/HapticPatternScope.clip|clip(io.github.compose.jindong.core.model.HapticPattern){}[0]
     final fun delay(kotlin.time/Duration) // io.github.compose.jindong.core.dsl/HapticPatternScope.delay|delay(kotlin.time.Duration){}[0]
     final fun haptic(kotlin.time/Duration, io.github.compose.jindong.core.model/HapticIntensity = ..., io.github.compose.jindong.core.model/IosHapticParameters? = ...) // io.github.compose.jindong.core.dsl/HapticPatternScope.haptic|haptic(kotlin.time.Duration;io.github.compose.jindong.core.model.HapticIntensity;io.github.compose.jindong.core.model.IosHapticParameters?){}[0]
     final fun include(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core.dsl/HapticPatternScope.include|include(io.github.compose.jindong.core.model.HapticPattern){}[0]
