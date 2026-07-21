@@ -76,6 +76,22 @@ This is useful for:
 
 The content block is compiled into a `HapticPattern` containing scheduled events. The pattern is then executed by the `HapticExecutor` provided via `LocalHapticExecutor`.
 
+### The Reactive Contract
+
+`Jindong` reads values and fires playback under three rules:
+
+1. Values read inside `content` are frozen at compile time. The block is compiled once per key change and does not recompose, so a captured state value is read once.
+2. Keys are the playback trigger. Put a value in `keys` when its change should play; keep pattern-shaping values inside the block as parameters.
+3. Cancel-and-restart is best effort. A key change cancels the in-flight playback first, but the platform stop calls report no completion, so brief physical overlap is possible.
+
+To make a value both shape the pattern and re-fire when it changes, pass it as a key and read it inside the block. For a prebuilt pattern, thread it through the keys and place it with `Clip`:
+
+```kotlin
+Jindong(pattern) { Clip(pattern) }
+```
+
+See [The Reactive Contract](/docs/guide/reactive-contract) for the full explanation.
+
 ## Usage
 
 ### Basic Usage
@@ -169,6 +185,7 @@ Within the `JindongScope`, you can use:
 | [`Sequence`](/docs/api/jindong-compose/composable-dsl/sequence) | Group events sequentially |
 | [`Repeat`](/docs/api/jindong-compose/composable-dsl/repeat) | Repeat content N times |
 | [`RepeatWithIndex`](/docs/api/jindong-compose/composable-dsl/repeat-with-index) | Repeat with index access |
+| [`Clip`](/docs/api/jindong-compose/composable-dsl/clip) | Place a prebuilt pattern on the timeline |
 
 ## Notes
 
@@ -179,6 +196,7 @@ Within the `JindongScope`, you can use:
 
 ## See Also
 
+- [The Reactive Contract](/docs/guide/reactive-contract)
 - [JindongProvider](/docs/api/jindong-compose/jindong-provider)
 - [JindongScope](/docs/api/jindong-compose/jindong-scope)
 - [Quick Start](/docs/guide/quick-start)

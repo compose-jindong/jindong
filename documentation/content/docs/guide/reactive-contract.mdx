@@ -1,0 +1,83 @@
+---
+title: The Reactive Contract
+description: How Jindong decides when to play and which values it reads
+---
+
+import { Callout } from 'fumadocs-ui/components/callout';
+
+# The Reactive Contract
+
+`Jindong` behaves like `LaunchedEffect`: it plays the pattern in its content block, and a change to any key restarts it. Three rules describe exactly which values it reads and when it fires. Everything about reactive `Jindong` usage follows from them.
+
+## Rule 1: values in content are frozen at compile time
+
+When a key changes, `Jindong` compiles the content block into a pattern once and plays it. The compilation runs in a composition that produces the pattern in a single pass and is then torn down, so there is no recomposition. A state value the block reads is read once, at that compile, and does not update on its own afterward.
+
+```kotlin
+var level by remember { mutableStateOf(1) }
+
+// `level` is read once, when the current key last changed.
+Jindong(trigger) {
+    RepeatWithIndex(level) { index ->
+        Haptic(50.ms)
+    }
+}
+```
+
+If `level` changes but `trigger` does not, the played pattern keeps the `level` from the last time `trigger` changed.
+
+## Rule 2: keys are the playback trigger
+
+A key change is what fires playback. Put a value in the keys exactly when its change should play. Values that only shape the pattern belong inside the block as parameters.
+
+The distinction matters most with continuous input. A slider value passed as a key fires a vibration on every drag step:
+
+```kotlin
+// Fires on every value change while dragging.
+Jindong(sliderValue) {
+    Haptic((sliderValue * 100).toInt().ms)
+}
+```
+
+The same value as a parameter shapes the next playback without firing on each step:
+
+```kotlin
+// Reads sliderValue when `commit` changes; does not fire mid-drag.
+Jindong(commit) {
+    Haptic((sliderValue * 100).toInt().ms)
+}
+```
+
+To make a value both shape the pattern and re-fire when it changes, pass it as a key and read it inside the block:
+
+```kotlin
+Jindong(level) {
+    RepeatWithIndex(level) { index ->
+        Haptic(50.ms, HapticIntensity.Custom(1f - index * 0.1f))
+    }
+}
+```
+
+<Callout type="info">
+Prebuilt patterns follow the same rule. `Clip` captures its pattern at compile time, so thread the pattern through the keys to re-fire on change: `Jindong(pattern) { Clip(pattern) }`. See [Clip](/docs/api/jindong-compose/composable-dsl/clip).
+</Callout>
+
+## Rule 3: cancel-and-restart is best effort
+
+A key change cancels the in-flight playback before starting the new one. The manager serializes this with a state lock, so a fast sequence of key changes cancels in order and the last one wins.
+
+The cancellation itself is best effort. Neither `Vibrator.cancel()` on Android nor `CHHapticPatternPlayer.stop` on iOS reports when the hardware has actually stopped, so a few milliseconds of physical overlap between the old and new playback are possible. Patterns that change keys rapidly should not assume a clean cut between them.
+
+## Choosing keys
+
+| Value | Where it goes | Effect |
+|-------|---------------|--------|
+| Should fire playback when it changes | Key | Each change plays |
+| Shapes the pattern, read at the next fire | Parameter in the block | Frozen until a key changes |
+| Should both shape and fire | Key and read in the block | Each change plays with the new value |
+
+## See also
+
+- [Jindong API](/docs/api/jindong-compose/jindong)
+- [Clip](/docs/api/jindong-compose/composable-dsl/clip)
+- [Quick Start](/docs/guide/quick-start)
