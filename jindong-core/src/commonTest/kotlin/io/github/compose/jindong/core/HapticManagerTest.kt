@@ -24,7 +24,14 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.testTimeSource
+import kotlin.time.Duration.Companion.milliseconds
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class HapticManagerTest :
   FunSpec({
     lateinit var fakeExecutor: FakeHapticExecutor
@@ -48,27 +55,48 @@ class HapticManagerTest :
       HapticManager.isSupported shouldBe false
     }
 
-    test("execute should execute pattern synchronously") {
-      val pattern = buildHapticPattern {
-        haptic(100.ms)
-      }
+    test("execute should play pattern through the handle path and wait for completion") {
+      runTest {
+        // execute() drives playback via executeAsync so the in-flight vibration stays reachable via
+        // currentHandle; it still suspends until the handle's playback window elapses.
+        val playbackMs = 10L
+        val timedExecutor = FakeHapticExecutor(
+          playbackDuration = playbackMs.milliseconds,
+          timeSource = testTimeSource,
+        )
+        HapticManager.initializeExecutor(timedExecutor)
+        val pattern = buildHapticPattern { haptic(100.ms) }
 
-      HapticManager.execute(pattern)
+        val before = testScheduler.currentTime
+        HapticManager.execute(pattern)
+        val elapsed = testScheduler.currentTime - before
 
-      assertSoftly {
-        fakeExecutor.executedPatterns shouldHaveSize 1
-        fakeExecutor.executedPatterns[0] shouldBe pattern
+        assertSoftly {
+          timedExecutor.asyncExecutedPatterns shouldHaveSize 1
+          timedExecutor.asyncExecutedPatterns[0] shouldBe pattern
+          // Suspended for the whole playback window (poll granularity may round up the final step).
+          (elapsed >= playbackMs) shouldBe true
+        }
       }
     }
 
     test("execute should handle empty pattern") {
-      val emptyPattern = buildHapticPattern { }
+      runTest {
+        val timedExecutor = FakeHapticExecutor(
+          playbackDuration = 0.milliseconds,
+          timeSource = testTimeSource,
+        )
+        HapticManager.initializeExecutor(timedExecutor)
+        val emptyPattern = buildHapticPattern { }
 
-      HapticManager.execute(emptyPattern)
+        shouldNotThrowAny {
+          HapticManager.execute(emptyPattern)
+        }
 
-      assertSoftly {
-        fakeExecutor.executedPatterns shouldHaveSize 1
-        fakeExecutor.executedPatterns[0].events.shouldBeEmpty()
+        assertSoftly {
+          timedExecutor.asyncExecutedPatterns shouldHaveSize 1
+          timedExecutor.asyncExecutedPatterns[0].events.shouldBeEmpty()
+        }
       }
     }
 
@@ -96,6 +124,46 @@ class HapticManagerTest :
       assertSoftly {
         fakeExecutor.asyncExecutedPatterns shouldHaveSize 2
         handle1.isActive shouldBe false
+      }
+    }
+
+    test("executeAsync should cancel an execute() playback that is still in flight") {
+      // Regression: while execute() is mid-playback, an executeAsync must find and cancel the
+      // in-flight handle (the two share currentHandle) instead of firing a second overlapping
+      // vibration. Reverting execute() to clear currentHandle before playback makes this RED.
+      runTest {
+        // Long window so the execute() playback is still active when executeAsync lands.
+        val timedExecutor = FakeHapticExecutor(
+          playbackDuration = 1_000.milliseconds,
+          timeSource = testTimeSource,
+        )
+        HapticManager.initializeExecutor(timedExecutor)
+
+        val longPattern = buildHapticPattern { haptic(500.ms) }
+        val otherPattern = buildHapticPattern { haptic(100.ms) }
+
+        // Start the suspending execute() in the background; let it install its handle and begin its
+        // await, then interleave the async call while it is provably still in flight.
+        val executeJob = launch { HapticManager.execute(longPattern) }
+        advanceTimeBy(10)
+        val executeHandle = timedExecutor.issuedHandles.single()
+        executeHandle.isActive shouldBe true
+
+        val asyncHandle = HapticManager.executeAsync(otherPattern)
+
+        assertSoftly {
+          // The in-flight execute() playback was cancelled, not left overlapping.
+          executeHandle.cancelled shouldBe true
+          executeHandle.isActive shouldBe false
+          // Both playbacks reached the executor; only the async one is still live.
+          timedExecutor.asyncExecutedPatterns shouldBe listOf(longPattern, otherPattern)
+          asyncHandle.isActive shouldBe true
+        }
+
+        // execute()'s cleanup unwinds once its handle is cancelled; it must not cancel the newer
+        // async handle that took over the currentHandle slot.
+        executeJob.join()
+        asyncHandle.isActive shouldBe true
       }
     }
 

@@ -21,9 +21,12 @@ import io.github.compose.jindong.core.executor.HapticExecutor
 import io.github.compose.jindong.core.executor.HapticHandle
 import io.github.compose.jindong.core.executor.createHapticExecutor
 import io.github.compose.jindong.core.model.HapticPattern
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 
 /**
  * Singleton manager for haptic pattern execution.
@@ -124,12 +127,27 @@ object HapticManager {
    */
   suspend fun execute(pattern: HapticPattern) {
     executionMutex.withLock {
-      val executor = withStateLock {
+      // Drive playback through the handle path (not the suspend executor.execute) so the in-flight
+      // vibration stays reachable via currentHandle: only HapticHandle.cancel() stops the motor,
+      // while a coroutine-cancelled executor.execute() would abort its delay but leave the actuator
+      // buzzing. Publishing the handle lets a concurrent executeAsync/execute cancel-and-restart it
+      // instead of overlapping.
+      val handle = withStateLock {
         currentHandle?.cancel()
-        currentHandle = null
-        getOrCreateExecutorLocked()
+        val newHandle = getOrCreateExecutorLocked().executeAsync(pattern)
+        currentHandle = newHandle
+        newHandle
       }
-      executor.execute(pattern)
+      try {
+        awaitCompletion(handle)
+      } finally {
+        // Stop the motor and clear the slot on normal end, cancellation, or a takeover by another
+        // caller. clearHandleIfCurrent guards against wiping a handle a newer call already installed.
+        withContext(NonCancellable) {
+          handle.cancel()
+          clearHandleIfCurrent(handle)
+        }
+      }
     }
   }
 
@@ -142,10 +160,25 @@ object HapticManager {
    * @return A [HapticHandle] for cancelling the execution
    */
   fun executeAsync(pattern: HapticPattern): HapticHandle = withStateLockBlocking {
+    // Shares currentHandle with execute(), so an executeAsync landing mid-execute cancels the
+    // in-flight handle here before starting its own, so the two paths never overlap.
     currentHandle?.cancel()
     val handle = getOrCreateExecutorLocked().executeAsync(pattern)
     currentHandle = handle
     handle
+  }
+
+  /**
+   * Suspends until [handle] is no longer active — natural (duration-estimate) completion, or an
+   * external [HapticHandle.cancel] from a concurrent takeover. Polls because neither Android's
+   * `Vibrator` nor iOS' `CHHapticPatternPlayerProtocol` reports per-effect completion; the whole
+   * library already treats completion as a best-effort estimate (see [HandleExpiry]). The delay is a
+   * suspension point, so coroutine cancellation of execute() unwinds here immediately.
+   */
+  private suspend fun awaitCompletion(handle: HapticHandle) {
+    while (handle.isActive) {
+      delay(COMPLETION_POLL_INTERVAL_MS)
+    }
   }
 
   /**
@@ -178,6 +211,14 @@ object HapticManager {
     }
   }
 
+  // Clears currentHandle only when it still points at [handle]. execute()'s cleanup must not wipe a
+  // handle that a newer execute/executeAsync already installed after taking over.
+  private fun clearHandleIfCurrent(handle: HapticHandle) {
+    withStateLockBlocking {
+      if (currentHandle === handle) currentHandle = null
+    }
+  }
+
   private suspend fun <T> withStateLock(action: () -> T): T = stateMutex.withLock { action() }
 
   private fun <T> withStateLockBlocking(action: () -> T): T = runBlocking {
@@ -194,6 +235,11 @@ object HapticManager {
     executor = newExecutor
     return newExecutor
   }
+
+  // Playback has no OS completion callback, so execute() polls the handle. 4ms keeps the caller's
+  // resume within one frame of natural end while cancellation (a takeover) still unwinds instantly
+  // at the next suspension point.
+  private const val COMPLETION_POLL_INTERVAL_MS = 4L
 }
 
 /**
