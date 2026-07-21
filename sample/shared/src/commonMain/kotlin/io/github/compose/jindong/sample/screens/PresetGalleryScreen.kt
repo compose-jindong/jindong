@@ -95,8 +95,8 @@ fun PresetGalleryScreen(modifier: Modifier = Modifier) {
     }
   }
 
-  // VIBRATION PATH (stale pre-#84; see SingleHapticScreen for the rationale). Each preset's literal
-  // events are replayed serially via the Compose DSL; the timeline cards above are always live.
+  // Each preset's literal events are replayed serially via the Compose DSL; the timeline cards above
+  // are always live.
   val current = remember(playName) { presets.firstOrNull { it.name == playName } }
   if (current != null) {
     Jindong(playTrigger, playName) {

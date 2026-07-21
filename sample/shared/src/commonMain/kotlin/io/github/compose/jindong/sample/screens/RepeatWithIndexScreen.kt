@@ -151,8 +151,8 @@ fun RepeatWithIndexScreen(modifier: Modifier = Modifier) {
     PlayButton(onClick = { playTrigger++ })
   }
 
-  // VIBRATION PATH (stale pre-#84; see SingleHapticScreen for the rationale). The timeline above is
-  // always live; this executor call self-heals once #84 lands.
+  // Explicit-play: playTrigger and the pattern parameters are keys, so Play replays the current
+  // values. The timeline above is driven separately and is always live.
   Jindong(playTrigger, riCount, riDir) {
     RepeatWithIndex(riCount) { i ->
       Haptic(70.ms, HapticIntensity.Custom(ramp(i, riCount, riDir)))

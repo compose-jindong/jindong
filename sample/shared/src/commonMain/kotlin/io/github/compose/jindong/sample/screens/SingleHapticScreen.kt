@@ -179,9 +179,9 @@ fun SingleHapticScreen(modifier: Modifier = Modifier) {
     PlayButton(onClick = { playTrigger++ })
   }
 
-  // VIBRATION PATH: key only on playTrigger so this stays an explicit-play screen (Reactive is the
+  // Explicit-play: key only on playTrigger, so this stays an explicit-play screen (Reactive is the
   // auto-firing one). The block reads live sgDur/resolvedIntensity, so Play always uses the current
-  // values. The timeline above is driven separately from state and stays live regardless of #84.
+  // values. The timeline above is driven separately from state and stays live.
   Jindong(playTrigger) {
     Haptic(sgDur.ms, resolvedIntensity)
   }

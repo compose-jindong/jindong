@@ -24,6 +24,7 @@ public abstract interface annotation class io/github/compose/jindong/core/dsl/Ha
 }
 
 public final class io/github/compose/jindong/core/dsl/HapticPatternScope {
+	public final fun clip (Lio/github/compose/jindong/core/model/HapticPattern;)V
 	public final fun delay-LRDsOJo (J)V
 	public final fun haptic-KLykuaI (JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)V
 	public static synthetic fun haptic-KLykuaI$default (Lio/github/compose/jindong/core/dsl/HapticPatternScope;JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILjava/lang/Object;)V

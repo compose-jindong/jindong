@@ -64,13 +64,9 @@ import io.github.compose.jindong.sample.theme.JindongTheme
 import kotlin.math.roundToLong
 
 /**
- * Reactive / State-driven (handoff 07): the one differentiator — moving a control re-fires the
+ * Reactive / State-driven (handoff 07): the one differentiator, moving a control re-fires the
  * pattern with no Play button, and the pattern itself changes with state. This screen doubles as a
  * regression oracle: each card's Expected/Actual proves whether the live path tracks the controls.
- *
- * NOTE: pre-#84 the VIBRATION (the actual buzz from `Jindong`) is the bug surface — it replays the
- * first-compiled pattern. The TIMELINE here stays live (it never touches the buggy remember), so the
- * Expected/Actual comparison still reads true; once #84 lands the buzz matches with zero changes.
  */
 @Composable
 fun ReactiveScreen(modifier: Modifier = Modifier) {
@@ -143,7 +139,8 @@ private fun ThresholdCard() {
     },
   )
 
-  // VIBRATION PATH (stale pre-#84). The card's timeline is live; the buzz self-heals once #84 lands.
+  // State is a key, so the pattern recompiles and the buzz tracks the controls. The card's timeline
+  // is driven separately and is always live.
   Jindong(rxThresh) {
     Haptic(120.ms, HapticIntensity.Custom(intensity))
   }
@@ -183,7 +180,8 @@ private fun CountCard() {
     },
   )
 
-  // VIBRATION PATH (stale pre-#84). The card's timeline is live; the buzz self-heals once #84 lands.
+  // State is a key, so the pattern recompiles and the buzz tracks the controls. The card's timeline
+  // is driven separately and is always live.
   Jindong(rxCount) {
     Repeat(rxCount) {
       Haptic(60.ms, HapticIntensity.Custom(0.7f))
@@ -240,7 +238,8 @@ private fun MultiInputCard() {
     },
   )
 
-  // VIBRATION PATH (stale pre-#84). The card's timeline is live; the buzz self-heals once #84 lands.
+  // State is a key, so the pattern recompiles and the buzz tracks the controls. The card's timeline
+  // is driven separately and is always live.
   Jindong(rxDur, rxInt) {
     Haptic(rxDur.ms, HapticIntensity.Custom(rxInt))
   }
