@@ -20,6 +20,7 @@ plugins {
   alias(libs.plugins.android.kotlin.multiplatform.library)
   alias(libs.plugins.vanniktech.mavenPublish)
   alias(libs.plugins.kotest)
+  alias(libs.plugins.testballoon)
   alias(libs.plugins.ksp)
   alias(libs.plugins.binaryCompatibilityValidator)
   alias(libs.plugins.kover)
@@ -70,6 +71,8 @@ kotlin {
       implementation(libs.kotest.framework.engine)
       implementation(libs.kotest.assertions.core)
       implementation(libs.kotest.property)
+      // PoC: TestBalloon running alongside Kotest in the same source set.
+      implementation(libs.testballoon.framework.core)
     }
 
     named("androidHostTest").dependencies {

@@ -11,6 +11,7 @@ composeMultiplatform = "1.10.0"
 composeBom = "2025.12.01"
 coroutines = "1.10.2"
 kotest = "6.0.7"
+testballoon = "1.0.1-K2.3.0"
 ksp = "2.3.4"
 robolectric = "4.16"
 androidxTest = "1.7.0"
@@ -29,6 +30,7 @@ kotest-framework-engine = { module = "io.kotest:kotest-framework-engine", versio
 kotest-assertions-core = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }
 kotest-runner-junit5 = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
+testballoon-framework-core = { module = "de.infix.testBalloon:testBalloon-framework-core", version.ref = "testballoon" }
 junit-vintage-engine = { module = "org.junit.vintage:junit-vintage-engine", version.ref = "junit5" }
 robolectric = { module = "org.robolectric:robolectric", version.ref = "robolectric" }
 androidx-test-core = { module = "androidx.test:core", version.ref = "androidxTest" }
@@ -46,6 +48,7 @@ vanniktech-mavenPublish = { id = "com.vanniktech.maven.publish", version.ref = "
 spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 binaryCompatibilityValidator = { id = "org.jetbrains.kotlinx.binary-compatibility-validator", version.ref = "binaryCompatibilityValidator" }
 kotest = { id = "io.kotest", version.ref = "kotest" }
+testballoon = { id = "de.infix.testBalloon", version.ref = "testballoon" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 android-application = { id = "com.android.application", version.ref = "agp" }
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMultiplatform" }

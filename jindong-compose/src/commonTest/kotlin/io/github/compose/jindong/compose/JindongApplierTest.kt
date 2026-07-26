@@ -18,40 +18,38 @@
 package io.github.compose.jindong.compose
 
 import androidx.compose.runtime.ExperimentalComposeApi
+import de.infix.testBalloon.framework.core.testSuite
 import io.github.compose.jindong.core.element.HapticElement
 import io.github.compose.jindong.core.element.SequenceElement
 import io.github.compose.jindong.core.element.VibrationElement
 import io.github.compose.jindong.core.model.HapticIntensity
 import io.kotest.assertions.throwables.shouldThrow
-import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContainExactly
 import io.kotest.matchers.shouldBe
 
 /**
- * Tests for [JindongApplier] using Kotest FunSpec.
+ * PoC migration of the former Kotest `JindongApplierTest` (FunSpec) to TestBalloon.
  *
- * Verifies correct tree manipulation operations:
- * - Insert (top-down and bottom-up)
- * - Remove (single and multiple elements)
- * - Move (forward, backward, multiple elements)
- * - Clear
- * - Navigation (down/up)
+ * The `lateinit var root/applier` + `beforeEach` pattern is replaced by a single `testFixture`. Bound
+ * with `asContextForEach`, every test — including those in nested suites — receives a freshly built
+ * [Fixture] as its receiver, so `root`/`applier` read exactly as they did before while the isolation
+ * is now structural rather than a re-init hook that has to run first. Assertions stay on
+ * kotest-assertions-core, so only the spec engine changed.
+ *
+ * Covers the same tree operations: insert (top-down), remove, move, clear, navigation, edge cases.
  */
-class JindongApplierTest :
-  FunSpec({
+val JindongApplierTest by testSuite {
 
-    fun createElement(durationMs: Long): VibrationElement = VibrationElement(durationMs = durationMs, intensity = HapticIntensity.HIGH)
+  fun createElement(durationMs: Long): VibrationElement = VibrationElement(durationMs = durationMs, intensity = HapticIntensity.HIGH)
 
-    lateinit var root: HapticElement
-    lateinit var applier: JindongApplier
+  class Fixture {
+    val root: HapticElement = SequenceElement()
+    val applier = JindongApplier(root)
+  }
 
-    beforeEach {
-      root = SequenceElement()
-      applier = JindongApplier(root)
-    }
-
-    context("JindongApplier insertTopDown") {
+  testFixture { Fixture() } asContextForEach {
+    testSuite("JindongApplier insertTopDown") {
       test("should add element at index 0") {
         val element = createElement(100)
 
@@ -93,7 +91,7 @@ class JindongApplierTest :
       }
     }
 
-    context("JindongApplier remove") {
+    testSuite("JindongApplier remove") {
       test("should remove single element at index") {
         val element1 = createElement(100)
         val element2 = createElement(200)
@@ -142,8 +140,8 @@ class JindongApplierTest :
       }
     }
 
-    context("JindongApplier move") {
-      context("moving single element") {
+    testSuite("JindongApplier move") {
+      testSuite("moving single element") {
         test("should move element forward") {
           val element1 = createElement(100)
           val element2 = createElement(200)
@@ -199,7 +197,7 @@ class JindongApplierTest :
         }
       }
 
-      context("moving multiple elements") {
+      testSuite("moving multiple elements") {
         test("should move multiple elements forward") {
           val elements = (1..5).map { createElement(it * 100L) }
           elements.forEach { applier.insertTopDown(root.children.size, it) }
@@ -240,7 +238,7 @@ class JindongApplierTest :
         }
       }
 
-      context("complex move scenarios") {
+      testSuite("complex move scenarios") {
         test("should handle sequential move operations correctly") {
           val elements = (1..7).map { createElement(it * 100L) }
           elements.forEach { applier.insertTopDown(root.children.size, it) }
@@ -263,7 +261,7 @@ class JindongApplierTest :
       }
     }
 
-    context("JindongApplier clear") {
+    testSuite("JindongApplier clear") {
       test("should remove all children from root") {
         val element1 = createElement(100)
         val element2 = createElement(200)
@@ -289,7 +287,7 @@ class JindongApplierTest :
       }
     }
 
-    context("JindongApplier navigation") {
+    testSuite("JindongApplier navigation") {
       test("should navigate down and up correctly") {
         val containerElement = SequenceElement()
         val leafElement = createElement(100)
@@ -330,7 +328,7 @@ class JindongApplierTest :
       }
     }
 
-    context("JindongApplier edge cases") {
+    testSuite("JindongApplier edge cases") {
       test("should handle empty operations on empty root") {
         root.children.shouldBeEmpty()
 
@@ -364,4 +362,5 @@ class JindongApplierTest :
         root.children.shouldBeEmpty()
       }
     }
-  })
+  }
+}

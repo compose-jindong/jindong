@@ -15,44 +15,48 @@
  */
 package io.github.compose.jindong.core.model
 
-import io.kotest.core.spec.style.FunSpec
+import de.infix.testBalloon.framework.core.testSuite
 import io.kotest.matchers.shouldBe
 
-class HapticIntensityTest :
-  FunSpec({
-    context("Pre-defined levels") {
-      test("LIGHT should have value 0.25") {
-        HapticIntensity.LIGHT.value shouldBe 0.25f
-      }
-      test("MEDIUM should have value 0.5") {
-        HapticIntensity.MEDIUM.value shouldBe 0.5f
-      }
-      test("STRONG should have value 0.75") {
-        HapticIntensity.STRONG.value shouldBe 0.75f
-      }
-      test("HIGH should have value 1.0") {
-        HapticIntensity.HIGH.value shouldBe 1.0f
-      }
-    }
-
-    context("Custom intensity") {
-      test("should coerce values above 1.0 to 1.0") {
-        HapticIntensity.Custom(1.5f).value shouldBe 1.0f
-        HapticIntensity.Custom(2.0f).value shouldBe 1.0f
-        HapticIntensity.Custom(100f).value shouldBe 1.0f
-      }
-
-      test("should coerce values below 0.0 to 0.0") {
-        HapticIntensity.Custom(-0.1f).value shouldBe 0.0f
-        HapticIntensity.Custom(-1.0f).value shouldBe 0.0f
-        HapticIntensity.Custom(-100f).value shouldBe 0.0f
-      }
-
-      test("should preserve valid values") {
-        HapticIntensity.Custom(0.0f).value shouldBe 0.0f
-        HapticIntensity.Custom(0.5f).value shouldBe 0.5f
-        HapticIntensity.Custom(1.0f).value shouldBe 1.0f
-        HapticIntensity.Custom(0.33f).value shouldBe 0.33f
+/**
+ * PoC migration of the former Kotest `HapticIntensityTest` (FunSpec) to TestBalloon.
+ *
+ * The data-driven cases previously sat as several `shouldBe` calls inside one test body, where the
+ * first failing input aborts the rest and the test name says nothing about which input broke. Each
+ * input is now its own test: a plain Kotlin `for` loop over `test(...)` is all TestBalloon needs for
+ * parameterization. Assertions stay on kotest-assertions-core (`shouldBe`), so only the spec engine
+ * changed.
+ */
+val HapticIntensityTest by testSuite {
+  testSuite("Pre-defined levels") {
+    val levels = listOf(
+      Triple("LIGHT", HapticIntensity.LIGHT, 0.25f),
+      Triple("MEDIUM", HapticIntensity.MEDIUM, 0.5f),
+      Triple("STRONG", HapticIntensity.STRONG, 0.75f),
+      Triple("HIGH", HapticIntensity.HIGH, 1.0f),
+    )
+    for ((name, level, expected) in levels) {
+      test("$name should have value $expected") {
+        level.value shouldBe expected
       }
     }
-  })
+  }
+
+  testSuite("Custom intensity") {
+    for (input in listOf(1.5f, 2.0f, 100f)) {
+      test("should coerce $input above 1.0 to 1.0") {
+        HapticIntensity.Custom(input).value shouldBe 1.0f
+      }
+    }
+    for (input in listOf(-0.1f, -1.0f, -100f)) {
+      test("should coerce $input below 0.0 to 0.0") {
+        HapticIntensity.Custom(input).value shouldBe 0.0f
+      }
+    }
+    for (input in listOf(0.0f, 0.5f, 1.0f, 0.33f)) {
+      test("should preserve valid value $input") {
+        HapticIntensity.Custom(input).value shouldBe input
+      }
+    }
+  }
+}

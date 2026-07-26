@@ -21,6 +21,7 @@ plugins {
     alias(libs.plugins.compose.compiler)
     alias(libs.plugins.vanniktech.mavenPublish)
     alias(libs.plugins.kotest)
+    alias(libs.plugins.testballoon)
     alias(libs.plugins.ksp)
     alias(libs.plugins.binaryCompatibilityValidator)
 }
@@ -71,6 +72,8 @@ kotlin {
             implementation(libs.kotest.assertions.core)
             implementation(libs.compose.ui.test)
             implementation(libs.kotlinx.coroutines.test)
+            // PoC: TestBalloon running alongside Kotest in the same source set.
+            implementation(libs.testballoon.framework.core)
         }
     }
 }
