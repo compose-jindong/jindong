@@ -7,7 +7,7 @@ on:
       - 'documentation/**'
       - '.github/workflows/docs.yml'
   pull_request:
-    branches: [main]
+    branches: [main, 'feature/**']
     paths:
       - 'documentation/**'
       - '.github/workflows/docs.yml'
