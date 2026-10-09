@@ -110,6 +110,19 @@ With the option set to false, constant or absent keys never trigger playback. Co
 
 Changing the default to false is deferred to a separate breaking change for 2.x. This addition preserves both the existing function symbols and entry behavior. Use the explicit false option now when entry playback is unwanted.
 
+## Playback ownership
+
+Each default executor owns its current playback session. Coroutine cancellation, a key change,
+or leaving composition cancels that session's native effect. Starting a replacement cancels the
+previous session first. Cancelling an old handle later does not cancel the replacement.
+
+`JindongProvider` releases its previous executor when the platform context changes and releases
+the current executor when the provider leaves composition. A released executor rejects new
+playback. `HapticManager.release()` can be followed by a new initialization.
+
+Silent timelines wait for their logical duration without starting a native effect. Empty timelines
+finish immediately. Completion remains an estimate; these checks do not measure physical actuator stop time.
+
 ## See also
 
 - [Jindong API](/docs/api/jindong-compose/jindong)

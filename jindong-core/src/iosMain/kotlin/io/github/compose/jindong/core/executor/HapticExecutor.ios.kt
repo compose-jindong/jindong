@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(ExperimentalAtomicApi::class, ExperimentalForeignApi::class, BetaInteropApi::class)
+@file:OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 
 package io.github.compose.jindong.core.executor
 
@@ -26,7 +26,8 @@ import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
 import kotlinx.cinterop.ptr
 import kotlinx.cinterop.value
-import kotlinx.coroutines.delay
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import platform.CoreHaptics.CHHapticEngine
 import platform.CoreHaptics.CHHapticEvent
 import platform.CoreHaptics.CHHapticEventParameter
@@ -34,23 +35,16 @@ import platform.CoreHaptics.CHHapticEventParameterIDHapticIntensity
 import platform.CoreHaptics.CHHapticEventParameterIDHapticSharpness
 import platform.CoreHaptics.CHHapticEventTypeHapticContinuous
 import platform.CoreHaptics.CHHapticPattern
-import platform.CoreHaptics.CHHapticPatternPlayerProtocol
 import platform.Foundation.NSError
-import kotlin.concurrent.atomics.AtomicReference
-import kotlin.concurrent.atomics.ExperimentalAtomicApi
 import kotlin.time.TimeSource
 
 /**
  * iOS HapticExecutor implementation using Core Haptics.
  */
-internal class DefaultIosHapticExecutor : HapticExecutor {
+internal class DefaultIosHapticExecutor(timeSource: TimeSource = TimeSource.Monotonic) : HapticExecutor {
 
-  private val engineRef = AtomicReference<CHHapticEngine?>(null)
-  private var engine: CHHapticEngine?
-    get() = engineRef.load()
-    set(value) {
-      engineRef.store(value)
-    }
+  private val sessions = PlaybackSessions(timeSource)
+  private var engine: CHHapticEngine? = null
 
   override val isSupported: Boolean by lazy {
     CHHapticEngine.capabilitiesForHardware().supportsHaptics()
@@ -62,101 +56,84 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
     get() = isSupported
 
   override suspend fun execute(pattern: HapticPattern) {
-    if (pattern.events.none { it.intensity.value > 0f && it.durationMs > 0L }) {
-      delay(pattern.playbackDurationMs())
-      return
-    }
-    if (!isSupported) return
+    currentCoroutineContext().ensureActive()
+    executeAsync(pattern).awaitCompletion()
+  }
 
-    val chPattern = pattern.toCHHapticPattern() ?: return
-    val currentEngine = ensureEngine() ?: return
+  override fun executeAsync(pattern: HapticPattern): PlaybackSessions.Session = sessions.start {
+    if (pattern.events.none { it.durationMs > 0L && it.intensity.value > 0f }) {
+      return@start NativePlayback(pattern.durationMs)
+    }
+    if (!isSupported) return@start null
+    val hapticPattern = checkNotNull(pattern.toCHHapticPattern())
+    val currentEngine = ensureEngine()
 
     memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
-      val player = currentEngine.createPlayerWithPattern(chPattern, errorPtr.ptr)
-      if (errorPtr.value != null || player == null) return
-
-      player.startAtTime(0.0, errorPtr.ptr)
-      if (errorPtr.value != null) return
-
-      delay(pattern.playbackDurationMs())
-
-      player.stopAtTime(0.0, errorPtr.ptr)
-    }
-  }
-
-  override fun executeAsync(pattern: HapticPattern): HapticHandle {
-    if (pattern.events.none { it.intensity.value > 0f && it.durationMs > 0L }) {
-      return IosHapticHandle(player = null, totalDurationMs = pattern.playbackDurationMs())
-    }
-    if (!isSupported) return IosHapticHandle(player = null, totalDurationMs = 0L)
-
-    val hapticPattern = pattern.toCHHapticPattern()
-      ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
-    val currentEngine = ensureEngine() ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
-
-    return memScoped {
-      val errorPtr = alloc<ObjCObjectVar<NSError?>>()
       val player = currentEngine.createPlayerWithPattern(hapticPattern, errorPtr.ptr)
-      if (errorPtr.value != null || player == null) {
-        return@memScoped IosHapticHandle(player = null, totalDurationMs = 0L)
+      check(player != null && errorPtr.value == null) {
+        "Could not create haptic player: ${errorPtr.value?.localizedDescription}"
       }
-
-      player.startAtTime(0.0, errorPtr.ptr)
-      if (errorPtr.value != null) {
-        return@memScoped IosHapticHandle(player = null, totalDurationMs = 0L)
+      val started = player.startAtTime(0.0, errorPtr.ptr)
+      if (!started || errorPtr.value != null) {
+        player.stopAtTime(0.0, null)
+        error("Could not start haptic player: ${errorPtr.value?.localizedDescription}")
       }
-
-      IosHapticHandle(player = player, totalDurationMs = pattern.playbackDurationMs())
+      NativePlayback(pattern.playbackDurationMs()) { player.stopAtTime(0.0, null) }
     }
   }
 
-  override fun release() {
-    engineRef.exchange(null)?.stopWithCompletionHandler(null)
+  override fun release() = sessions.release {
+    val oldEngine = engine
+    engine = null
+    oldEngine?.let(::disposeEngine)
   }
 
-  private fun ensureEngine(): CHHapticEngine? {
-    engineRef.load()?.let { return it }
-
+  private fun ensureEngine(): CHHapticEngine {
+    engine?.let { return it }
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
       val newEngine = CHHapticEngine(errorPtr.ptr)
-      if (errorPtr.value != null) {
-        return@memScoped null
+      check(errorPtr.value == null) {
+        "Could not create haptic engine: ${errorPtr.value?.localizedDescription}"
       }
-
-      newEngine.stoppedHandler = { _ ->
+      newEngine.stoppedHandler = { _ -> invalidateEngine(newEngine) }
+      newEngine.resetHandler = { invalidateEngine(newEngine) }
+      engine = newEngine
+      val started = newEngine.startAndReturnError(errorPtr.ptr)
+      if (!started || errorPtr.value != null) {
         engine = null
+        disposeEngine(newEngine)
+        error("Could not start haptic engine: ${errorPtr.value?.localizedDescription}")
       }
+      newEngine
+    }
+  }
 
-      newEngine.resetHandler = {
-        memScoped {
-          val errorPtr = alloc<ObjCObjectVar<NSError?>>()
-          newEngine.startAndReturnError(errorPtr.ptr)
-        }
-      }
-
-      newEngine.startAndReturnError(errorPtr.ptr)
-      if (errorPtr.value != null) {
-        return@memScoped null
-      }
-
-      if (engineRef.compareAndSet(null, newEngine)) {
-        newEngine
-      } else {
-        newEngine.stopWithCompletionHandler(null)
-        engineRef.load()
+  private fun invalidateEngine(stoppedEngine: CHHapticEngine) = sessions.withLock {
+    if (engine === stoppedEngine) {
+      engine = null
+      try {
+        sessions.cancel()
+      } finally {
+        disposeEngine(stoppedEngine)
       }
     }
+  }
+
+  private fun disposeEngine(oldEngine: CHHapticEngine) {
+    oldEngine.stoppedHandler = { _ -> }
+    oldEngine.resetHandler = { }
+    oldEngine.stopWithCompletionHandler(null)
   }
 
   // Signature is asymmetric with Android's playbackDurationMs() on purpose: playback length is derived
   // from a different input per platform (iOS = the pattern, Android = the waveform actually played).
-  // Core Haptics has no compat segments, so the pattern's raw span already is its playback length.
-  private fun HapticPattern.playbackDurationMs(): Long = rawSpanMs()
+  // Core Haptics has no compat segments; trailing silence still belongs to the logical deadline.
+  private fun HapticPattern.playbackDurationMs(): Long = durationMs
 
   internal fun HapticPattern.toCHHapticPattern(): CHHapticPattern? {
-    val hapticEvents = events.filter { it.intensity.value > 0f && it.durationMs > 0L }.map { it.toCHHapticEvent() }
+    val hapticEvents = events.filter { it.durationMs > 0L && it.intensity.value > 0f }.map { it.toCHHapticEvent() }
     if (hapticEvents.isEmpty()) return null
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
@@ -165,7 +142,10 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
         parameters = emptyList<Any>(),
         error = errorPtr.ptr,
       )
-      if (errorPtr.value != null) null else pattern
+      check(errorPtr.value == null) {
+        "Could not create haptic pattern: ${errorPtr.value?.localizedDescription}"
+      }
+      pattern
     }
   }
 
@@ -194,32 +174,6 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
 
   companion object {
     private const val DEFAULT_SHARPNESS = 0.5f
-  }
-}
-
-@OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
-internal class IosHapticHandle(
-  private var player: CHHapticPatternPlayerProtocol?,
-  totalDurationMs: Long,
-  timeSource: TimeSource = TimeSource.Monotonic,
-) : HapticHandle {
-
-  // iOS executeAsync/cancel run on the same thread, so a plain flag is sufficient here.
-  private var cancelled = false
-  private val expiry = HandleExpiry(totalDurationMs, timeSource)
-
-  override val isActive: Boolean
-    get() = !cancelled && !expiry.isExpired
-
-  override fun cancel() {
-    if (cancelled) return
-    cancelled = true
-
-    memScoped {
-      val errorPtr = alloc<ObjCObjectVar<NSError?>>()
-      player?.stopAtTime(0.0, errorPtr.ptr)
-    }
-    player = null
   }
 }
 

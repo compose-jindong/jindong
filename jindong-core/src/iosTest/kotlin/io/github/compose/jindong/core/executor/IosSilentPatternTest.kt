@@ -17,16 +17,22 @@
 
 package io.github.compose.jindong.core.executor
 
+import io.github.compose.jindong.core.dsl.buildHapticPattern
 import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
+import io.github.compose.jindong.core.ms
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.nulls.shouldBeNull
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.runTest
 import platform.CoreHaptics.CHHapticPatternKeyEvent
 import platform.CoreHaptics.CHHapticPatternKeyEventDuration
 import platform.CoreHaptics.CHHapticPatternKeyPattern
 import platform.CoreHaptics.CHHapticPatternKeyTime
+import kotlin.time.Duration.Companion.milliseconds
+import kotlin.time.TestTimeSource
 
 class IosSilentPatternTest :
   FunSpec({
@@ -39,6 +45,30 @@ class IosSilentPatternTest :
       handle.isActive shouldBe true
       handle.cancel()
       handle.isActive shouldBe false
+    }
+
+    test("silent handles expire at the logical end including trailing silence") {
+      val clock = TestTimeSource()
+      val executor = DefaultIosHapticExecutor(clock)
+      val pattern = HapticPattern(listOf(event(0, 50, 0f)), durationMs = 100L)
+      val handle = executor.executeAsync(pattern)
+      clock += 50.milliseconds
+      handle.isActive shouldBe true
+      clock += 50.milliseconds
+      handle.isActive shouldBe false
+      executor.release()
+    }
+
+    test("delay-only execute waits without creating a native player") {
+      @OptIn(ExperimentalCoroutinesApi::class)
+      runTest {
+        val executor = DefaultIosHapticExecutor()
+        val silence = buildHapticPattern { delay(100.ms) }
+        with(executor) { silence.toCHHapticPattern().shouldBeNull() }
+        executor.execute(silence)
+        testScheduler.currentTime shouldBe 100L
+        executor.release()
+      }
     }
 
     test("native adapter omits silent events without shifting a positive event") {

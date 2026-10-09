@@ -37,7 +37,7 @@ interface HapticHandle {
    * `CHHapticPatternPlayerProtocol` reports per-effect completion). As a result:
    * - Natural completion may be off by tens of milliseconds (OS scheduling, Doze, throttling).
    * - [cancel] flips this to `false` immediately and exactly.
-   * - A silent or empty pattern is never active (this is `false` from the start).
+   * - A silent pattern remains active for its logical duration; an empty pattern ends immediately.
    */
   val isActive: Boolean
 }

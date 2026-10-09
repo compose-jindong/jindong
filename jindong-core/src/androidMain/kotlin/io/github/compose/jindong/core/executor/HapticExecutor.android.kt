@@ -24,9 +24,9 @@ import android.os.VibratorManager
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.core.model.HapticPattern
-import kotlinx.coroutines.delay
-import java.util.concurrent.atomic.AtomicBoolean
-import kotlin.time.Duration.Companion.milliseconds
+import io.github.compose.jindong.core.model.checkedTimeAdd
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlin.time.TimeSource
 
 /**
@@ -40,7 +40,12 @@ import kotlin.time.TimeSource
  * Requires `<uses-permission android:name="android.permission.VIBRATE"/>` in AndroidManifest.xml
  */
 @RequiresApi(Build.VERSION_CODES.O)
-internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
+internal class DefaultAndroidHapticExecutor(
+  context: Context,
+  timeSource: TimeSource = TimeSource.Monotonic,
+) : HapticExecutor {
+
+  private val sessions = PlaybackSessions(timeSource)
 
   private val vibrator: Vibrator = when {
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
@@ -65,34 +70,32 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override suspend fun execute(pattern: HapticPattern) {
-    if (!isSupported || pattern.events.isEmpty()) return
-
-    // Await the exact waveform that was played, including the primer/trailing compat segments,
-    // so the caller resumes when the vibration truly ends rather than a few ms early.
-    val waveform = vibratePattern(pattern)
-    delay((waveform?.playbackDurationMs() ?: pattern.rawSpanMs()).milliseconds)
+    currentCoroutineContext().ensureActive()
+    executeAsync(pattern).awaitCompletion()
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
-  override fun executeAsync(pattern: HapticPattern): HapticHandle = when {
-    !isSupported || pattern.events.isEmpty() -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
-
-    else -> when (val waveform = vibratePattern(pattern)) {
-      // Use the exact waveform length (primer/trailing compat segments included), matching execute(),
-      // so isActive estimates completion against what actually played.
-      null -> AndroidHapticHandle(vibrator = null, totalDurationMs = pattern.rawSpanMs())
-
-      else -> AndroidHapticHandle(vibrator = vibrator, totalDurationMs = waveform.playbackDurationMs())
+  override fun executeAsync(pattern: HapticPattern): PlaybackSessions.Session = sessions.start {
+    if (pattern.events.none { it.durationMs > 0L && it.intensity.value > 0f }) {
+      return@start NativePlayback(pattern.durationMs)
+    }
+    if (!isSupported) return@start null
+    val waveform = vibratePattern(pattern)
+    if (waveform == null) {
+      NativePlayback(pattern.durationMs)
+    } else {
+      NativePlayback(maxOf(pattern.durationMs, waveform.playbackDurationMs())) { vibrator.cancel() }
     }
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
-  override fun release() = vibrator.cancel()
+  override fun release() = sessions.release { }
 
   /** Plays [pattern] and returns the played waveform, or null when there is nothing to vibrate. */
   @RequiresPermission(Manifest.permission.VIBRATE)
   private fun vibratePattern(pattern: HapticPattern): Waveform? {
     val waveform = pattern.toWaveform() ?: return null
+    waveform.playbackDurationMs()
     val vibrationEffect = VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
     vibrator.vibrate(vibrationEffect)
     return waveform
@@ -189,7 +192,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
   // The played waveform's length is the sum of its slice timings (compat segments included). Signature
   // is asymmetric with iOS's playbackDurationMs() on purpose: playback length is derived from a
   // different input per platform (Android = the waveform actually played, iOS = the pattern).
-  private fun Waveform.playbackDurationMs(): Long = timings.sum()
+  private fun Waveform.playbackDurationMs(): Long = timings.fold(0L) { total, timing -> checkedTimeAdd(total, timing, "native waveform duration") }
 
   internal data class Waveform(
     val timings: LongArray,
@@ -210,27 +213,6 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 
   companion object {
     private const val MAX_AMPLITUDE = 255
-  }
-}
-
-internal class AndroidHapticHandle(
-  private var vibrator: Vibrator?,
-  totalDurationMs: Long,
-  timeSource: TimeSource = TimeSource.Monotonic,
-) : HapticHandle {
-
-  // executeAsync may be called off the main thread, so cancel() can race the reader; keep it atomic.
-  private val cancelled = AtomicBoolean(false)
-  private val expiry = HandleExpiry(totalDurationMs, timeSource)
-
-  override val isActive: Boolean
-    get() = !cancelled.get() && !expiry.isExpired
-
-  @RequiresPermission(Manifest.permission.VIBRATE)
-  override fun cancel() {
-    if (!cancelled.compareAndSet(false, true)) return
-    vibrator?.cancel()
-    vibrator = null
   }
 }
 

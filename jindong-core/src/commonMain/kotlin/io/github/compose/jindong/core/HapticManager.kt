@@ -102,7 +102,7 @@ object HapticManager {
   fun initialize(context: Any? = null) {
     withStateLockBlocking {
       if (executor == null) {
-        initializeExecutor(createHapticExecutor(context))
+        executor = createHapticExecutor(context)
       }
     }
   }
@@ -127,11 +127,7 @@ object HapticManager {
    */
   suspend fun execute(pattern: HapticPattern) {
     executionMutex.withLock {
-      // Drive playback through the handle path (not the suspend executor.execute) so the in-flight
-      // vibration stays reachable via currentHandle: only HapticHandle.cancel() stops the motor,
-      // while a coroutine-cancelled executor.execute() would abort its delay but leave the actuator
-      // buzzing. Publishing the handle lets a concurrent executeAsync/execute cancel-and-restart it
-      // instead of overlapping.
+      // Keep the owned handle reachable by cancel() and executeAsync() while this call waits.
       val handle = withStateLock {
         currentHandle?.cancel()
         val newHandle = getOrCreateExecutorLocked().executeAsync(pattern)
