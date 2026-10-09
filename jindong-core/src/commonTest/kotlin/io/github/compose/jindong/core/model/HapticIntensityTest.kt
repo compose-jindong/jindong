@@ -15,6 +15,7 @@
  */
 package io.github.compose.jindong.core.model
 
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
@@ -46,6 +47,13 @@ class HapticIntensityTest :
         HapticIntensity.Custom(-0.1f).value shouldBe 0.0f
         HapticIntensity.Custom(-1.0f).value shouldBe 0.0f
         HapticIntensity.Custom(-100f).value shouldBe 0.0f
+      }
+
+      test("should reject non-finite values at construction and copy") {
+        for (value in listOf(Float.NaN, Float.POSITIVE_INFINITY, Float.NEGATIVE_INFINITY)) {
+          shouldThrow<IllegalArgumentException> { HapticIntensity.Custom(value) }
+          shouldThrow<IllegalArgumentException> { HapticIntensity.Custom(0.5f).copy(customValue = value) }
+        }
       }
 
       test("should preserve valid values") {

@@ -30,7 +30,7 @@ private const val MIN_RAMP_MS = 4L
  * so the total duration and every active segment's timing are preserved. Each ramp step is marked
  * `isGap = false` so quantization floors its non-zero intensity to a real amplitude; only the
  * remaining true gap stays at 0. Transitions other than active->gap (active->active, gap->active,
- * leading gap) are left untouched.
+ * leading gap) are left untouched. Explicit zero-intensity events stay silent and lend no ramp time.
  *
  * Invariant: `insertFallRamps(s).sumOf { it.durationMs } == s.sumOf { it.durationMs }`.
  */
@@ -43,7 +43,7 @@ internal fun insertFallRamps(segments: List<HapticSegment>): List<HapticSegment>
     val current = segments[i]
     val next = segments.getOrNull(i + 1)
 
-    val isActiveToGap = !current.isGap && next != null && next.isGap && next.durationMs > MIN_RAMP_MS
+    val isActiveToGap = !current.isGap && current.intensity > 0f && next != null && next.isGap && next.durationMs > MIN_RAMP_MS
     if (next == null || !isActiveToGap) {
       result += current
       i++

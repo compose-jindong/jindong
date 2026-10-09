@@ -120,6 +120,17 @@ class InsertFallRampsTest :
       output shouldBe input
     }
 
+    test("explicit zero-intensity intervals remain silent without borrowing ramp time") {
+      val input = listOf(
+        active(startTimeMs = 0, durationMs = 50, intensity = 1f),
+        active(startTimeMs = 50, durationMs = 50, intensity = 0f),
+        gap(startTimeMs = 100, durationMs = 50),
+        active(startTimeMs = 150, durationMs = 50, intensity = 1f),
+      )
+
+      insertFallRamps(input) shouldBe input
+    }
+
     test("leading gap before the first active is not ramped") {
       val input = listOf(
         gap(startTimeMs = 0, durationMs = 100),
