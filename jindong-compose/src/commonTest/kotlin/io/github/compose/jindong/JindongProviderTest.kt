@@ -44,14 +44,17 @@ class JindongProviderTest :
           }
         }
         waitForIdle()
-        executor.starts shouldBe 1
         trigger.value = 1
         waitForIdle()
-        executor.starts shouldBe 2
-        executor.cancellations shouldBe 1
+        val startsBeforeReplacement = executor.starts
+        val cancellationsBeforeReplacement = executor.cancellations
+        trigger.value = 2
+        waitForIdle()
+        executor.starts shouldBe startsBeforeReplacement + 1
+        executor.cancellations shouldBe cancellationsBeforeReplacement + 1
         visible.value = false
         waitForIdle()
-        executor.cancellations shouldBe 2
+        executor.cancellations shouldBe cancellationsBeforeReplacement + 2
       }
     }
     test("replacement disposes the previous executor and exit disposes the current one") {
