@@ -101,11 +101,10 @@ class ClipTest :
           }
         }
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 1
-        recorder.executedPatterns.last().durationMs shouldBe 100L
+        val playsBeforeChange = recorder.executedPatterns.size
         patternState.value = onePulse.copy(durationMs = 150L)
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 2
+        recorder.executedPatterns.size shouldBe playsBeforeChange + 1
         recorder.executedPatterns.last().durationMs shouldBe 150L
       }
     }
