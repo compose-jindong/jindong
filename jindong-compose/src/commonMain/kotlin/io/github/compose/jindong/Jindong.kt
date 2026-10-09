@@ -33,8 +33,8 @@ import kotlinx.coroutines.launch
 /**
  * Composable that compiles the haptic pattern in [content] and plays it when [keys] change.
  *
- * Like [LaunchedEffect], a change to any key restarts the effect: the pattern is recompiled and
- * played. The reactive behavior follows three rules.
+ * A change to any key recompiles and plays the pattern, cancelling the previous playback like
+ * [LaunchedEffect]. Initial entry is silent by default. The reactive behavior follows three rules.
  *
  * 1. Values read inside [content] are frozen at compile time. The pattern is compiled once per key
  *    change through a single-shot composition that never recomposes (see [compilePattern]), so a
@@ -69,8 +69,9 @@ import kotlinx.coroutines.launch
  * Jindong(pattern) { Clip(pattern) }
  * ```
  *
- * Playback starts on first entry by default. To wait for the first key change, use the overload
- * with `playOnInitialComposition = false`.
+ * To play on first entry, use the overload with `playOnInitialComposition = true`. A constant key
+ * such as `Unit` never changes, so it needs this option for entry feedback. Keys detect value
+ * changes, not truth: both `false` to `true` and `true` to `false` trigger playback.
  *
  * @param keys Keys that trigger re-execution when changed (like [LaunchedEffect])
  * @param content DSL block defining the haptic pattern
@@ -79,7 +80,7 @@ import kotlinx.coroutines.launch
 fun Jindong(
   vararg keys: Any?,
   content: @Composable JindongScope.() -> Unit,
-) = Jindong(*keys, playOnInitialComposition = true, content = content)
+) = Jindong(*keys, playOnInitialComposition = false, content = content)
 
 /**
  * Compiles [content] and plays it when [keys] change, with an explicit initial playback policy.

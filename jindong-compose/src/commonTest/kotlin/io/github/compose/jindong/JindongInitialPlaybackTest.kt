@@ -38,7 +38,7 @@ import kotlinx.coroutines.test.runTest
 
 class JindongInitialPlaybackTest :
   FunSpec({
-    test("a Boolean key preserves default initial playback") {
+    test("a Boolean key starts silently and plays on changes in either direction") {
       runComposeUiTest {
         val recorder = RecordingHapticExecutor()
         val trigger = mutableStateOf(false)
@@ -49,8 +49,11 @@ class JindongInitialPlaybackTest :
         }
 
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.size shouldBe 0
         trigger.value = true
+        waitForIdle()
+        recorder.executedPatterns.size shouldBe 1
+        trigger.value = false
         waitForIdle()
         recorder.executedPatterns.size shouldBe 2
       }
@@ -70,7 +73,23 @@ class JindongInitialPlaybackTest :
       }
     }
 
-    test("initial suppression freezes non-key values until a key change") {
+    listOf(emptyArray<Any?>(), arrayOf<Any?>(Unit)).forEach { keys ->
+      test("constant keys ${keys.toList()} stay silent without explicit entry playback") {
+        runComposeUiTest {
+          val recorder = RecordingHapticExecutor()
+          setContent {
+            CompositionLocalProvider(LocalHapticExecutor provides recorder) {
+              Jindong(*keys) { Haptic(50.ms) }
+            }
+          }
+
+          waitForIdle()
+          recorder.executedPatterns.size shouldBe 0
+        }
+      }
+    }
+
+    test("the default policy freezes non-key values until a key change") {
       runComposeUiTest {
         val recorder = RecordingHapticExecutor()
         val trigger = mutableStateOf(0)
@@ -80,7 +99,7 @@ class JindongInitialPlaybackTest :
           val key by trigger
           val durationMs by duration
           CompositionLocalProvider(LocalHapticExecutor provides recorder) {
-            Jindong(key, playOnInitialComposition = false) {
+            Jindong(key) {
               compilations++
               Haptic(durationMs.ms)
             }
@@ -154,7 +173,7 @@ class JindongInitialPlaybackTest :
       }
     }
 
-    listOf(false, true).forEach { playInitially ->
+    listOf(null, false, true).forEach { playInitially ->
       test("re-entry resets the initial playback policy when option is $playInitially") {
         runComposeUiTest {
           val recorder = RecordingHapticExecutor()
@@ -163,12 +182,16 @@ class JindongInitialPlaybackTest :
           setContent {
             CompositionLocalProvider(LocalHapticExecutor provides recorder) {
               if (visible.value) {
-                Jindong(trigger.value, playOnInitialComposition = playInitially) { Haptic(50.ms) }
+                if (playInitially == null) {
+                  Jindong(trigger.value) { Haptic(50.ms) }
+                } else {
+                  Jindong(trigger.value, playOnInitialComposition = playInitially) { Haptic(50.ms) }
+                }
               }
             }
           }
 
-          val initialCount = if (playInitially) 1 else 0
+          val initialCount = if (playInitially == true) 1 else 0
           waitForIdle()
           recorder.executedPatterns.size shouldBe initialCount
           trigger.value = 1

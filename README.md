@@ -29,6 +29,8 @@ Jindong(trigger) {
 }
 ```
 
+Initial entry is silent. Key changes trigger playback. For screen entry feedback, use `Jindong(Unit, playOnInitialComposition = true) { ... }`.
+
 ## Features
 
 - **Declarative API** - Define haptic patterns like you define UI with Compose

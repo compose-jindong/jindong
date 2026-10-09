@@ -141,7 +141,7 @@ private fun ThresholdCard() {
 
   // State is a key, so the pattern recompiles and the buzz tracks the controls. The card's timeline
   // is driven separately and is always live.
-  Jindong(rxThresh, playOnInitialComposition = false) {
+  Jindong(rxThresh) {
     Haptic(120.ms, HapticIntensity.Custom(intensity))
   }
 }
@@ -182,7 +182,7 @@ private fun CountCard() {
 
   // State is a key, so the pattern recompiles and the buzz tracks the controls. The card's timeline
   // is driven separately and is always live.
-  Jindong(rxCount, playOnInitialComposition = false) {
+  Jindong(rxCount) {
     Repeat(rxCount) {
       Haptic(60.ms, HapticIntensity.Custom(0.7f))
       Delay(80.ms)
@@ -240,7 +240,7 @@ private fun MultiInputCard() {
 
   // State is a key, so the pattern recompiles and the buzz tracks the controls. The card's timeline
   // is driven separately and is always live.
-  Jindong(rxDur, rxInt, playOnInitialComposition = false) {
+  Jindong(rxDur, rxInt) {
     Haptic(rxDur.ms, HapticIntensity.Custom(rxInt))
   }
 }

@@ -59,7 +59,8 @@ Jindong(key1, key2, ...) {
 }
 ```
 
-- Works like `LaunchedEffect`
+- Key changes cancel and restart playback, as with `LaunchedEffect`
+- Initial entry is silent by default
 - Executes when any key changes
 - Content block defines the pattern
 
@@ -130,13 +131,13 @@ Jindong(trigger) {
 
 ### Screen Entry Feedback
 
-Use `Unit` as key to trigger haptic immediately when entering a screen:
+Request initial playback explicitly to trigger haptic when entering a screen:
 
 ```kotlin
 @Composable
 fun WelcomeScreen() {
     // Executes once when screen appears
-    Jindong(Unit) {
+    Jindong(Unit, playOnInitialComposition = true) {
         Haptic(100.ms, HapticIntensity.MEDIUM)
     }
 
@@ -233,12 +234,12 @@ fun HeartbeatHaptic(trigger: Int) {
 
 | Pattern | Key | Code |
 |---------|-----|------|
-| On screen enter | `Jindong(Unit)` | `Haptic(100.ms)` |
+| On screen enter | `Jindong(Unit, playOnInitialComposition = true)` | `Haptic(100.ms)` |
 | Single tap | `Jindong(count)` | `Haptic(50.ms)` |
 | Double tap | `Jindong(count)` | `Repeat(2) { Haptic(40.ms); Delay(40.ms) }` |
 | Long press | `Jindong(count)` | `Haptic(200.ms, HapticIntensity.MEDIUM)` |
-| Success | `Jindong(success)` | `Haptic(50.ms); Delay(50.ms); Haptic(100.ms)` |
-| Error | `Jindong(error)` | `Repeat(3) { Haptic(80.ms); Delay(50.ms) }` |
+| Success | `Jindong(success)` | `if (success) { Haptic(50.ms); Delay(50.ms); Haptic(100.ms) }` |
+| Error | `Jindong(error)` | `if (error) { Repeat(3) { Haptic(80.ms); Delay(50.ms) } }` |
 
 ## Tips
 

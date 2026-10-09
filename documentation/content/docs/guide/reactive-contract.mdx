@@ -7,7 +7,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 # The Reactive Contract
 
-`Jindong` behaves like `LaunchedEffect`: it plays the pattern in its content block, and a change to any key restarts it. Three rules describe exactly which values it reads and when it fires. Everything about reactive `Jindong` usage follows from them.
+`Jindong` starts silently. A change to any key compiles and plays its content, cancelling the previous playback as with `LaunchedEffect`. Three rules describe which values it reads and when it fires.
 
 ## Rule 1: values in content are frozen at compile time
 
@@ -29,6 +29,16 @@ If `level` changes but `trigger` does not, the played pattern keeps the `level` 
 ## Rule 2: keys are the playback trigger
 
 A key change is what fires playback. Put a value in the keys exactly when its change should play. Values that only shape the pattern belong inside the block as parameters.
+
+A key is a value to compare, not a Boolean condition. Both `false → true` and `true → false` trigger playback. To emit haptics only when a condition becomes true, keep that condition inside the content:
+
+```kotlin
+Jindong(success) {
+    if (success) Haptic(100.ms)
+}
+```
+
+If `success` is already true when this call first enters composition, entry remains silent by default.
 
 The distinction matters most with continuous input. A slider value passed as a key fires a vibration on every drag step:
 
@@ -78,17 +88,23 @@ The cancellation itself is best effort. Neither `Vibrator.cancel()` on Android n
 
 ## Initial playback
 
-By default, `Jindong` plays once when it enters composition. To wait for the first key change, set `playOnInitialComposition = false`:
+By default, `Jindong` waits for the first key change. Initial values establish a baseline and do not play. Request entry feedback explicitly:
 
 ```kotlin
-Jindong(trigger, playOnInitialComposition = false) {
+Jindong(trigger, playOnInitialComposition = true) {
     Clip(pattern)
 }
 ```
 
-This option skips only the initial playback for each composition entry. Later key changes compile the current content and play once. Non-key values stay frozen until a key changes. Changing only the option does not compile or play again.
+Later key changes compile the current content and play once. Non-key values stay frozen until a key changes. Changing only the option does not compile or play again.
 
-After `Jindong` leaves and re-enters composition, the initial policy applies again. The option uses temporary composition state and does not persist across entries.
+After `Jindong` leaves and re-enters composition, the initial policy applies again. Changes while it is absent are not replayed. The option uses temporary composition state and does not persist across entries.
+
+`Jindong(Unit)` and calls without keys remain silent with the default policy because their keys never change. If a conditional branch mounts `Jindong` to play immediately, set `playOnInitialComposition = true` there.
+
+### Migration to 2.0
+
+Earlier versions played on entry. The 2.0 default changes that behavior while preserving the existing function symbols. Add `playOnInitialComposition = true` to calls that need their previous entry playback. Trigger counters such as `Jindong(clickCount)` can use the new default to wait for user input.
 
 ## See also
 
