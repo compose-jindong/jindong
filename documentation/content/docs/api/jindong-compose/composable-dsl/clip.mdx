@@ -50,7 +50,7 @@ A clip captures its `pattern` at compile time. Because `Jindong` compiles conten
 Jindong(pattern) { Clip(pattern) }
 ```
 
-`HapticPattern` is a data class, so the key comparison is structural: an equal pattern does not re-fire, a different one does.
+`HapticPattern` compares events and logical duration. A trailing-silence change also changes the key and triggers playback.
 
 <Callout type="warning">
 Do not add a `Jindong(pattern, vararg keys)` overload to skip the `Clip` call. `Jindong(p) { ... }` resolves to the existing `vararg keys` overload with `p` as a key, which compiles but plays the lambda instead of `p`. The `Jindong(pattern) { Clip(pattern) }` idiom is the supported way to embed a value.
@@ -96,7 +96,8 @@ fun SaveButton(saved: Boolean) {
 - The pattern is captured when the node is inserted, not on every frame
 - Preceding `Delay` and `Haptic` nodes shift the clip's start time
 - `HapticPattern` equality is structural, which drives key comparison
-- An empty pattern (`HapticPattern.Empty`) places nothing
+- Clip preserves trailing silence and patterns that contain only delays
+- An empty pattern (`HapticPattern.Empty`) has no events and zero duration
 
 ## See Also
 

@@ -72,7 +72,7 @@ fun AlgebraScreen(modifier: Modifier = Modifier) {
 
   // Both timelines share one window (the larger span), so the transform reads as a change against a
   // fixed axis rather than each plot rescaling itself.
-  val window = algebraWindow(maxOf(base.spanEndMs(), transformed.spanEndMs()))
+  val window = algebraWindow(maxOf(base.durationMs, transformed.durationMs))
   val baseBars = TimelineMapper.toBars(base, window) { accent }
   val resultBars = TimelineMapper.toBars(transformed, window) { accent }
 
@@ -93,7 +93,7 @@ fun AlgebraScreen(modifier: Modifier = Modifier) {
     HapticTimeline(
       bars = baseBars,
       topLeft = "INTENSITY ▲",
-      topRight = "${base.spanEndMs()} ms",
+      topRight = "${base.durationMs} ms",
       minLabel = "0",
       maxLabel = window.toString(),
       playheadProgress = 0f,
@@ -129,7 +129,7 @@ fun AlgebraScreen(modifier: Modifier = Modifier) {
     HapticTimeline(
       bars = resultBars,
       topLeft = "INTENSITY ▲",
-      topRight = "${transformed.spanEndMs()} ms",
+      topRight = "${transformed.durationMs} ms",
       minLabel = "0",
       maxLabel = window.toString(),
       playheadProgress = 0f,

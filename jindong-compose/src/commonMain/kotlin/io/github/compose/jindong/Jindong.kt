@@ -136,7 +136,7 @@ private class JindongCompositionHost : AutoCloseable {
 
   fun collectEvents(): HapticPattern {
     val events = rootElement.collectEvents(0L)
-    return HapticPattern(events)
+    return HapticPattern(events, durationMs = rootElement.totalDurationMs(0L))
   }
 
   fun dispose() {

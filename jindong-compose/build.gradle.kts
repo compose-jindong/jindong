@@ -33,7 +33,7 @@ apiValidation {
 }
 
 group = "io.github.compose-jindong"
-version = "1.1.1"
+version = "2.0.0-SNAPSHOT"
 
 kotlin {
     androidLibrary {

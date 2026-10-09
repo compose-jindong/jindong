@@ -15,16 +15,21 @@
  */
 package io.github.compose.jindong.core.model
 
-/**
- * Returns a new pattern that plays this pattern back-to-back [times] times.
- *
- * Defined by folding [then], so `repeated(n)` equals `this then this then ...` n copies:
- * `repeated(1)` is this pattern, `repeated(0)` is [HapticPattern.Empty], and each copy after the
- * first is offset by one span so the copies never overlap.
- *
- * @param times non-negative repeat count
- */
+/** Repeats the complete timeline [times] times. Zero repetitions produce [HapticPattern.Empty]. */
 public fun HapticPattern.repeated(times: Int): HapticPattern {
   require(times >= 0) { "times must be non-negative, was $times" }
-  return (1 until times).fold(if (times == 0) HapticPattern.Empty else this) { acc, _ -> acc then this }
+  val duration = checkedTimeMultiply(durationMs, times, "repeated")
+  val eventCount = checkedEventCount(events.size.toLong() * times, "repeated")
+  if (eventCount == 0) return HapticPattern(emptyList(), duration)
+  return HapticPattern(
+    buildList(eventCount) {
+      repeat(times) { iteration ->
+        val offset = checkedTimeMultiply(durationMs, iteration, "repeated offset")
+        events.forEach { event ->
+          add(event.copy(startTimeMs = checkedTimeAdd(offset, event.startTimeMs, "repeated event")))
+        }
+      }
+    },
+    duration,
+  )
 }

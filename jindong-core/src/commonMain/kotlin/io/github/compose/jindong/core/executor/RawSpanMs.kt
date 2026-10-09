@@ -16,7 +16,7 @@
 package io.github.compose.jindong.core.executor
 
 import io.github.compose.jindong.core.model.HapticPattern
-import io.github.compose.jindong.core.model.spanMs
+import io.github.compose.jindong.core.model.eventSpanMs
 
 /**
  * The raw span of a pattern: the latest event end on its timeline, or 0 for an empty pattern.
@@ -25,4 +25,4 @@ import io.github.compose.jindong.core.model.spanMs
  * (Android compat segments, actuator quirks). Each executor derives its own playback length from this
  * according to its physics — see the platform `playbackDurationMs()` helpers.
  */
-internal fun HapticPattern.rawSpanMs(): Long = spanMs()
+internal fun HapticPattern.rawSpanMs(): Long = events.eventSpanMs()

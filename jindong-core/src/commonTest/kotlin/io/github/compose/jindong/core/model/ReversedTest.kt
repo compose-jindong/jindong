@@ -27,9 +27,9 @@ class ReversedTest :
       }
     }
 
-    test("reversing preserves the span") {
+    test("reversing preserves the logical duration") {
       checkAll(patterns()) { pattern ->
-        pattern.reversed().spanMs() shouldBe pattern.spanMs()
+        pattern.reversed().durationMs shouldBe pattern.durationMs
       }
     }
 

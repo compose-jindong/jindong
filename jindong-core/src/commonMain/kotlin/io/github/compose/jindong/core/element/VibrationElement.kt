@@ -36,7 +36,7 @@ class VibrationElement(
 ) : HapticElement {
 
   init {
-    require(durationMs >= 0) { "durationMs must be non-negative, but was $durationMs" }
+    require(durationMs > 0) { "durationMs must be positive (at least 1ms), but was $durationMs" }
   }
 
   override val children: MutableList<HapticElement> = mutableListOf()

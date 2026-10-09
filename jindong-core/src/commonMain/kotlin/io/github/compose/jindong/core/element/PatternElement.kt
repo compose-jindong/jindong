@@ -17,7 +17,7 @@ package io.github.compose.jindong.core.element
 
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
-import io.github.compose.jindong.core.model.spanMs
+import io.github.compose.jindong.core.model.checkedTimeAdd
 
 /**
  * An element that includes an existing [HapticPattern].
@@ -49,11 +49,9 @@ class PatternElement(
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {
     // Offset all events in the pattern by the start time
     return pattern.events.map { event ->
-      event.copy(startTimeMs = event.startTimeMs + startTimeMs)
+      event.copy(startTimeMs = checkedTimeAdd(event.startTimeMs, startTimeMs, "Clip/include event"))
     }
   }
 
-  // An included pattern's own span is its duration; startTimeMs is the caller's offset and is not
-  // folded in here (unlike sequential tree-sum elements).
-  override fun totalDurationMs(startTimeMs: Long): Long = pattern.spanMs()
+  override fun totalDurationMs(startTimeMs: Long): Long = pattern.durationMs
 }

@@ -46,11 +46,7 @@ import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.compose.jindong.Jindong
-import io.github.compose.jindong.core.model.HapticIntensity
-import io.github.compose.jindong.core.ms
-import io.github.compose.jindong.dsl.Delay
-import io.github.compose.jindong.dsl.Haptic
-import io.github.compose.jindong.dsl.Sequence
+import io.github.compose.jindong.dsl.Clip
 import io.github.compose.jindong.sample.components.HapticTimeline
 import io.github.compose.jindong.sample.components.JindongIcons
 import io.github.compose.jindong.sample.components.ScreenDescription
@@ -95,20 +91,11 @@ fun PresetGalleryScreen(modifier: Modifier = Modifier) {
     }
   }
 
-  // Each preset's literal events are replayed serially via the Compose DSL; the timeline cards above
-  // are always live.
+  // Preview and playback share the preset value, including its trailing silence.
   val current = remember(playName) { presets.firstOrNull { it.name == playName } }
   if (current != null) {
     Jindong(playTrigger, playName) {
-      Sequence {
-        var cursor = 0L
-        current.events.forEach { event ->
-          val gap = event.start - cursor
-          if (gap > 0) Delay(gap.ms)
-          Haptic(event.dur.ms, HapticIntensity.Custom(event.intensity))
-          cursor = event.start + event.dur
-        }
-      }
+      Clip(current.toPattern())
     }
   }
 }

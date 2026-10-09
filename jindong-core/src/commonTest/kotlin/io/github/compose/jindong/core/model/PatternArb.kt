@@ -22,26 +22,16 @@ import io.kotest.property.arbitrary.float
 import io.kotest.property.arbitrary.int
 import io.kotest.property.arbitrary.long
 
-/**
- * Generates arbitrary haptic patterns for property tests: 0..5 events, each with a positive duration
- * (1..200ms), intensities in [0, 1], and interior offsets that may overlap or leave gaps — exactly
- * what the transforms must tolerate.
- *
- * The timeline is anchored at 0 (the earliest event starts at 0), which is what compiled patterns
- * look like: `buildHapticPattern` collects events from `startTimeMs = 0`. `reversed()` reflects on
- * `[0, span]`, so its involution `reversed().reversed() == p` holds precisely for anchored patterns;
- * a leading gap would let a reflection fold events off the front and lose the anchor.
- */
-internal fun patterns(): Arb<HapticPattern> = arbitrary { rs ->
+/** Generates overlapping timelines with leading/trailing silence and positive event durations. */
+internal fun patterns(minDurationMs: Long = 1L): Arb<HapticPattern> = arbitrary { rs ->
   val count = Arb.int(0..5).bind()
   val offsets = List(count) { Arb.long(0L..500L).bind() }
-  val floor = offsets.minOrNull() ?: 0L
   val events = offsets.map { offset ->
     ScheduledHapticEvent(
-      startTimeMs = offset - floor,
-      durationMs = Arb.long(1L..200L).bind(),
+      startTimeMs = offset,
+      durationMs = Arb.long(minDurationMs..200L).bind(),
       intensity = HapticIntensity.Custom(Arb.float(0f..1f).bind()),
     )
   }
-  HapticPattern(events)
+  HapticPattern(events, durationMs = (events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L) + Arb.long(0L..200L).bind())
 }

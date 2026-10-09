@@ -177,5 +177,5 @@ internal fun repeatPattern(count: Int): HapticPattern {
         intensity = HapticIntensity.Custom(UNIT_INTENSITY),
       )
     }
-  return HapticPattern(events)
+  return HapticPattern(events, durationMs = count * 150L)
 }

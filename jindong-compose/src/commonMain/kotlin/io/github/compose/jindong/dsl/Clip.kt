@@ -45,7 +45,7 @@ import io.github.compose.jindong.core.model.HapticPattern
  * Jindong(pattern) { Clip(pattern) }
  * ```
  *
- * [HapticPattern] is a data class, so the key comparison is structural.
+ * [HapticPattern] compares events and logical duration, so trailing silence is part of the key.
  *
  * @param pattern The prebuilt pattern to place on the timeline
  */

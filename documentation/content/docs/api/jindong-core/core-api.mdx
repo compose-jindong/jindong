@@ -34,7 +34,7 @@ Use `buildHapticPattern` to create haptic patterns:
 ```kotlin
 import io.github.compose.jindong.core.dsl.*
 import io.github.compose.jindong.core.model.HapticIntensity
-import kotlin.time.Duration.Companion.ms
+import io.github.compose.jindong.core.ms
 
 val tapPattern = buildHapticPattern {
     haptic(50.ms)
@@ -53,6 +53,27 @@ val alertPattern = buildHapticPattern {
     }
 }
 ```
+
+## Pattern Duration
+
+`HapticPattern.durationMs` includes trailing silence. Builders pass the complete duration, and `include` and transforms preserve it.
+A delay-only pattern has no events and can have a positive duration.
+
+```kotlin
+val tick = buildHapticPattern {
+    haptic(50.ms)
+    delay(50.ms)
+}
+check(tick.durationMs == 100L)
+val sameEventsWithMoreSilence = tick.copy(durationMs = 150L)
+```
+
+Equality includes events and duration. Events-only construction uses the latest event end as its default duration.
+Pass `HapticPattern(events, durationMs = ...)` when you construct a timeline with trailing silence.
+
+Duration inputs must be finite and non-negative. They round to the nearest millisecond, with half-milliseconds rounded up.
+The shared `Duration.toHapticMilliseconds()` conversion applies that rule. Vibrations require at least 1ms; zero delays are allowed.
+See [Migrating to 2.0](/docs/guide/migration-2) for source and ABI changes.
 
 ## Executing Patterns
 

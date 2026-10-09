@@ -16,12 +16,12 @@
 package io.github.compose.jindong.core.element
 
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
+import io.github.compose.jindong.core.model.checkedTimeAdd
 
 /**
  * A container element that executes its children sequentially.
  *
- * Each child starts after the previous one completes. The timing is calculated
- * by tracking the maximum end time of events from each child.
+ * Each child starts after the previous child's complete logical duration, including silence.
  *
  * Special handling for [DelayElement]: advances time without generating events.
  *
@@ -38,27 +38,18 @@ class SequenceElement : HapticElement {
   override val children: MutableList<HapticElement> = mutableListOf()
 
   override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {
-    val (_, events) = children.fold(
-      initial = TimingState(currentTimeMs = startTimeMs, events = emptyList()),
-    ) { state, child ->
-      processChildElement(child, state)
+    checkedTimeAdd(startTimeMs, totalDurationMs(startTimeMs), "Sequence end")
+    val count = expandedEventCount()
+    return buildList(count) {
+      var cursor = startTimeMs
+      children.forEach { child ->
+        addAll(child.collectEvents(cursor))
+        cursor = checkedTimeAdd(cursor, child.totalDurationMs(cursor), "Sequence child end")
+      }
     }
-    return events
   }
 
-  private fun processChildElement(child: HapticElement, state: TimingState): TimingState {
-    val childEvents = child.collectEvents(state.currentTimeMs)
-    val nextStartTime = state.currentTimeMs + child.totalDurationMs(state.currentTimeMs)
-    return TimingState(
-      currentTimeMs = nextStartTime,
-      events = state.events + childEvents,
-    )
+  override fun totalDurationMs(startTimeMs: Long): Long = children.fold(0L) { duration, child ->
+    checkedTimeAdd(duration, child.totalDurationMs(startTimeMs), "Sequence duration")
   }
-
-  override fun totalDurationMs(startTimeMs: Long): Long = children.sumOf { it.totalDurationMs(startTimeMs) }
-
-  private data class TimingState(
-    val currentTimeMs: Long,
-    val events: List<ScheduledHapticEvent>,
-  )
 }

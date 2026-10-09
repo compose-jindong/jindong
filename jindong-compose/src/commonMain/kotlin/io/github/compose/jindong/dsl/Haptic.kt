@@ -21,6 +21,7 @@ import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
 import io.github.compose.jindong.core.element.VibrationElement
 import io.github.compose.jindong.core.model.HapticIntensity
+import io.github.compose.jindong.core.toHapticMilliseconds
 import kotlin.time.Duration
 
 /**
@@ -42,7 +43,7 @@ fun JindongScope.Haptic(
   intensity: HapticIntensity = HapticIntensity.MEDIUM,
 ) {
   ComposeNode<VibrationElement, JindongApplier>(
-    factory = { VibrationElement(duration.inWholeMilliseconds, intensity) },
+    factory = { VibrationElement(duration.toHapticMilliseconds(), intensity) },
     update = { },
   )
 }

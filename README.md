@@ -52,6 +52,9 @@ kotlin {
 }
 ```
 
+This checkout targets the 2.0 development line (`2.0.0-SNAPSHOT`). This change does not publish a 2.0 release.
+See the [2.0 migration guide](documentation/content/docs/guide/migration-2.mdx) for model and timing changes.
+
 ### Platform Requirements
 
 | Platform | Minimum Version |

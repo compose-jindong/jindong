@@ -15,21 +15,9 @@
  */
 package io.github.compose.jindong.core.model
 
-/**
- * Returns a new pattern with events mirrored across the pattern span.
- *
- * Each event is reflected on `[0, span]`: `newStart = span - (start + duration)`, keeping its
- * duration. Intensity and iOS parameters are unchanged. Interior gaps make the mirror overlap
- * neighbors; overlaps are left as-is and resolved at playback by the serial merge (highest intensity
- * wins), so this stays a pure timeline reflection. Compiled patterns are anchored at 0, so reflecting
- * twice recovers the original; a leading gap (earliest event not at 0) would fold events off the
- * front and is not a shape the builder produces.
- */
-public fun HapticPattern.reversed(): HapticPattern {
-  val span = spanMs()
-  return copy(
-    events = events.map { event ->
-      event.copy(startTimeMs = span - (event.startTimeMs + event.durationMs))
-    },
-  )
-}
+/** Reflects events across [HapticPattern.durationMs], exchanging leading and trailing silence. */
+public fun HapticPattern.reversed(): HapticPattern = copy(
+  events = events.map { event ->
+    event.copy(startTimeMs = durationMs - checkedTimeAdd(event.startTimeMs, event.durationMs, "reversed event"))
+  },
+)

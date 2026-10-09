@@ -15,6 +15,7 @@
  */
 package io.github.compose.jindong.core
 
+import io.github.compose.jindong.core.model.checkedTimeAdd
 import kotlin.time.Duration
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -45,3 +46,13 @@ val Int.ms: Duration
  */
 val Long.ms: Duration
   get() = this.milliseconds
+
+/**
+ * Converts a finite non-negative duration to the nearest millisecond, rounding half up.
+ * A vibration must additionally have a positive result; an explicit zero delay is allowed.
+ */
+public fun Duration.toHapticMilliseconds(): Long {
+  require(isFinite() && this >= Duration.ZERO) { "duration must be finite and non-negative, was $this" }
+  val whole = inWholeMilliseconds
+  return checkedTimeAdd(whole, if (this - whole.milliseconds >= 0.5.milliseconds) 1L else 0L, "duration")
+}
