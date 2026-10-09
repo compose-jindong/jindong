@@ -76,6 +76,20 @@ The cancellation itself is best effort. Neither `Vibrator.cancel()` on Android n
 | Shapes the pattern, read at the next fire | Parameter in the block | Frozen until a key changes |
 | Should both shape and fire | Key and read in the block | Each change plays with the new value |
 
+## Initial playback
+
+By default, `Jindong` plays once when it enters composition. To wait for the first key change, set `playOnInitialComposition = false`:
+
+```kotlin
+Jindong(trigger, playOnInitialComposition = false) {
+    Clip(pattern)
+}
+```
+
+This option skips only the initial playback for each composition entry. Later key changes compile the current content and play once. Non-key values stay frozen until a key changes. Changing only the option does not compile or play again.
+
+After `Jindong` leaves and re-enters composition, the initial policy applies again. The option uses temporary composition state and does not persist across entries.
+
 ## See also
 
 - [Jindong API](/docs/api/jindong-compose/jindong)

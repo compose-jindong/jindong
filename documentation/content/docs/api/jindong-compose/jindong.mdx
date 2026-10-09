@@ -19,6 +19,13 @@ fun Jindong(
     vararg keys: Any?,
     content: @Composable JindongScope.() -> Unit
 )
+
+@Composable
+fun Jindong(
+    vararg keys: Any?,
+    playOnInitialComposition: Boolean,
+    content: @Composable JindongScope.() -> Unit
+)
 ```
 
 ## Parameters
@@ -26,9 +33,22 @@ fun Jindong(
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `keys` | `vararg Any?` | Keys that trigger re-execution when changed |
+| `playOnInitialComposition` | `Boolean` | Explicit initial playback policy in the second overload. The original overload plays on entry. |
 | `content` | `@Composable JindongScope.() -> Unit` | DSL block defining the haptic pattern |
 
 ## Description
+
+Both overloads compile content when `Jindong` enters composition and when a key changes. The original overload plays on entry.
+
+Use the second overload to skip initial playback:
+
+```kotlin
+Jindong(trigger, playOnInitialComposition = false) {
+    Haptic(100.ms)
+}
+```
+
+Later key changes compile the current content and play once. Changing only this option does not trigger compilation or playback. Leaving and re-entering composition resets the initial policy.
 
 `Jindong` works similarly to `LaunchedEffect`. When any of the provided keys change, the haptic pattern defined in the content block is compiled and executed.
 

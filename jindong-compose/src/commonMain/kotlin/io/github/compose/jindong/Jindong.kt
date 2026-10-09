@@ -20,6 +20,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.Recomposer
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.remember
 import io.github.compose.jindong.compose.JindongApplier
 import io.github.compose.jindong.core.element.SequenceElement
 import io.github.compose.jindong.core.model.HapticPattern
@@ -67,6 +69,9 @@ import kotlinx.coroutines.launch
  * Jindong(pattern) { Clip(pattern) }
  * ```
  *
+ * Playback starts on first entry by default. To wait for the first key change, use the overload
+ * with `playOnInitialComposition = false`.
+ *
  * @param keys Keys that trigger re-execution when changed (like [LaunchedEffect])
  * @param content DSL block defining the haptic pattern
  */
@@ -74,13 +79,40 @@ import kotlinx.coroutines.launch
 fun Jindong(
   vararg keys: Any?,
   content: @Composable JindongScope.() -> Unit,
+) = Jindong(*keys, playOnInitialComposition = true, content = content)
+
+/**
+ * Compiles [content] and plays it when [keys] change, with an explicit initial playback policy.
+ *
+ * When [playOnInitialComposition] is false, only the initial playback of this composition entry is
+ * skipped. Later key changes recompile the current content and play once. Leaving and re-entering
+ * composition resets this policy. Changing only the option does not trigger playback.
+ *
+ * @param keys Keys that trigger recompilation and playback when changed
+ * @param playOnInitialComposition Whether to play on first entry into composition
+ * @param content DSL block defining the haptic pattern, frozen until the next key change
+ */
+@Composable
+fun Jindong(
+  vararg keys: Any?,
+  playOnInitialComposition: Boolean,
+  content: @Composable JindongScope.() -> Unit,
 ) {
-  val pattern = rememberHapticPattern(*keys) { content() }
+  val entry = remember { JindongEntry() }
+  val shouldPlay = entry.hasCommitted || playOnInitialComposition
+  val pattern = rememberHapticPattern(*keys, content = content)
   val executor = LocalHapticExecutor.current
 
+  // Advance at commit so a key change before the first effect runs still plays.
+  SideEffect { entry.hasCommitted = true }
+
   LaunchedEffect(*keys) {
-    executor.execute(pattern)
+    if (shouldPlay) executor.execute(pattern)
   }
+}
+
+private class JindongEntry {
+  var hasCommitted = false
 }
 
 /**
