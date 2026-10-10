@@ -31,4 +31,6 @@ internal data class HapticSegment(
   val intensity: Float,
   val sharpness: Float,
   val isGap: Boolean = false,
+  val endIntensity: Float = intensity,
+  val endSharpness: Float = sharpness,
 )

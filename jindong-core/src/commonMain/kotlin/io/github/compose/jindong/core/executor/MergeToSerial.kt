@@ -16,50 +16,114 @@
 package io.github.compose.jindong.core.executor
 
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
+import io.github.compose.jindong.core.model.checkedTimeAdd
+import kotlin.math.ceil
+import kotlin.math.floor
 
-private const val DEFAULT_SHARPNESS = 0.5f
+private const val MAX_MIX_SEGMENTS = 100_000
+private const val MAX_MIX_ACTIVE_VISITS = 1_000_000L
+
+internal class HapticPlanningLimitException(message: String) : IllegalArgumentException(message)
 
 /**
- * Flattens potentially overlapping [events] into a gap-filled serial timeline.
- *
- * Boundaries are every event start and end, so each sub-interval is either fully covered by an
- * event or empty. Overlaps resolve to the highest-intensity event (ties keep input order for
- * determinism) instead of summing, matching how a single vibrator motor can only render one
- * amplitude at a time. Gaps (including a leading gap before the first event) become 0f segments.
- *
- * Invariant: the sum of output [HapticSegment.durationMs] equals `events.maxOf { start + dur }`.
+ * Mixes overlapping continuous events by maximum intensity, carrying the winner's sharpness.
+ * Input order breaks ties. Curve points and intensity crossings split the serial track so a winner
+ * cannot mask a stronger event later in the same interval. Fractional crossings use a 1ms grid;
+ * native planners report this approximation. Transients must first become backend-specific pulses.
  */
 internal fun mergeToSerial(events: List<ScheduledHapticEvent>): List<HapticSegment> {
-  if (events.isEmpty()) return emptyList()
+  val continuous = events.filter { it.durationMs > 0L }
+  if (continuous.isEmpty()) return emptyList()
 
-  val boundaries = buildList {
+  val boundaries = buildSet {
     add(0L)
-    for (event in events) {
+    for (event in continuous) {
       add(event.startTimeMs)
-      add(event.startTimeMs + event.durationMs)
+      add(checkedTimeAdd(event.startTimeMs, event.durationMs, "mix event end"))
+      for (curve in listOfNotNull(event.intensityCurve, event.sharpnessCurve)) {
+        curve.points.forEach { add(checkedTimeAdd(event.startTimeMs, it.timeMs, "mix curve point")) }
+      }
     }
-  }.distinct().sorted()
+  }.sorted()
 
-  val segments = mutableListOf<HapticSegment>()
-
-  for (i in 0 until boundaries.size - 1) {
-    val start = boundaries[i]
-    val end = boundaries[i + 1]
-    if (start == end) continue // drop zero-length slices
-
-    // Boundaries cover every endpoint, so an active event fully spans [start, end).
-    val winner = events
-      .filter { it.startTimeMs <= start && it.startTimeMs + it.durationMs >= end }
-      .maxByOrNull { it.intensity.value }
-
-    segments += HapticSegment(
-      startTimeMs = start,
-      durationMs = end - start,
-      intensity = winner?.intensity?.value ?: 0f,
-      sharpness = winner?.iosParameters?.sharpness ?: DEFAULT_SHARPNESS,
-      isGap = winner == null,
-    )
+  if (boundaries.size > MAX_MIX_SEGMENTS + 1) throw HapticPlanningLimitException("Mixing exceeds $MAX_MIX_SEGMENTS serial intervals")
+  val byStart = continuous.withIndex().sortedWith(compareBy<IndexedValue<ScheduledHapticEvent>> { it.value.startTimeMs }.thenBy { it.index })
+  val active = mutableListOf<IndexedValue<ScheduledHapticEvent>>()
+  var cursor = 0
+  var visits = 0L
+  return buildList {
+    for (i in 0 until boundaries.lastIndex) {
+      val start = boundaries[i]
+      val end = boundaries[i + 1]
+      visits += active.size
+      active.removeAll { it.value.startTimeMs + it.value.durationMs <= start }
+      while (cursor < byStart.size && byStart[cursor].value.startTimeMs <= start) active += byStart[cursor++]
+      visits += active.size
+      if (visits > MAX_MIX_ACTIVE_VISITS) throw HapticPlanningLimitException("Mixing exceeds $MAX_MIX_ACTIVE_VISITS active-event visits")
+      if (active.isEmpty()) {
+        add(HapticSegment(start, end - start, 0f, 0.5f, isGap = true))
+        continue
+      }
+      val lines = active.map { (index, event) ->
+        val initial = event.intensityAt(start).toDouble()
+        MixingLine(event, index, initial, event.intensityAt(end).toDouble() - initial)
+      }
+      val splits = crossingBoundaries(lines, start, end)
+      for (split in 0 until splits.lastIndex) {
+        val from = splits[split]
+        val to = splits[split + 1]
+        val midpoint = ((from - start).toDouble() + (to - from).toDouble() / 2.0) / (end - start).toDouble()
+        val winner = lines.maxWith(compareBy<MixingLine> { it.initial + it.delta * midpoint }.thenBy { -it.index }).event
+        if (size >= MAX_MIX_SEGMENTS) throw HapticPlanningLimitException("Mixing exceeds $MAX_MIX_SEGMENTS serial intervals")
+        add(
+          HapticSegment(
+            startTimeMs = from,
+            durationMs = to - from,
+            intensity = winner.intensityAt(from),
+            sharpness = winner.sharpnessAt(from),
+            endIntensity = winner.intensityAt(to),
+            endSharpness = winner.sharpnessAt(to),
+          ),
+        )
+      }
+    }
   }
+}
 
-  return segments
+private fun ScheduledHapticEvent.intensityAt(timeMs: Long): Float = intensityCurve?.valueAt(timeMs - startTimeMs) ?: intensity.value
+
+private fun ScheduledHapticEvent.sharpnessAt(timeMs: Long): Float = sharpnessCurve?.valueAt(timeMs - startTimeMs) ?: sharpness
+
+private data class MixingLine(val event: ScheduledHapticEvent, val index: Int, val initial: Double, val delta: Double)
+
+private data class WinningLine(val line: MixingLine, val startsAt: Double)
+
+/** The upper envelope finds relevant crossings without comparing every pair of overlapping events. */
+private fun crossingBoundaries(lines: List<MixingLine>, start: Long, end: Long): List<Long> {
+  if (lines.size == 1 || lines.all { it.delta == 0.0 }) return listOf(start, end)
+  val hull = mutableListOf<WinningLine>()
+  val sorted = lines.sortedWith(compareBy<MixingLine> { it.delta }.thenByDescending { it.initial }.thenBy { it.index })
+    .distinctBy { it.delta }
+  for (line in sorted) {
+    var crossing = Double.NEGATIVE_INFINITY
+    while (hull.isNotEmpty()) {
+      val previous = hull.last()
+      crossing = (previous.line.initial - line.initial) / (line.delta - previous.line.delta)
+      if (crossing > previous.startsAt) break
+      hull.removeAt(hull.lastIndex)
+    }
+    hull += WinningLine(line, if (hull.isEmpty()) Double.NEGATIVE_INFINITY else crossing)
+  }
+  val width = end - start
+  return buildSet {
+    add(start)
+    add(end)
+    for (entry in hull) {
+      if (entry.startsAt > 0.0 && entry.startsAt < 1.0) {
+        val offset = entry.startsAt * width.toDouble()
+        add(checkedTimeAdd(start, floor(offset).toLong().coerceIn(0L, width), "mix crossing"))
+        add(checkedTimeAdd(start, ceil(offset).toLong().coerceIn(0L, width), "mix crossing"))
+      }
+    }
+  }.sorted()
 }

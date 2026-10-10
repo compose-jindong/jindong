@@ -43,7 +43,7 @@ internal fun insertFallRamps(segments: List<HapticSegment>): List<HapticSegment>
     val current = segments[i]
     val next = segments.getOrNull(i + 1)
 
-    val isActiveToGap = !current.isGap && current.intensity > 0f && next != null && next.isGap && next.durationMs > MIN_RAMP_MS
+    val isActiveToGap = !current.isGap && current.endIntensity > 0f && next != null && next.isGap && next.durationMs > MIN_RAMP_MS
     if (next == null || !isActiveToGap) {
       result += current
       i++
@@ -51,7 +51,7 @@ internal fun insertFallRamps(segments: List<HapticSegment>): List<HapticSegment>
     }
 
     result += current
-    result += rampThenGap(fromIntensity = current.intensity, gap = next)
+    result += rampThenGap(fromIntensity = current.endIntensity, gap = next)
     i += 2 // current and the gap are both consumed here
   }
 
