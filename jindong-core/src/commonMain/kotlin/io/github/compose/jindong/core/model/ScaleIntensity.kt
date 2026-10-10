@@ -20,7 +20,7 @@ package io.github.compose.jindong.core.model
  *
  * Every level is mapped to [HapticIntensity.Custom], since a scaled predefined level (a dimmed
  * `STRONG`, say) has no predefined equivalent. `Custom` clamps to [0, 1], so `factor` above 1 is
- * safe and saturates rather than overflowing. Timing and iOS parameters are unchanged.
+ * safe and saturates rather than overflowing. Intensity curves scale and clamp by the same factor. Timing and sharpness are unchanged.
  *
  * @param factor non-negative intensity multiplier
  */
@@ -28,7 +28,13 @@ public fun HapticPattern.scaleIntensity(factor: Float): HapticPattern {
   require(factor.isFinite() && factor >= 0f) { "factor must be finite and non-negative, was $factor" }
   return copy(
     events = events.map { event ->
-      event.copy(intensity = HapticIntensity.Custom(event.intensity.value * factor))
+      event.copy(
+        intensity = HapticIntensity.Custom(event.intensity.value * factor),
+        eventType = event.eventType,
+        intensityCurve = event.intensityCurve?.let { curve ->
+          HapticCurve(curve.points.map { it.copy(value = (it.value * factor).coerceIn(0f, 1f)) })
+        },
+      )
     },
   )
 }

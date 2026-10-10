@@ -18,6 +18,14 @@ package io.github.compose.jindong.core.model
 /** Reflects events across [HapticPattern.durationMs], exchanging leading and trailing silence. */
 public fun HapticPattern.reversed(): HapticPattern = copy(
   events = events.map { event ->
-    event.copy(startTimeMs = durationMs - checkedTimeAdd(event.startTimeMs, event.durationMs, "reversed event"))
+    fun reverse(curve: HapticCurve?): HapticCurve? = curve?.let {
+      HapticCurve(it.points.asReversed().map { point -> point.copy(timeMs = event.durationMs - point.timeMs) })
+    }
+    event.copy(
+      startTimeMs = durationMs - checkedTimeAdd(event.startTimeMs, event.durationMs, "reversed event"),
+      eventType = event.eventType,
+      intensityCurve = reverse(event.intensityCurve),
+      sharpnessCurve = reverse(event.sharpnessCurve),
+    )
   },
 )
