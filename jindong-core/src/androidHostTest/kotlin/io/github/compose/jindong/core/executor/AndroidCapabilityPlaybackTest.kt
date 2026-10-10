@@ -53,7 +53,7 @@ class AndroidCapabilityPlaybackTest {
       ScheduledHapticEvent(
         0L,
         300L,
-        HapticIntensity.HIGH,
+        HapticIntensity.Custom(0f),
         eventType = HapticEventType.CONTINUOUS,
         intensityCurve = HapticCurve(listOf(HapticControlPoint(0L, 0f), HapticControlPoint(80L, 0.8f), HapticControlPoint(300L, 0f))),
         sharpness = 0.6f,
@@ -70,7 +70,7 @@ class AndroidCapabilityPlaybackTest {
   }
 
   @Test
-  fun `API36 builds the real basic envelope selected by diagnostics`() {
+  fun `API36 renders a positive curve with zero fixed intensity using the diagnosed envelope`() {
     vibrator.envelopeSupported = true
     val executor = DefaultAndroidHapticExecutor(context)
     val diagnostics = executor.diagnose(curved)

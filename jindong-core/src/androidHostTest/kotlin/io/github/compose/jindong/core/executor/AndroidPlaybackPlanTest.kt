@@ -70,7 +70,7 @@ private fun AndroidWaveform.amplitudeAt(timeMs: Long): Int {
 class AndroidPlaybackPlanTest :
   FunSpec({
     test("envelope merges intensity and sharpness point times and uses normalized values") {
-      val event = continuous().copy(
+      val event = continuous(intensity = 0f).copy(
         eventType = HapticEventType.CONTINUOUS,
         sharpnessCurve = curve(0L to 0.2f, 100L to 0.7f, 300L to 0.8f),
       )
@@ -197,7 +197,7 @@ class AndroidPlaybackPlanTest :
     }
 
     test("short curves retain peaks boundaries and exact zero intervals") {
-      val event = continuous(start = 5L, intensityCurve = curve(0L to 0f, 1L to 1f, 2L to 0f, 4L to 0f))
+      val event = continuous(start = 5L, intensity = 0f, intensityCurve = curve(0L to 0f, 1L to 1f, 2L to 0f, 4L to 0f))
       val plan = planAndroidPlayback(HapticPattern(listOf(event), 20L), capabilities(envelope = false))
       val waveform = plan.waveform!!
       waveform.amplitudeAt(4L) shouldBe 0
