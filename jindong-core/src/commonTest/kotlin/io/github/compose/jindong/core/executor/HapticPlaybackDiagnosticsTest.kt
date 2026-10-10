@@ -21,37 +21,38 @@ import io.github.compose.jindong.core.model.HapticPattern
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
-class HapticPlaybackDiagnosticsTest : FunSpec({
-  test("custom executor can describe a pattern without playing it") {
-    val executor = FakeHapticExecutor(hasAmplitudeControl = false)
-    val diagnostic = executor.diagnose(HapticPattern(emptyList(), 120L))
+class HapticPlaybackDiagnosticsTest :
+  FunSpec({
+    test("custom executor can describe a pattern without playing it") {
+      val executor = FakeHapticExecutor(hasAmplitudeControl = false)
+      val diagnostic = executor.diagnose(HapticPattern(emptyList(), 120L))
 
-    diagnostic.backend shouldBe HapticPlaybackBackend.CUSTOM
-    diagnostic.capabilities shouldBe HapticDeviceCapabilities(true, false)
-    diagnostic.logicalDurationMs shouldBe 120L
-    diagnostic.estimatedNativeDurationMs shouldBe 120L
-    executor.executedPatterns shouldBe emptyList()
-    executor.asyncExecutedPatterns shouldBe emptyList()
-  }
-
-  test("unsupported executor reports no native duration") {
-    val diagnostic = FakeHapticExecutor(isSupported = false, hasAmplitudeControl = false)
-      .diagnose(HapticPattern(emptyList(), 120L))
-
-    diagnostic.backend shouldBe HapticPlaybackBackend.UNSUPPORTED
-    diagnostic.logicalDurationMs shouldBe 120L
-    diagnostic.estimatedNativeDurationMs shouldBe 0L
-    diagnostic.unsupportedReason shouldBe "Haptic hardware is unavailable"
-  }
-
-  test("manager delegates diagnosis without starting a session") {
-    val executor = FakeHapticExecutor()
-    HapticManager.initializeExecutor(executor)
-    try {
-      HapticManager.diagnose(HapticPattern.Empty).backend shouldBe HapticPlaybackBackend.CUSTOM
-      executor.issuedHandles shouldBe emptyList()
-    } finally {
-      HapticManager.release()
+      diagnostic.backend shouldBe HapticPlaybackBackend.CUSTOM
+      diagnostic.capabilities shouldBe HapticDeviceCapabilities(true, false)
+      diagnostic.logicalDurationMs shouldBe 120L
+      diagnostic.estimatedNativeDurationMs shouldBe 120L
+      executor.executedPatterns shouldBe emptyList()
+      executor.asyncExecutedPatterns shouldBe emptyList()
     }
-  }
-})
+
+    test("unsupported executor reports no native duration") {
+      val diagnostic = FakeHapticExecutor(isSupported = false, hasAmplitudeControl = false)
+        .diagnose(HapticPattern(emptyList(), 120L))
+
+      diagnostic.backend shouldBe HapticPlaybackBackend.UNSUPPORTED
+      diagnostic.logicalDurationMs shouldBe 120L
+      diagnostic.estimatedNativeDurationMs shouldBe 0L
+      diagnostic.unsupportedReason shouldBe "Haptic hardware is unavailable"
+    }
+
+    test("manager delegates diagnosis without starting a session") {
+      val executor = FakeHapticExecutor()
+      HapticManager.initializeExecutor(executor)
+      try {
+        HapticManager.diagnose(HapticPattern.Empty).backend shouldBe HapticPlaybackBackend.CUSTOM
+        executor.issuedHandles shouldBe emptyList()
+      } finally {
+        HapticManager.release()
+      }
+    }
+  })

@@ -1,6 +1,6 @@
 ---
 title: Migrating to 2.0
-description: Logical timeline duration, immutable pattern values, and time validation
+description: Logical timelines, common transient and continuous events, and normalized curves
 ---
 
 # Migrating to 2.0
@@ -49,7 +49,7 @@ Jindong(tick) {
 `include`, `Clip`, `then`, `plus`, and repetition preserve the logical duration.
 `reversed()` reflects across that duration, exchanging leading and trailing silence.
 `timeStretch()` scales event boundaries and the duration together. `scaleIntensity()` preserves timing.
-Playback adapters adopt this logical duration in the separate P0 playback follow-up.
+Playback preserves the logical duration. Native pulse length can exceed a transient's zero logical duration.
 
 ## Input validation
 
@@ -63,5 +63,64 @@ The compiler rejects patterns above 10,000 expanded events before unfolding repe
 Core `repeatWithIndex` and Compose `RepeatWithIndex` allow at most 10,000 eager iterations.
 They reject larger counts before invoking content, including when the content would produce no events.
 Ordinary `repeat` and `Repeat` retain support for large delay-only counts without expanding each iteration.
-These internal resource limits are not public configuration options. No curve model is present in this change.
-The planned curve implementation must also enforce the 100,000 control-point limit.
+Patterns also allow at most 100,000 intensity and sharpness control points in total, counting each repeated event.
+These internal resource limits are not public configuration options.
+
+## Common events and curves
+
+Use `transient` for a single impact and `continuous` for positive-duration feedback.
+Compose provides `Transient` and `Continuous` with the same parameters. Both DSLs compile to the same common event values.
+
+```kotlin
+import io.github.compose.jindong.core.dsl.buildHapticPattern
+import io.github.compose.jindong.core.dsl.hapticCurve
+import io.github.compose.jindong.core.model.HapticIntensity
+import io.github.compose.jindong.core.ms
+
+val rise = hapticCurve {
+    point(0.ms, 0f)
+    point(80.ms, 0.8f)
+    point(300.ms, 0f)
+}
+val celebration = buildHapticPattern {
+    repeat(3) {
+        transient(HapticIntensity.STRONG, sharpness = 0.9f)
+        delay(80.ms)
+    }
+    continuous(300.ms, intensityCurve = rise, sharpness = 0.6f)
+}
+// Impact starts: 0ms, 80ms, 160ms. Continuous interval: 240..540ms.
+```
+
+A transient has zero logical duration. Add `delay` to separate successive impacts.
+A continuous event must last at least 1ms after rounding.
+Sharpness expresses texture intent in `0..1`; it does not specify frequency in Hz.
+The default sharpness is `0.5f`.
+
+Each curve contains absolute normalized values, with linear interpolation between control points.
+A curve replaces the corresponding fixed event value. Intensity `0` means silence.
+Control point values and sharpness must be finite and within `0..1`.
+A continuous curve requires at least two points, starting at 0ms and ending at the event duration.
+Rounded point times must strictly increase. Transients cannot contain curves.
+Direct event and curve constructors apply the same validation as the DSLs.
+
+`scaleIntensity` scales and clamps fixed intensity and intensity curves, preserving sharpness.
+`timeStretch` scales event and control point times on the same absolute timeline.
+It rejects control points that round to the same millisecond.
+`reversed` reflects each curve within its event. Reversing twice restores the original event order and values.
+`then`, repetition, `include`, and `Clip` preserve event type, sharpness, and curves.
+Curves snapshot their input lists, so later list mutations cannot change pattern equality or Compose keys.
+
+`ScheduledHapticEvent` is now an ordinary immutable class with value equality, `copy`, and destructuring.
+The original four-argument constructor, four-argument `copy`, and first four component functions retain their JVM and klib signatures.
+The extended constructor and `copy` require `eventType` to keep old calls unambiguous:
+
+```kotlin
+val moved = event.copy(startTimeMs = 100L) // Preserves rich properties.
+val softerTexture = event.copy(eventType = event.eventType, sharpness = 0.2f)
+```
+
+The original constructor still permits zero-length continuous no-ops. Existing `haptic` calls continue to require positive duration.
+The explicit continuous constructor rejects zero duration. Data-class reflection metadata is no longer present.
+Hash codes and string output now include the rich properties. Recompile consumers when migrating to the 2.0 development line.
+Device execution can approximate the requested texture or shape; common values do not guarantee identical physical feedback across devices.

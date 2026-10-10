@@ -1,6 +1,6 @@
 ---
 title: Haptic
-description: DSL function to emit a vibration event
+description: Fixed-duration vibration, transient impacts, and continuous haptic curves
 ---
 
 # Haptic
@@ -124,6 +124,53 @@ Jindong(trigger) {
     }
 }
 ```
+
+## Transient and Continuous
+
+Use the common rich event model through these Compose functions:
+
+```kotlin
+@Composable
+fun JindongScope.Transient(
+    intensity: HapticIntensity = HapticIntensity.MEDIUM,
+    sharpness: Float = 0.5f,
+)
+
+@Composable
+fun JindongScope.Continuous(
+    duration: Duration,
+    intensity: HapticIntensity = HapticIntensity.MEDIUM,
+    sharpness: Float = 0.5f,
+    intensityCurve: HapticCurve? = null,
+    sharpnessCurve: HapticCurve? = null,
+)
+```
+
+Both use `io.github.compose.jindong.dsl`. Build shared curves with `io.github.compose.jindong.core.dsl.hapticCurve`:
+
+```kotlin
+val rise = hapticCurve {
+    point(0.ms, 0f)
+    point(80.ms, 0.8f)
+    point(300.ms, 0f)
+}
+Jindong(trigger, playOnInitialComposition = false) {
+    Repeat(3) {
+        Transient(HapticIntensity.STRONG, sharpness = 0.9f)
+        Delay(80.ms)
+    }
+    Continuous(300.ms, intensityCurve = rise, sharpness = 0.6f)
+}
+```
+
+A transient has zero logical duration. Use `Delay` to separate impacts.
+A continuous event requires a positive duration. Curves replace the corresponding fixed value and must end at the event duration.
+Sharpness and curve values must be finite and within `0..1`.
+The core DSL applies the same validation and produces equal compiled values.
+
+As with `Haptic` and `Clip`, values are captured when the pattern compiles.
+Include changing values in `Jindong` trigger keys when they must update the pattern.
+See [Migrating to 2.0](/docs/guide/migration-2) for curve and compatibility rules.
 
 ## Platform Behavior
 

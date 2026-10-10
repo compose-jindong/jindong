@@ -54,6 +54,37 @@ val alertPattern = buildHapticPattern {
 }
 ```
 
+## Transients, continuous feedback, and curves
+
+The common DSL supports fixed intensity and sharpness, plus linear intensity and sharpness curves:
+
+```kotlin
+val rise = hapticCurve {
+    point(0.ms, 0f)
+    point(80.ms, 0.8f)
+    point(300.ms, 0f)
+}
+val feedback = buildHapticPattern {
+    repeat(3) {
+        transient(HapticIntensity.STRONG, sharpness = 0.9f)
+        delay(80.ms)
+    }
+    continuous(300.ms, intensityCurve = rise, sharpness = 0.6f)
+}
+```
+
+This pattern contains impacts at 0ms, 80ms, and 160ms, followed by continuous feedback from 240ms through 540ms.
+Transients do not advance the logical timeline. Their physical pulse length depends on the backend.
+Continuous feedback requires a positive duration. Sharpness is normalized texture intent, not frequency in Hz.
+
+A curve replaces its corresponding fixed value. Control points use event-relative time and absolute values in `0..1`.
+Values and sharpness must be finite. Curves require at least two points, starting at 0ms and ending at the event duration.
+Rounded point times must strictly increase. A pattern permits at most 10,000 events and 100,000 control points.
+
+Curves and events are immutable values. `include`, repetition, `then`, and `Clip` preserve their properties.
+`scaleIntensity` scales and clamps intensity curves. `timeStretch` scales their absolute times and rejects rounded duplicate points.
+`reversed` also reverses curves within their events.
+
 ## Pattern Duration
 
 `HapticPattern.durationMs` includes trailing silence. Builders pass the complete duration, and `include` and transforms preserve it.
@@ -173,6 +204,26 @@ haptic(duration: Duration)
 haptic(duration: Duration, intensity: HapticIntensity)
 haptic(duration: Duration, intensity: HapticIntensity, iosParameters: IosHapticParameters?)
 ```
+
+### transient and continuous
+
+```kotlin
+fun transient(
+    intensity: HapticIntensity = HapticIntensity.MEDIUM,
+    sharpness: Float = 0.5f,
+)
+
+fun continuous(
+    duration: Duration,
+    intensity: HapticIntensity = HapticIntensity.MEDIUM,
+    sharpness: Float = 0.5f,
+    intensityCurve: HapticCurve? = null,
+    sharpnessCurve: HapticCurve? = null,
+)
+```
+
+Build reusable curves with `hapticCurve { point(time: Duration, value: Float) }` from `io.github.compose.jindong.core.dsl`.
+`HapticCurve` and `HapticControlPoint` are also available in `io.github.compose.jindong.core.model` for direct construction.
 
 ### delay
 

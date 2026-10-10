@@ -36,6 +36,7 @@ Jindong(trigger, playOnInitialComposition = false) {
 - **Declarative API** - Define haptic patterns like you define UI with Compose
 - **Cross-platform based on Compose Multiplatform** - Unified APIs for Android and iOS
 - **Compose Integration** - Works naturally with Compose state and effects
+- **Common rich feedback** - Transient impacts, continuous events, and normalized intensity and sharpness curves in Kotlin
 
 ## Installation
 
