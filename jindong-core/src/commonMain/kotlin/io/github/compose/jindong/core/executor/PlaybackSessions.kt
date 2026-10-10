@@ -107,6 +107,7 @@ internal class PlaybackSessions(private val timeSource: TimeSource = TimeSource.
             }
           }
         }
+        completion?.failure?.let { throw it }
       } catch (error: Throwable) {
         failure = error
         throw error

@@ -140,14 +140,24 @@ object HapticManager {
         currentHandle = newHandle
         newHandle
       }
+      var failure: Throwable? = null
       try {
         awaitCompletion(handle)
+      } catch (error: Throwable) {
+        failure = error
+        throw error
       } finally {
         // Stop the motor and clear the slot on normal end, cancellation, or a takeover by another
         // caller. clearHandleIfCurrent guards against wiping a handle a newer call already installed.
         withContext(NonCancellable) {
-          handle.cancel()
-          clearHandleIfCurrent(handle)
+          try {
+            handle.cancel()
+          } catch (cleanupError: Throwable) {
+            if (failure == null) throw cleanupError
+            if (failure !== cleanupError) failure.addSuppressed(cleanupError)
+          } finally {
+            clearHandleIfCurrent(handle)
+          }
         }
       }
     }
@@ -187,8 +197,11 @@ object HapticManager {
    */
   fun cancel() {
     withStateLockBlocking {
-      currentHandle?.cancel()
-      currentHandle = null
+      try {
+        currentHandle?.cancel()
+      } finally {
+        currentHandle = null
+      }
     }
   }
 

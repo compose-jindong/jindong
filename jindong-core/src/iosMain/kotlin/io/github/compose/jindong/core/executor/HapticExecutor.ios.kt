@@ -32,6 +32,7 @@ internal class DefaultIosHapticExecutor(
 ) : HapticExecutor {
   private val sessions = PlaybackSessions(timeSource)
   private var engine: IosEngineState? = null
+  private var playbackEngine: IosEngineState? = null
 
   override val isSupported: Boolean get() = driver.supportsHaptics
   override val hasAmplitudeControl: Boolean get() = isSupported
@@ -48,6 +49,7 @@ internal class DefaultIosHapticExecutor(
   }
 
   override fun executeAsync(pattern: HapticPattern): PlaybackSessions.Session = sessions.start {
+    playbackEngine = null
     val plan = plan(pattern)
     if (plan.diagnostics.backend == HapticPlaybackBackend.SILENT) return@start NativePlayback(pattern.durationMs)
     if (plan.players.isEmpty()) return@start null
@@ -76,7 +78,14 @@ internal class DefaultIosHapticExecutor(
       val startTime = currentEngine.native.currentTimeSeconds + IOS_SCHEDULING_LEAD_MS / 1000.0
       group.start(startTime)
       check(currentEngine.isValid) { "Core Haptics engine stopped while starting playback" }
-      NativePlayback(logicalDeadline, completion) { group.stop() }
+      playbackEngine = currentEngine
+      NativePlayback(logicalDeadline, completion) {
+        try {
+          group.stop()
+        } finally {
+          if (playbackEngine === currentEngine) playbackEngine = null
+        }
+      }
     } catch (failure: Throwable) {
       try {
         group.stop()
@@ -90,6 +99,7 @@ internal class DefaultIosHapticExecutor(
   override fun release() = sessions.release {
     val oldEngine = engine
     engine = null
+    playbackEngine = null
     oldEngine?.dispose()
   }
 
@@ -104,13 +114,14 @@ internal class DefaultIosHapticExecutor(
       newEngine.invalidate()
       enqueueCallback {
         sessions.withLock {
-          if (engine === newEngine) {
-            engine = null
-            try {
-              sessions.cancel()
-            } finally {
-              newEngine.dispose()
-            }
+          val ownsPlayback = playbackEngine === newEngine
+          val ownsCachedEngine = engine === newEngine
+          if (ownsPlayback) playbackEngine = null
+          if (ownsCachedEngine) engine = null
+          try {
+            if (ownsPlayback) sessions.cancel()
+          } finally {
+            if (ownsCachedEngine) newEngine.dispose()
           }
         }
       }

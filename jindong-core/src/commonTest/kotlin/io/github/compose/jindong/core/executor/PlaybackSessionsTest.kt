@@ -20,6 +20,7 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -27,7 +28,7 @@ import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TestTimeSource
 
-@OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
+@OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackSessionsTest :
   FunSpec({
     test("replacement stops the old native playback before starting the new one") {
@@ -251,6 +252,18 @@ class PlaybackSessionsTest :
         completion.completePlayer(0) { throw failure }
         session.isActive shouldBe false
         session.failure shouldBe failure
+        shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe failure
+        session.failure shouldBe failure
+      }
+    }
+
+    test("cancellation before awaiting cannot hide a retained native failure") {
+      runTest {
+        val completion = NativePlaybackCompletion(1)
+        val session = PlaybackSessions().start { NativePlayback(100, completion) }
+        val failure = IllegalStateException("native failed before cancellation")
+        completion.completePlayer(0, failure)
+        session.cancel()
         shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe failure
         session.failure shouldBe failure
       }

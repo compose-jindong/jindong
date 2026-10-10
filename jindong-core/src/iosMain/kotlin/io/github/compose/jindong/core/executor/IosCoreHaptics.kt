@@ -13,11 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlinx.cinterop.BetaInteropApi::class)
+@file:OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 
 package io.github.compose.jindong.core.executor
 
 import io.github.compose.jindong.core.model.HapticEventType
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ExperimentalForeignApi
 import kotlinx.cinterop.ObjCObjectVar
 import kotlinx.cinterop.alloc
 import kotlinx.cinterop.memScoped
@@ -93,8 +95,13 @@ private class CoreHapticsEngine(private val native: CHHapticEngine) : IosHapticE
     val error = alloc<ObjCObjectVar<NSError?>>()
     val player = native.createAdvancedPlayerWithPattern(pattern, error.ptr)
     if (player == null || error.value != null) {
-      player?.cancelAndReturnError(null)
-      error("Could not create haptic player: ${error.value?.localizedDescription}")
+      val failure = IllegalStateException("Could not create haptic player: ${error.value?.localizedDescription}")
+      try {
+        player?.let { CoreHapticsPlayer(it).stop() }
+      } catch (cleanupError: Throwable) {
+        failure.addSuppressed(cleanupError)
+      }
+      throw failure
     }
     CoreHapticsPlayer(player)
   }
@@ -120,8 +127,11 @@ private class CoreHapticsPlayer(private val native: CHHapticAdvancedPatternPlaye
     }
   }
 
-  override fun stop() {
-    native.cancelAndReturnError(null)
+  override fun stop() = memScoped {
+    val error = alloc<ObjCObjectVar<NSError?>>()
+    check(native.cancelAndReturnError(error.ptr) && error.value == null) {
+      "Could not stop haptic player: ${error.value?.localizedDescription}"
+    }
   }
 }
 

@@ -26,10 +26,13 @@ import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.core.model.HapticPattern
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
+import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
@@ -273,4 +276,80 @@ class HapticManagerTest :
       handle.failure shouldBe failure
       fakeExecutor.executeAsync(HapticPattern.Empty).failure shouldBe null
     }
+
+    test("manager preserves native failure when cleanup fails and clears the handle") {
+      runTest {
+        val failure = IllegalStateException("native playback failed")
+        val handle = CleanupFailingHandle(isActive = false, failure = failure)
+        HapticManager.initializeExecutor(executorWithFirstHandle(fakeExecutor, handle))
+        shouldThrow<IllegalStateException> { HapticManager.execute(HapticPattern.Empty) } shouldBe failure
+        failure.suppressedExceptions shouldBe listOf(handle.cleanupFailure)
+        HapticManager.executeAsync(HapticPattern.Empty).isActive shouldBe true
+        handle.cancellations shouldBe 1
+      }
+    }
+
+    test("manager preserves coroutine cancellation when cleanup fails and clears the handle") {
+      runTest {
+        val handle = CleanupFailingHandle()
+        HapticManager.initializeExecutor(executorWithFirstHandle(fakeExecutor, handle))
+        var observed: Throwable? = null
+        val job = launch(start = CoroutineStart.UNDISPATCHED) {
+          try {
+            HapticManager.execute(HapticPattern.Empty)
+          } catch (failure: Throwable) {
+            observed = failure
+            throw failure
+          }
+        }
+        job.cancel()
+        job.join()
+        (observed is CancellationException) shouldBe true
+        observed!!.suppressedExceptions shouldBe listOf(handle.cleanupFailure)
+        HapticManager.executeAsync(HapticPattern.Empty).isActive shouldBe true
+        handle.cancellations shouldBe 1
+      }
+    }
+
+    test("manager reports cleanup failure after normal completion and clears the handle") {
+      runTest {
+        val handle = CleanupFailingHandle(isActive = false)
+        HapticManager.initializeExecutor(executorWithFirstHandle(fakeExecutor, handle))
+        shouldThrow<IllegalStateException> { HapticManager.execute(HapticPattern.Empty) } shouldBe handle.cleanupFailure
+        HapticManager.executeAsync(HapticPattern.Empty).isActive shouldBe true
+        handle.cancellations shouldBe 1
+      }
+    }
+
+    test("manager cancel clears the handle even when native cancellation fails") {
+      val handle = CleanupFailingHandle()
+      HapticManager.initializeExecutor(executorWithFirstHandle(fakeExecutor, handle))
+      HapticManager.executeAsync(HapticPattern.Empty)
+      shouldThrow<IllegalStateException> { HapticManager.cancel() } shouldBe handle.cleanupFailure
+      HapticManager.executeAsync(HapticPattern.Empty).isActive shouldBe true
+      handle.cancellations shouldBe 1
+    }
   })
+
+private class CleanupFailingHandle(
+  override var isActive: Boolean = true,
+  override val failure: Throwable? = null,
+) : HapticHandle {
+  val cleanupFailure = IllegalStateException("native cancellation failed")
+  var cancellations = 0
+  override fun cancel() {
+    cancellations++
+    isActive = false
+    throw cleanupFailure
+  }
+}
+
+private fun executorWithFirstHandle(delegate: HapticExecutor, first: HapticHandle): HapticExecutor = object : HapticExecutor by delegate {
+  private var started = false
+  override fun executeAsync(pattern: HapticPattern): HapticHandle = if (started) {
+    delegate.executeAsync(pattern)
+  } else {
+    started = true
+    first
+  }
+}

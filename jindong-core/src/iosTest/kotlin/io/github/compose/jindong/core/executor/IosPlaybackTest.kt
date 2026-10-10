@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:OptIn(kotlinx.cinterop.ExperimentalForeignApi::class, kotlinx.cinterop.BetaInteropApi::class)
+@file:OptIn(ExperimentalForeignApi::class, BetaInteropApi::class)
 
 package io.github.compose.jindong.core.executor
 
@@ -26,6 +26,8 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlinx.cinterop.BetaInteropApi
+import kotlinx.cinterop.ExperimentalForeignApi
 import platform.CoreHaptics.CHHapticEventParameterIDHapticIntensity
 import platform.CoreHaptics.CHHapticEventParameterIDHapticSharpness
 import platform.CoreHaptics.CHHapticEventTypeHapticContinuous
@@ -135,6 +137,27 @@ class IosPlaybackTest :
       fixture.executor.release()
     }
 
+    test("an old engine reset cannot cancel its silent replacement") {
+      for (reset in listOf(true, false)) {
+        val clock = TestTimeSource()
+        val fixture = IosFixture(clock)
+        val old = fixture.executor.executeAsync(mixedPattern())
+        val invalidation = if (reset) fixture.engine.onReset else fixture.engine.onStopped
+        invalidation()
+        val silent = fixture.executor.executeAsync(HapticPattern(emptyList(), 100))
+        fixture.drainCallbacks()
+        old.isActive shouldBe false
+        silent.isActive shouldBe true
+        fixture.driver.engines.size shouldBe 1
+        fixture.engine.disposals shouldBe 1
+        clock += 100.milliseconds
+        silent.isActive shouldBe false
+        fixture.executor.executeAsync(HapticPattern(listOf(iosEvent(0, 100)))).isActive shouldBe true
+        fixture.driver.engines.size shouldBe 2
+        fixture.executor.release()
+      }
+    }
+
     test("synchronous native callbacks are queued outside native start and stop") {
       val clock = TestTimeSource()
       val fixture = IosFixture(clock)
@@ -163,6 +186,31 @@ class IosPlaybackTest :
       failureCallback(null)
       fixture.drainCallbacks()
       next.isActive shouldBe true
+      fixture.executor.release()
+    }
+
+    test("a player cancellation failure still stops every player and is reported") {
+      val fixture = IosFixture()
+      fixture.engine.failStopAt = 1
+      val handle = fixture.executor.executeAsync(mixedPattern())
+      shouldThrow<IllegalStateException> { handle.cancel() }.message shouldBe "player cancellation failed"
+      fixture.engine.players.map { it.stops } shouldBe listOf(1, 1, 1)
+      handle.isActive shouldBe false
+      fixture.engine.failStopAt = null
+      fixture.executor.executeAsync(HapticPattern(listOf(iosEvent(0, 100)))).isActive shouldBe true
+      fixture.executor.release()
+    }
+
+    test("a player cancellation failure is suppressed onto a native completion failure") {
+      val fixture = IosFixture()
+      fixture.engine.failStopAt = 1
+      val handle = fixture.executor.executeAsync(mixedPattern())
+      val failure = IllegalStateException("native callback failed")
+      fixture.engine.players.first().onCompletion(failure)
+      fixture.drainCallbacks()
+      handle.failure shouldBe failure
+      failure.suppressedExceptions.single().message shouldBe "player cancellation failed"
+      fixture.engine.players.map { it.stops } shouldBe listOf(1, 1, 1)
       fixture.executor.release()
     }
 
@@ -259,6 +307,7 @@ private class FakeIosEngine : IosHapticEngine {
   val players = mutableListOf<FakeIosPlayer>()
   var failCreationAt: Int? = null
   var failStartAt: Int? = null
+  var failStopAt: Int? = null
   var completeDuringStart = false
   var completeDuringStop = false
   var disposals = 0
@@ -283,6 +332,7 @@ private class FakeIosPlayer(private val index: Int, private val engine: FakeIosE
   }
   override fun stop() {
     stops++
+    check(engine.failStopAt != index) { "player cancellation failed" }
     if (engine.completeDuringStop) onCompletion(null)
   }
 }
