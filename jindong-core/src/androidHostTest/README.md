@@ -24,12 +24,12 @@ An explicit `org.gradle.java.home` setting overrides `JAVA_HOME`.
 - SDK 36 envelope builders with reported hardware limits and waveform fallback.
 - Primitive composition with queried support and native duration.
 - Zero-duration transient completion and native start failure cleanup.
-- Common pure planning tests for mixed events, curves, primitive spacing, and diagnostics.
+- Pure Android planning tests for mixed events, curves, primitive spacing, and diagnostics.
 
 
 ## Configuration
 
 - **SDK**: API 26 for existing waveform tests; API 36 for capability playback tests.
-- **Runner**: `RobolectricTestRunner`
+- **Runner**: Kotest on JUnit Platform; adapter tests use `RobolectricTestRunner` through JUnit Vintage.
 
 Robolectric validates effect construction and adapter behavior. These tests do not measure physical haptic quality.

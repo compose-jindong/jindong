@@ -39,6 +39,7 @@ internal enum class AndroidPrimitive(val id: Int) {
 internal data class AndroidPlaybackCapabilities(
   val apiLevel: Int,
   val device: HapticDeviceCapabilities,
+  val supportsEnvelopeEffects: Boolean = false,
   val envelopeLimits: AndroidEnvelopeLimits? = null,
   val primitiveDurationsMs: Map<AndroidPrimitive, Int> = emptyMap(),
 )
@@ -99,7 +100,7 @@ private fun buildAndroidPlaybackPlan(pattern: HapticPattern, capabilities: Andro
     if (hasCurves) approximations += "Overlapping curve crossings use a millisecond grid (at most 1 ms timing error)."
   }
 
-  if (capabilities.apiLevel >= 36 && capabilities.device.supportsEnvelopeEffects) {
+  if (capabilities.apiLevel >= 36 && capabilities.supportsEnvelopeEffects) {
     val envelope = try {
       envelopePoints(pattern, capabilities.envelopeLimits, approximations)
     } catch (limit: HapticPlanningLimitException) {

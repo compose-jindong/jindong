@@ -51,7 +51,8 @@ internal class DefaultAndroidHapticExecutor(
     val envelopeSupported = isSupported && Build.VERSION.SDK_INT >= 36 && vibrator.areEnvelopeEffectsSupported()
     AndroidPlaybackCapabilities(
       apiLevel = Build.VERSION.SDK_INT,
-      device = HapticDeviceCapabilities(isSupported, hasAmplitudeControl, envelopeSupported),
+      device = HapticDeviceCapabilities(isSupported, hasAmplitudeControl),
+      supportsEnvelopeEffects = envelopeSupported,
       envelopeLimits = if (envelopeSupported && Build.VERSION.SDK_INT >= 36) readEnvelopeLimits() else null,
       primitiveDurationsMs = if (isSupported && Build.VERSION.SDK_INT >= 31) readPrimitiveDurations() else emptyMap(),
     )

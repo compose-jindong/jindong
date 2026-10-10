@@ -51,10 +51,11 @@ private fun capabilities(
   amplitude: Boolean = true,
   primitives: Map<AndroidPrimitive, Int> = emptyMap(),
 ): AndroidPlaybackCapabilities = AndroidPlaybackCapabilities(
-  api,
-  HapticDeviceCapabilities(true, amplitude, envelope),
-  limits,
-  primitives,
+  apiLevel = api,
+  device = HapticDeviceCapabilities(true, amplitude),
+  supportsEnvelopeEffects = envelope,
+  envelopeLimits = limits,
+  primitiveDurationsMs = primitives,
 )
 
 private fun AndroidWaveform.amplitudeAt(timeMs: Long): Int {
