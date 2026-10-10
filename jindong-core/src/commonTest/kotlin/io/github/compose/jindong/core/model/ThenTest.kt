@@ -36,9 +36,9 @@ class ThenTest :
       }
     }
 
-    test("appended span is the sum of the two spans") {
+    test("appended duration is the sum of the two logical durations") {
       checkAll(patterns(), patterns()) { a, b ->
-        (a then b).spanMs() shouldBe a.spanMs() + b.spanMs()
+        (a then b).durationMs shouldBe a.durationMs + b.durationMs
       }
     }
 

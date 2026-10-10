@@ -177,10 +177,8 @@ internal fun Preset.toPattern(): HapticPattern = HapticPattern(
       intensity = HapticIntensity.Custom(event.intensity),
     )
   },
+  durationMs = span,
 )
-
-/** The pure timeline extent of a pattern (latest event end), mirroring the library-internal spanMs. */
-internal fun HapticPattern.spanEndMs(): Long = events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
 
 /**
  * The fixed base pattern for the Algebra screen (handoff 08): an asymmetric strong→weak ramp with

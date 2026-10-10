@@ -297,5 +297,5 @@ internal fun timingPattern(nodes: List<Node>): HapticPattern {
       NodeType.Pause -> cursor += node.ms
     }
   }
-  return HapticPattern(events)
+  return HapticPattern(events, durationMs = cursor)
 }

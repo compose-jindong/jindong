@@ -90,6 +90,25 @@ class ClipTest :
       }
     }
 
+    test("changing only trailing silence in a pattern key triggers a new compile and playback") {
+      runComposeUiTest {
+        val recorder = RecordingHapticExecutor()
+        val patternState = mutableStateOf(onePulse.copy(durationMs = 100L))
+        setContent {
+          val pattern by patternState
+          CompositionLocalProvider(LocalHapticExecutor provides recorder) {
+            Jindong(pattern) { Clip(pattern) }
+          }
+        }
+        waitForIdle()
+        val playsBeforeChange = recorder.executedPatterns.size
+        patternState.value = onePulse.copy(durationMs = 150L)
+        waitForIdle()
+        recorder.executedPatterns.size shouldBe playsBeforeChange + 1
+        recorder.executedPatterns.last().durationMs shouldBe 150L
+      }
+    }
+
     test("Clip freezes on the first pattern when it is not a key") {
       runComposeUiTest {
         val recorder = RecordingHapticExecutor()

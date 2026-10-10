@@ -28,4 +28,10 @@ public data class ScheduledHapticEvent(
   val durationMs: Long,
   val intensity: HapticIntensity,
   val iosParameters: IosHapticParameters? = null,
-)
+) {
+  init {
+    require(startTimeMs >= 0L) { "startTimeMs must be non-negative, was $startTimeMs" }
+    require(durationMs >= 0L) { "durationMs must be non-negative, was $durationMs" }
+    checkedTimeAdd(startTimeMs, durationMs, "event end")
+  }
+}

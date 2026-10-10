@@ -395,5 +395,5 @@ internal fun reactiveCountPattern(count: Int): HapticPattern {
         intensity = HapticIntensity.Custom(0.7f),
       )
     }
-  return HapticPattern(events)
+  return HapticPattern(events, durationMs = count * 140L)
 }

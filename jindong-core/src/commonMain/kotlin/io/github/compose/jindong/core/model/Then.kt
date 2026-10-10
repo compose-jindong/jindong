@@ -15,23 +15,17 @@
  */
 package io.github.compose.jindong.core.model
 
-/**
- * Returns a new pattern that plays this pattern, then [other] appended after it.
- *
- * Every event of [other] is shifted by this pattern's span, so the two timelines never overlap and
- * `span(a then b) == span(a) + span(b)`. Intensity and iOS parameters are carried unchanged. The
- * empty pattern is the identity for [then].
- */
+/** Appends [other] after this pattern's complete timeline, including silence. */
 public infix fun HapticPattern.then(other: HapticPattern): HapticPattern {
-  val offset = spanMs()
-  return copy(
-    events = events + other.events.map { event ->
-      event.copy(startTimeMs = event.startTimeMs + offset)
+  val duration = checkedTimeAdd(durationMs, other.durationMs, "then")
+  checkedEventCount(events.size.toLong() + other.events.size, "then")
+  return HapticPattern(
+    events + other.events.map { event ->
+      event.copy(startTimeMs = checkedTimeAdd(durationMs, event.startTimeMs, "then event"))
     },
+    duration,
   )
 }
 
-/**
- * Operator alias for [then], so patterns can be concatenated with `a + b`.
- */
+/** Operator alias for [then]. */
 public operator fun HapticPattern.plus(other: HapticPattern): HapticPattern = this then other

@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ComposeNode
 import io.github.compose.jindong.JindongScope
 import io.github.compose.jindong.compose.JindongApplier
+import io.github.compose.jindong.core.dsl.validateIndexedRepeatCount
 import io.github.compose.jindong.core.element.SequenceElement
 
 /**
@@ -37,7 +38,7 @@ import io.github.compose.jindong.core.element.SequenceElement
  * ```
  *
  *
- * @param count Number of times to repeat (must be non-negative)
+ * @param count Number of eagerly expanded iterations, from 0 through 10,000
  * @param content The pattern to repeat, receiving the 0-based iteration index
  */
 @Composable
@@ -45,6 +46,7 @@ fun JindongScope.RepeatWithIndex(
   count: Int,
   content: @Composable JindongScope.(index: Int) -> Unit,
 ) {
+  validateIndexedRepeatCount(count)
   ComposeNode<SequenceElement, JindongApplier>(
     factory = { SequenceElement() },
     update = { },

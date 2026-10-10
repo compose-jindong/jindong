@@ -20,7 +20,7 @@ import androidx.compose.runtime.remember
 import io.github.compose.jindong.core.model.HapticPattern
 
 /**
- * Compiles and memoizes a haptic DSL pattern.
+ * Compiles and memoizes a haptic DSL pattern, including its complete logical duration.
  *
  * @param keys Inputs that invalidate the memoized pattern when changed
  * @param content DSL block defining the haptic pattern

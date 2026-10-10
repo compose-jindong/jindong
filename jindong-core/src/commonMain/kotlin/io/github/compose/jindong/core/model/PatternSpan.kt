@@ -15,11 +15,30 @@
  */
 package io.github.compose.jindong.core.model
 
-/**
- * The span of a pattern: the latest event end on its timeline, or 0 for an empty pattern.
- *
- * This is the raw timeline extent of the scheduled events, independent of any tree structure or
- * platform post-processing. It is the shared basis for [reversed] mirroring, [then] offsetting,
- * executor playback length, and [io.github.compose.jindong.core.element.PatternElement] duration.
- */
-internal fun HapticPattern.spanMs(): Long = events.maxOfOrNull { it.startTimeMs + it.durationMs } ?: 0L
+internal const val MAX_PATTERN_EVENTS: Int = 10_000
+
+internal fun List<ScheduledHapticEvent>.eventSpanMs(): Long {
+  checkedEventCount(size.toLong(), "pattern")
+  return maxOfOrNull { event -> checkedTimeAdd(event.startTimeMs, event.durationMs, "event end") } ?: 0L
+}
+
+internal fun checkedTimeAdd(left: Long, right: Long, location: String): Long {
+  require(left >= 0L && right >= 0L && left <= Long.MAX_VALUE - right) {
+    "$location: non-negative millisecond sum overflows or has negative input ($left + $right)"
+  }
+  return left + right
+}
+
+internal fun checkedTimeMultiply(value: Long, count: Int, location: String): Long {
+  require(value >= 0L && count >= 0 && (count == 0 || value <= Long.MAX_VALUE / count)) {
+    "$location: millisecond duration overflows or has negative input ($value * $count)"
+  }
+  return value * count
+}
+
+internal fun checkedEventCount(count: Long, location: String): Int {
+  require(count in 0L..MAX_PATTERN_EVENTS.toLong()) {
+    "$location: expanded event count $count exceeds limit $MAX_PATTERN_EVENTS"
+  }
+  return count.toInt()
+}

@@ -1,0 +1,67 @@
+---
+title: Migrating to 2.0
+description: Logical timeline duration, immutable pattern values, and time validation
+---
+
+# Migrating to 2.0
+
+This checkout uses `2.0.0-SNAPSHOT`. No release publication is part of this change.
+The development line requires Android API 26 and compiles against API 36. Kotlin remains at 2.3.0.
+
+## Pattern values and compatibility
+
+`HapticPattern.durationMs` includes the complete timeline, including leading and trailing silence.
+Events-only construction defaults to the latest event end. Pass a duration when you construct a timeline with trailing silence:
+
+```kotlin
+val pattern = HapticPattern(events, durationMs = 200L)
+val (scheduledEvents, logicalDurationMs) = pattern
+val longer = pattern.copy(durationMs = 300L)
+```
+
+`durationMs` must cover every event end. An event-free pattern can have a positive duration.
+`HapticPattern.Empty` has no events and a zero duration.
+
+The model is an immutable class with structural equality, `copy`, and destructuring functions.
+Its event list is a snapshot. It no longer stores or compares the mutable builder tree.
+Equality and hashing include events and duration. Consequently, a trailing-silence change invalidates a pattern used as a Compose key.
+
+This is an ABI change to the JVM and klib model APIs. Recompile consumers for 2.0.
+The constructor's second argument and `component2()` now represent `durationMs`, replacing the implementation tree.
+Code that supplied `rootElement` must pass the compiled duration instead.
+`copy(events = ...)` preserves the current duration. Pass a new duration when replacement events extend the timeline.
+
+Existing builder and Compose DSL calls retain their source forms:
+
+```kotlin
+val tick = buildHapticPattern {
+    haptic(50.ms)
+    delay(50.ms)
+}
+
+Jindong(tick) {
+    Clip(tick)
+    Clip(tick)
+}
+// Event starts: 0ms and 100ms. Logical duration: 200ms.
+```
+
+`include`, `Clip`, `then`, `plus`, and repetition preserve the logical duration.
+`reversed()` reflects across that duration, exchanging leading and trailing silence.
+`timeStretch()` scales event boundaries and the duration together. `scaleIntensity()` preserves timing.
+Playback adapters adopt this logical duration in the separate P0 playback follow-up.
+
+## Input validation
+
+Duration inputs must be finite and non-negative. They round to the nearest millisecond, with positive half-milliseconds rounded up.
+A vibration must retain at least 1ms. An explicit zero delay is allowed.
+Non-finite factors and intensities, negative event times, and millisecond overflow raise `IllegalArgumentException` before native playback.
+Finite custom intensities outside `0..1` retain their existing clamp behavior.
+A stretch that collapses a positive event to 0ms fails. Increase the factor to preserve at least 1ms.
+
+The compiler rejects patterns above 10,000 expanded events before unfolding repetitions.
+Core `repeatWithIndex` and Compose `RepeatWithIndex` allow at most 10,000 eager iterations.
+They reject larger counts before invoking content, including when the content would produce no events.
+Ordinary `repeat` and `Repeat` retain support for large delay-only counts without expanding each iteration.
+These internal resource limits are not public configuration options. No curve model is present in this change.
+The planned curve implementation must also enforce the 100,000 control-point limit.

@@ -31,21 +31,21 @@ private fun factors(): Arb<Float> = Arb.float(0.1f..5f)
 class TimeStretchTest :
   FunSpec({
     test("stretching by 1 is the identity") {
-      checkAll(patterns()) { pattern ->
+      checkAll(patterns(minDurationMs = 100L)) { pattern ->
         pattern.timeStretch(1f) shouldBe pattern
       }
     }
 
-    test("stretching preserves event count and never yields a negative duration") {
-      checkAll(patterns(), factors()) { pattern, factor ->
+    test("stretching preserves event count and retains positive durations") {
+      checkAll(patterns(minDurationMs = 100L), factors()) { pattern, factor ->
         val stretched = pattern.timeStretch(factor)
         stretched.events.size shouldBe pattern.events.size
-        stretched.events.forEach { it.durationMs shouldBeGreaterThanOrEqual 0L }
+        stretched.events.forEach { it.durationMs shouldBeGreaterThanOrEqual 1L }
       }
     }
 
     test("composing two stretches equals stretching by the product, within rounding drift") {
-      checkAll(patterns(), factors(), factors()) { pattern, a, b ->
+      checkAll(patterns(minDurationMs = 100L), factors(), factors()) { pattern, a, b ->
         val composed = pattern.timeStretch(a).timeStretch(b)
         val combined = pattern.timeStretch(a * b)
         // The composed path rounds each edge with factor a (±0.5) and then scales that error by b and
@@ -59,10 +59,10 @@ class TimeStretchTest :
       }
     }
 
-    test("stretched span equals the rounded scaled span, within rounding drift") {
-      checkAll(patterns(), factors()) { pattern, factor ->
-        val expected = (pattern.spanMs() * factor).roundToLong()
-        abs(pattern.timeStretch(factor).spanMs() - expected) shouldBeLessThanOrEqual 1L
+    test("stretched logical duration equals the rounded scaled duration, within rounding drift") {
+      checkAll(patterns(minDurationMs = 100L), factors()) { pattern, factor ->
+        val expected = (pattern.durationMs * factor).roundToLong()
+        abs(pattern.timeStretch(factor).durationMs - expected) shouldBeLessThanOrEqual 1L
       }
     }
   })

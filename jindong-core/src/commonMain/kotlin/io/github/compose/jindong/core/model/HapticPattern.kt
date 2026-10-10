@@ -15,26 +15,48 @@
  */
 package io.github.compose.jindong.core.model
 
-import io.github.compose.jindong.core.element.HapticElement
-
 /**
- * Represents a complete haptic pattern ready for execution.
+ * An immutable compiled timeline. [durationMs] includes leading and trailing silence.
  *
- * A pattern is a collection of scheduled haptic events with absolute timing.
- * This immutable data class is passed to [HapticExecutor] for playback.
- *
- * @property events List of haptic events sorted by start time
- * @property rootElement The root element of the pattern tree (optional, for include functionality)
+ * Events-only construction defaults to the latest event end. Builders pass the complete timeline
+ * duration. Equality includes both events and duration, so silence changes invalidate Compose keys.
  */
-public data class HapticPattern(
-  val events: List<ScheduledHapticEvent>,
-  internal val rootElement: HapticElement? = null,
+public class HapticPattern(
+  events: List<ScheduledHapticEvent>,
+  public val durationMs: Long = events.eventSpanMs(),
 ) {
+  init {
+    checkedEventCount(events.size.toLong(), "pattern")
+  }
+
+  public val events: List<ScheduledHapticEvent> = object : AbstractList<ScheduledHapticEvent>() {
+    private val snapshot = events.toList()
+    override val size: Int get() = snapshot.size
+    override fun get(index: Int): ScheduledHapticEvent = snapshot[index]
+  }
+
+  init {
+    require(durationMs >= this.events.eventSpanMs()) {
+      "durationMs must be non-negative and cover every event end, was $durationMs"
+    }
+  }
+
+  public fun copy(
+    events: List<ScheduledHapticEvent> = this.events,
+    durationMs: Long = this.durationMs,
+  ): HapticPattern = HapticPattern(events, durationMs)
+
+  public operator fun component1(): List<ScheduledHapticEvent> = events
+
+  public operator fun component2(): Long = durationMs
+
+  override fun equals(other: Any?): Boolean = other is HapticPattern && events == other.events && durationMs == other.durationMs
+
+  override fun hashCode(): Int = 31 * events.hashCode() + durationMs.hashCode()
+
+  override fun toString(): String = "HapticPattern(events=$events, durationMs=$durationMs)"
+
   public companion object {
-    /**
-     * An empty haptic pattern with no events.
-     * Useful as a default value or for conditional patterns.
-     */
     public val Empty: HapticPattern = HapticPattern(emptyList())
   }
 }

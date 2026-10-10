@@ -25,7 +25,7 @@ package io.github.compose.jindong.core.model
  * @param factor non-negative intensity multiplier
  */
 public fun HapticPattern.scaleIntensity(factor: Float): HapticPattern {
-  require(factor >= 0f) { "factor must be non-negative, was $factor" }
+  require(factor.isFinite() && factor >= 0f) { "factor must be finite and non-negative, was $factor" }
   return copy(
     events = events.map { event ->
       event.copy(intensity = HapticIntensity.Custom(event.intensity.value * factor))

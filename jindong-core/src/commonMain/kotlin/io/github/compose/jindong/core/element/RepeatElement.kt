@@ -16,12 +16,13 @@
 package io.github.compose.jindong.core.element
 
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
+import io.github.compose.jindong.core.model.checkedTimeAdd
+import io.github.compose.jindong.core.model.checkedTimeMultiply
 
 /**
  * A container element that repeats its children N times sequentially.
  *
- * Each repetition starts after the previous one completes. The timing is calculated
- * by tracking the maximum end time of events from each iteration.
+ * Each repetition starts after the previous iteration's complete logical duration, including silence.
  *
  * Special handling for [DelayElement]: advances time without generating events.
  *
@@ -38,58 +39,32 @@ import io.github.compose.jindong.core.model.ScheduledHapticEvent
 class RepeatElement(
   val count: Int,
 ) : HapticElement {
-
   init {
     require(count >= 0) { "count must be non-negative, but was $count" }
   }
 
   override val children: MutableList<HapticElement> = mutableListOf()
 
-  override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> = buildList {
-    var currentTime = startTimeMs
-
-    repeat(count) {
-      val (events, endTimeMs) = collectIterationEvents(currentTime)
-      addAll(events)
-      currentTime = endTimeMs
+  override fun collectEvents(startTimeMs: Long): List<ScheduledHapticEvent> {
+    checkedTimeAdd(startTimeMs, totalDurationMs(startTimeMs), "Repeat end")
+    val eventCount = expandedEventCount()
+    if (eventCount == 0) return emptyList()
+    return buildList(eventCount) {
+      var cursor = startTimeMs
+      repeat(count) {
+        children.forEach { child ->
+          addAll(child.collectEvents(cursor))
+          cursor = checkedTimeAdd(cursor, child.totalDurationMs(cursor), "Repeat child end")
+        }
+      }
     }
   }
-
-  /**
-   * Collects events from one iteration of children.
-   * Returns both the events and the end time of this iteration (including delays).
-   */
-  private fun collectIterationEvents(startTimeMs: Long): IterationResult {
-    val (currentTimeMs, events) = children.fold(
-      initial = ChildState(startTimeMs, emptyList()),
-    ) { state, child ->
-      val childEvents = child.collectEvents(state.currentTimeMs)
-      val nextTime = state.currentTimeMs + child.totalDurationMs(state.currentTimeMs)
-      ChildState(
-        currentTimeMs = nextTime,
-        events = state.events + childEvents,
-      )
-    }
-    return IterationResult(events = events, endTimeMs = currentTimeMs)
-  }
-
-  private data class ChildState(
-    val currentTimeMs: Long,
-    val events: List<ScheduledHapticEvent>,
-  )
 
   override fun totalDurationMs(startTimeMs: Long): Long {
     if (count == 0) return 0L
-
-    val singleLoopDuration = children.sumOf { child ->
-      child.totalDurationMs(startTimeMs)
+    val duration = children.fold(0L) { duration, child ->
+      checkedTimeAdd(duration, child.totalDurationMs(startTimeMs), "Repeat iteration duration")
     }
-
-    return singleLoopDuration * count
+    return checkedTimeMultiply(duration, count, "Repeat duration")
   }
-
-  private data class IterationResult(
-    val events: List<ScheduledHapticEvent>,
-    val endTimeMs: Long,
-  )
 }

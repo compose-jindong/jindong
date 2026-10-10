@@ -24,6 +24,8 @@ import io.github.compose.jindong.core.element.VibrationElement
 import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.IosHapticParameters
+import io.github.compose.jindong.core.model.MAX_PATTERN_EVENTS
+import io.github.compose.jindong.core.toHapticMilliseconds
 import kotlin.time.Duration
 
 /**
@@ -64,7 +66,7 @@ class HapticPatternScope internal constructor() {
   ) {
     rootElement.children.add(
       VibrationElement(
-        durationMs = duration.inWholeMilliseconds,
+        durationMs = duration.toHapticMilliseconds(),
         intensity = intensity,
         iosParameters = iosParameters,
       ),
@@ -78,7 +80,7 @@ class HapticPatternScope internal constructor() {
    */
   fun delay(duration: Duration) {
     rootElement.children.add(
-      DelayElement(durationMs = duration.inWholeMilliseconds),
+      DelayElement(durationMs = duration.toHapticMilliseconds()),
     )
   }
 
@@ -119,10 +121,11 @@ class HapticPatternScope internal constructor() {
    * }
    * ```
    *
-   * @param count Number of repetitions
+   * @param count Number of eagerly expanded iterations, from 0 through 10,000
    * @param block Block to repeat with iteration index (0-based)
    */
   fun repeatWithIndex(count: Int, block: HapticPatternScope.(index: Int) -> Unit) {
+    validateIndexedRepeatCount(count)
     for (i in 0 until count) {
       block(i)
     }
@@ -197,7 +200,7 @@ class HapticPatternScope internal constructor() {
 
   internal fun build(): HapticPattern {
     val events = rootElement.collectEvents(startTimeMs = 0L)
-    return HapticPattern(events = events, rootElement = rootElement)
+    return HapticPattern(events = events, durationMs = rootElement.totalDurationMs(0L))
   }
 }
 
@@ -230,4 +233,11 @@ fun buildHapticPattern(block: HapticPatternScope.() -> Unit): HapticPattern {
   val scope = HapticPatternScope()
   scope.block()
   return scope.build()
+}
+
+/** Checks the eager indexed-iteration resource bound shared by the core and Compose DSLs. */
+public fun validateIndexedRepeatCount(count: Int) {
+  require(count in 0..MAX_PATTERN_EVENTS) {
+    "indexed repeat count must be in 0..$MAX_PATTERN_EVENTS, was $count"
+  }
 }

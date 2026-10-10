@@ -28,7 +28,7 @@ import io.kotest.matchers.shouldBe
 class PatternElementTest :
   FunSpec({
     test("collectEvents should return empty list when pattern has no events") {
-      val emptyPattern = HapticPattern(events = emptyList(), rootElement = SequenceElement())
+      val emptyPattern = HapticPattern(events = emptyList())
       val element = PatternElement(pattern = emptyPattern)
 
       val events = element.collectEvents(startTimeMs = 0)
@@ -42,7 +42,7 @@ class PatternElementTest :
         durationMs = 100,
         intensity = HapticIntensity.STRONG,
       )
-      val pattern = HapticPattern(events = listOf(event), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = listOf(event))
       val element = PatternElement(pattern = pattern)
 
       val events = element.collectEvents(startTimeMs = 0)
@@ -63,7 +63,7 @@ class PatternElementTest :
         durationMs = 100,
         intensity = HapticIntensity.MEDIUM,
       )
-      val pattern = HapticPattern(events = listOf(event), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = listOf(event))
       val element = PatternElement(pattern = pattern)
 
       val events = element.collectEvents(startTimeMs = 200)
@@ -86,7 +86,7 @@ class PatternElementTest :
         durationMs = 75,
         intensity = HapticIntensity.LIGHT,
       )
-      val pattern = HapticPattern(events = listOf(event1, event2), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = listOf(event1, event2))
       val element = PatternElement(pattern = pattern)
 
       val events = element.collectEvents(startTimeMs = 500)
@@ -106,7 +106,7 @@ class PatternElementTest :
         intensity = HapticIntensity.Custom(0.6f),
         iosParameters = iosParams,
       )
-      val pattern = HapticPattern(events = listOf(event), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = listOf(event))
       val element = PatternElement(pattern = pattern)
 
       val events = element.collectEvents(startTimeMs = 100)
@@ -124,14 +124,14 @@ class PatternElementTest :
     }
 
     test("children should always be empty for PatternElement") {
-      val pattern = HapticPattern(events = emptyList(), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = emptyList())
       val element = PatternElement(pattern = pattern)
 
       element.children.shouldBeEmpty()
     }
 
     test("totalDurationMs should return 0 for empty pattern") {
-      val emptyPattern = HapticPattern(events = emptyList(), rootElement = SequenceElement())
+      val emptyPattern = HapticPattern(events = emptyList())
       val element = PatternElement(pattern = emptyPattern)
 
       element.totalDurationMs(startTimeMs = 0) shouldBe 0
@@ -148,7 +148,7 @@ class PatternElementTest :
         durationMs = 200,
         intensity = HapticIntensity.MEDIUM,
       )
-      val pattern = HapticPattern(events = listOf(event1, event2), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = listOf(event1, event2))
       val element = PatternElement(pattern = pattern)
 
       // Event1 ends at 100, Event2 ends at 250, so total duration should be 250
@@ -167,7 +167,7 @@ class PatternElementTest :
         durationMs = 50,
         intensity = HapticIntensity.HIGH,
       )
-      val pattern = HapticPattern(events = listOf(event1, event2), rootElement = SequenceElement())
+      val pattern = HapticPattern(events = listOf(event1, event2))
       val element = PatternElement(pattern = pattern)
 
       // Event1 ends at 50, Event2 ends at 250
@@ -180,7 +180,7 @@ class PatternElementTest :
         durationMs = 50,
         intensity = HapticIntensity.MEDIUM,
       )
-      val innerPattern = HapticPattern(events = listOf(innerEvent), rootElement = SequenceElement())
+      val innerPattern = HapticPattern(events = listOf(innerEvent))
 
       val sequence = SequenceElement()
       sequence.children.add(VibrationElement(durationMs = 100, intensity = HapticIntensity.HIGH))

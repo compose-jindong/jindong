@@ -58,5 +58,9 @@ public sealed class HapticIntensity(public val value: Float) {
 
   public data object HIGH : HapticIntensity(1.0f)
 
-  public data class Custom(private val customValue: Float) : HapticIntensity(customValue.coerceIn(0f, 1f))
+  public data class Custom(private val customValue: Float) : HapticIntensity(customValue.coerceIn(0f, 1f)) {
+    init {
+      require(customValue.isFinite()) { "intensity must be finite, was $customValue" }
+    }
+  }
 }

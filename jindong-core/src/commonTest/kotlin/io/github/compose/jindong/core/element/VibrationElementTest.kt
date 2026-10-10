@@ -100,6 +100,6 @@ class VibrationElementTest :
           intensity = HapticIntensity.LIGHT,
         )
       }
-      exception.message shouldContain "durationMs must be non-negative"
+      exception.message shouldContain "durationMs must be positive"
     }
   })
