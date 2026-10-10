@@ -28,12 +28,10 @@ import kotlin.time.TimeSource
  * expected playback length. This holds the start [TimeMark] and the total duration and answers, on
  * each [isExpired] read, whether enough monotonic time has elapsed — no coroutine, scope, or timer.
  *
- * Both [io.github.compose.jindong.core.executor.AndroidHapticHandle] and
- * [io.github.compose.jindong.core.executor.IosHapticHandle] delegate to this so they share identical
- * expiry semantics across platforms.
+ * Owned playback sessions delegate to this on both platforms.
  *
  * @param totalDurationMs Expected playback length. A non-positive value means nothing is playing, so
- *   the handle is expired from the start (a silent/empty pattern is never active).
+ *   the handle is expired from the start (an empty pattern is never active).
  * @param timeSource Monotonic clock; injectable so tests can advance time deterministically.
  */
 internal class HandleExpiry(

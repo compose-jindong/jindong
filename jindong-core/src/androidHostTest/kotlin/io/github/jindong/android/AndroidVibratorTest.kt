@@ -85,7 +85,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // Single event split: [100ms event] + [1ms gap] + [1ms post] + [1ms end]
     shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
@@ -105,7 +105,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     shadowVibrator.pattern shouldBe longArrayOf(200, 1, 1, 1)
   }
 
@@ -124,7 +124,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     shadowVibrator.pattern shouldBe longArrayOf(150, 1, 1, 1)
   }
 
@@ -143,7 +143,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
 
@@ -162,7 +162,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
   }
 
@@ -190,7 +190,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // On an amplitude-capable (LRA) actuator, the active->gap boundary gets a fall ramp borrowed
     // from the gap front: the 50ms gap becomes [8ms ramp @ HIGH/2][42ms gap]. Total span unchanged.
     // [100ms event1] + [8ms ramp] + [42ms gap] + [100ms event2] + [1ms end]
@@ -222,7 +222,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // LRA fall ramps soften both internal active->gap boundaries: each 50ms gap becomes
     // [8ms ramp][42ms gap]. Total span unchanged (ramp borrowed from the gap front).
     // [100 e1][8 ramp][42 gap1][100 e2][8 ramp][42 gap2][100 e3][1 end]
@@ -249,7 +249,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // The 50ms gap is split into an 8ms ramp + 42ms gap; the active segments are untouched.
     // ShadowVibrator only exposes timings (getPattern), so amplitude precision is asserted in
     // InsertFallRampsTest; here we verify the timeline was reshaped by the ramp.
@@ -281,7 +281,7 @@ class AndroidVibratorTest {
 
     ermExecutor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // No ramp on ERM (amplitude would round up anyway): original gap shape preserved.
     shadowVibrator.pattern shouldBe longArrayOf(100, 50, 100, 1)
   }
@@ -307,7 +307,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // Gap stays whole: [100 active][4 gap][50 active][1 end]; no ramp inserted.
     shadowVibrator.pattern shouldBe longArrayOf(100, 4, 50, 1)
   }
@@ -405,7 +405,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // [50ms HIGH] + [50ms HIGH] + [50ms MEDIUM] + [1ms end], total span 150ms.
     shadowVibrator.pattern shouldBe longArrayOf(50, 50, 50, 1)
   }
@@ -435,7 +435,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // Back-to-back events without gaps in input: [25ms event1] + [25ms event2] + [25ms event3] + [1ms end]
     shadowVibrator.pattern shouldBe longArrayOf(25, 25, 25, 1)
   }
@@ -458,7 +458,7 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
+    shadowVibrator.isVibrating shouldBe false
     // Single event split: [1ms event] + [1ms gap] + [1ms post] + [1ms end]
     shadowVibrator.pattern shouldBe longArrayOf(1, 1, 1, 1)
   }

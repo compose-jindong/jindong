@@ -78,6 +78,19 @@ A key change cancels the in-flight playback before starting the new one. The man
 
 The cancellation itself is best effort. Neither `Vibrator.cancel()` on Android nor `CHHapticPatternPlayer.stop` on iOS reports when the hardware has actually stopped, so a few milliseconds of physical overlap between the old and new playback are possible. Patterns that change keys rapidly should not assume a clean cut between them.
 
+## Playback ownership
+
+Each default executor owns its current playback session. Coroutine cancellation, a key change,
+or leaving composition cancels that session's native effect. Starting a replacement cancels the
+previous session first. Cancelling an old handle later does not cancel the replacement.
+
+`JindongProvider` releases its previous executor when the platform context changes and releases
+the current executor when the provider leaves composition. A released executor rejects new
+playback. `HapticManager.release()` can be followed by a new initialization.
+
+Silent timelines wait for their logical duration without starting a native effect. Empty timelines
+finish immediately. Completion remains an estimate; these checks do not measure physical actuator stop time.
+
 ## Choosing keys
 
 | Value | Where it goes | Effect |

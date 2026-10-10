@@ -100,6 +100,21 @@ class HapticManagerTest :
       }
     }
 
+    test("suspending execute calls remain serialized") {
+      runTest {
+        val executor = FakeHapticExecutor(playbackDuration = 100.milliseconds, timeSource = testTimeSource)
+        HapticManager.initializeExecutor(executor)
+        val pattern = buildHapticPattern { haptic(100.ms) }
+        val first = launch { HapticManager.execute(pattern) }
+        val second = launch { HapticManager.execute(pattern) }
+        advanceTimeBy(50)
+        executor.asyncExecutedPatterns shouldHaveSize 1
+        first.join()
+        second.join()
+        executor.asyncExecutedPatterns shouldHaveSize 2
+      }
+    }
+
     test("executeAsync should execute pattern and return handle") {
       val pattern = buildHapticPattern {
         haptic(100.ms, HapticIntensity.STRONG)

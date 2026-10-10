@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.remember
+import io.github.compose.jindong.core.executor.HapticExecutor
 import io.github.compose.jindong.core.executor.createHapticExecutor
 import io.github.compose.jindong.executor.LocalHapticExecutor
 
@@ -52,7 +53,12 @@ fun JindongProvider(
   val context = platformContext()
   val executor = remember(context) { createHapticExecutor(context) }
 
-  DisposableEffect(Unit) {
+  ProvideHapticExecutor(executor, content)
+}
+
+@Composable
+internal fun ProvideHapticExecutor(executor: HapticExecutor, content: @Composable () -> Unit) {
+  DisposableEffect(executor) {
     onDispose {
       executor.release()
     }
