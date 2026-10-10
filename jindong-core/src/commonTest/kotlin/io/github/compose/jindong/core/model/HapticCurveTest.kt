@@ -17,6 +17,7 @@ package io.github.compose.jindong.core.model
 
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
+import io.kotest.matchers.floats.plusOrMinus
 import io.kotest.matchers.shouldBe
 import kotlin.time.Duration.Companion.milliseconds
 
@@ -140,11 +141,38 @@ class HapticCurveTest :
       scaled.durationMs shouldBe 400L
       scaled.events.single().let {
         it.intensity.value shouldBe 1f
-        it.intensityCurve!!.points.map { point -> point.value } shouldBe listOf(0f, 1f, 0f)
+        val curve = it.intensityCurve!!
+        original.events.single().intensityCurve!!.points.map { point -> curve.valueAt(point.timeMs) } shouldBe listOf(0f, 1f, 0f)
+        for (timeMs in 0L..300L) {
+          curve.valueAt(timeMs) shouldBe ((rise().valueAt(timeMs) * 2f).coerceIn(0f, 1f) plusOrMinus 1e-6f)
+        }
         it.sharpnessCurve shouldBe original.events.single().sharpnessCurve
         it.sharpness shouldBe 0.6f
       }
       original.scaleIntensity(0f).events.single().intensityCurve!!.points.map { it.value } shouldBe listOf(0f, 0f, 0f)
+    }
+
+    test("scaling inserts saturation boundaries for rising and falling curves") {
+      val curve = HapticCurve(listOf(HapticControlPoint(0L, 0f), HapticControlPoint(100L, 1f), HapticControlPoint(200L, 0f)))
+      val event = ScheduledHapticEvent(0L, 200L, HapticIntensity.MEDIUM, eventType = HapticEventType.CONTINUOUS, intensityCurve = curve)
+      val pattern = HapticPattern(listOf(event))
+      val scaled = pattern.scaleIntensity(2f).events.single().intensityCurve!!
+      scaled.points shouldBe listOf(
+        HapticControlPoint(0L, 0f),
+        HapticControlPoint(50L, 1f),
+        HapticControlPoint(100L, 1f),
+        HapticControlPoint(150L, 1f),
+        HapticControlPoint(200L, 0f),
+      )
+      for (timeMs in 0L..200L) scaled.valueAt(timeMs) shouldBe ((curve.valueAt(timeMs) * 2f).coerceIn(0f, 1f) plusOrMinus 1e-6f)
+      pattern.scaleIntensity(0.5f).events.single().intensityCurve!!.points.map { it.value } shouldBe listOf(0f, 0.5f, 0f)
+      pattern.scaleIntensity(1f).events.single().intensityCurve shouldBe curve
+    }
+
+    test("scaling enforces control point limits after adding saturation boundaries") {
+      val curve = HapticCurve(List(50_001) { HapticControlPoint(it * 2L, (it % 2).toFloat()) })
+      val event = ScheduledHapticEvent(0L, curve.durationMs, HapticIntensity.HIGH, eventType = HapticEventType.CONTINUOUS, intensityCurve = curve)
+      shouldThrow<IllegalArgumentException> { HapticPattern(listOf(event)).scaleIntensity(2f) }
     }
 
     test("stretch uses absolute point boundaries before restoring event relative times") {
