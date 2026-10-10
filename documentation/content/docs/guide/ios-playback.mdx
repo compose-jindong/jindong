@@ -21,4 +21,7 @@ Jindong(trigger, playOnInitialComposition = false) {
 }
 ```
 
-Native startup failures throw. A later native player failure is available from `HapticHandle.failure` and propagates from suspending playback. An unsupported device produces an unsupported plan. Simulator planning, adapter, and callback tests validate scheduling and ownership; an iPhone is required to evaluate physical feedback.
+Native startup failures throw. A later native player failure is available from `HapticHandle.failure` and propagates from suspending playback.
+Player cancellation and engine disposal failures during reset or stopped callbacks use the same failure path. Cleanup finishes before waiting callers resume.
+If playback and cleanup both fail, the playback error remains primary and retains the cleanup errors as suppressed exceptions.
+An unsupported device produces an unsupported plan. Simulator planning, adapter, and callback tests validate scheduling and ownership; an iPhone is required to evaluate physical feedback.

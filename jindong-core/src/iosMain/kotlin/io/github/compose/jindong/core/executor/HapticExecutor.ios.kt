@@ -118,10 +118,12 @@ internal class DefaultIosHapticExecutor(
           val ownsCachedEngine = engine === newEngine
           if (ownsPlayback) playbackEngine = null
           if (ownsCachedEngine) engine = null
-          try {
-            if (ownsPlayback) sessions.cancel()
-          } finally {
-            if (ownsCachedEngine) newEngine.dispose()
+          if (ownsPlayback) {
+            sessions.cancelFromNativeCallback {
+              if (ownsCachedEngine) newEngine.dispose()
+            }
+          } else if (ownsCachedEngine) {
+            runCatching { newEngine.dispose() }
           }
         }
       }

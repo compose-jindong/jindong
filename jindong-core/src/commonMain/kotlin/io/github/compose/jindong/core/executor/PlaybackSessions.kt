@@ -42,6 +42,13 @@ internal class PlaybackSessions(private val timeSource: TimeSource = TimeSource.
     current?.cancel()
   }
 
+  fun cancelFromNativeCallback(dispose: () -> Unit) {
+    withLock {
+      val session = current
+      if (session == null) runCatching(dispose) else session.cancelFromNativeCallback(dispose)
+    }
+  }
+
   fun release(dispose: () -> Unit) = withLock {
     if (!released) {
       released = true
@@ -70,14 +77,30 @@ internal class PlaybackSessions(private val timeSource: TimeSource = TimeSource.
 
     override val failure: Throwable? get() = completion?.failure
 
-    override fun cancel() = withLock {
+    override fun cancel() = finish { stopNative -> stopNative?.invoke() }
+
+    // Record every cleanup failure before finish can resume an unconfined waiter.
+    fun cancelFromNativeCallback(dispose: () -> Unit) = finish { stopNative ->
+      try {
+        stopNative?.invoke()
+      } catch (error: Throwable) {
+        completion?.recordCleanupFailure(error)
+      }
+      try {
+        dispose()
+      } catch (error: Throwable) {
+        completion?.recordCleanupFailure(error)
+      }
+    }
+
+    private fun finish(cleanup: ((() -> Unit)?) -> Unit) = withLock {
       if (!finished.isCompleted) {
         val stopNative = stop
         stop = null
         val ownsPlayback = current === this
         if (ownsPlayback) current = null
         try {
-          if (ownsPlayback) stopNative?.invoke()
+          cleanup(if (ownsPlayback) stopNative else null)
         } finally {
           finished.complete(Unit)
         }
@@ -136,11 +159,21 @@ internal class NativePlaybackCompletion(playerCount: Int) {
   private var remaining = playerCount
   private var finalizing = false
   private var playbackFailure: Throwable? = null
-  val failure: Throwable? get() = lock.withLock { playbackFailure }
+  private var cleanupFailure: Throwable? = null
+  val failure: Throwable? get() = lock.withLock { playbackFailure ?: cleanupFailure }
   val finished = CompletableDeferred<Unit>()
 
   init {
     require(playerCount > 0) { "Native playback must own at least one player" }
+  }
+
+  fun recordCleanupFailure(error: Throwable) = lock.withLock {
+    val failure = playbackFailure ?: cleanupFailure
+    if (failure == null) {
+      cleanupFailure = error
+    } else if (failure !== error) {
+      failure.addSuppressed(error)
+    }
   }
 
   fun completePlayer(index: Int, error: Throwable? = null, onFinished: () -> Unit = { }) {
@@ -148,7 +181,10 @@ internal class NativePlaybackCompletion(playerCount: Int) {
       if (completed[index]) return@withLock null
       completed[index] = true
       remaining--
-      if (error != null && playbackFailure == null) playbackFailure = error
+      if (error != null && playbackFailure == null) {
+        playbackFailure = error
+        cleanupFailure?.let { if (it !== error) error.addSuppressed(it) }
+      }
       if (!finalizing && (playbackFailure != null || remaining == 0)) {
         finalizing = true
         Pair(true, playbackFailure)

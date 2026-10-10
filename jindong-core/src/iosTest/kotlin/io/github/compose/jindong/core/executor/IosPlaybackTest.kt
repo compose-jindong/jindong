@@ -28,6 +28,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.cinterop.BetaInteropApi
 import kotlinx.cinterop.ExperimentalForeignApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.test.runTest
 import platform.CoreHaptics.CHHapticEventParameterIDHapticIntensity
 import platform.CoreHaptics.CHHapticEventParameterIDHapticSharpness
 import platform.CoreHaptics.CHHapticEventTypeHapticContinuous
@@ -135,6 +138,48 @@ class IosPlaybackTest :
       fixture.executor.executeAsync(HapticPattern(listOf(iosEvent(0, 100))))
       fixture.driver.engines.size shouldBe 2
       fixture.executor.release()
+    }
+
+    test("reset and stopped callbacks retain cleanup failures and wake suspended playback") {
+      for (reset in listOf(true, false)) {
+        runTest {
+          val fixture = IosFixture()
+          val handle = fixture.executor.executeAsync(mixedPattern())
+          val result = async(Dispatchers.Unconfined) { runCatching { handle.awaitCompletion() } }
+          val invalidation = if (reset) fixture.engine.onReset else fixture.engine.onStopped
+          fixture.engine.failStopAt = 1
+          invalidation()
+          fixture.drainCallbacks()
+          val failure = handle.failure!!
+          failure.message shouldBe "player cancellation failed"
+          result.await().exceptionOrNull() shouldBe failure
+          handle.isActive shouldBe false
+          fixture.engine.players.map { it.stops } shouldBe listOf(1, 1, 1)
+          fixture.engine.disposals shouldBe 1
+          val next = fixture.executor.executeAsync(HapticPattern(listOf(iosEvent(0, 100))))
+          invalidation()
+          fixture.drainCallbacks()
+          next.isActive shouldBe true
+          next.failure shouldBe null
+          handle.failure shouldBe failure
+          fixture.executor.release()
+        }
+      }
+    }
+
+    test("an old engine disposal failure cannot fail its silent replacement") {
+      for (reset in listOf(true, false)) {
+        val fixture = IosFixture()
+        fixture.executor.executeAsync(mixedPattern())
+        (if (reset) fixture.engine.onReset else fixture.engine.onStopped)()
+        val silent = fixture.executor.executeAsync(HapticPattern(emptyList(), 100))
+        fixture.engine.failDisposal = true
+        fixture.drainCallbacks()
+        silent.isActive shouldBe true
+        silent.failure shouldBe null
+        fixture.engine.disposals shouldBe 1
+        fixture.executor.release()
+      }
     }
 
     test("an old engine reset cannot cancel its silent replacement") {
@@ -310,6 +355,7 @@ private class FakeIosEngine : IosHapticEngine {
   var failStopAt: Int? = null
   var completeDuringStart = false
   var completeDuringStop = false
+  var failDisposal = false
   var disposals = 0
   override fun start() { }
   override fun createPlayer(plan: IosPlayerPlan): IosHapticPlayer {
@@ -318,6 +364,7 @@ private class FakeIosEngine : IosHapticEngine {
   }
   override fun dispose() {
     disposals++
+    check(!failDisposal) { "engine disposal failed" }
   }
 }
 

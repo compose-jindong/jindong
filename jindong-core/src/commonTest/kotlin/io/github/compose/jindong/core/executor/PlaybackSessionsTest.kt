@@ -20,7 +20,9 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
 import kotlinx.coroutines.test.runCurrent
@@ -266,6 +268,57 @@ class PlaybackSessionsTest :
         session.cancel()
         shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe failure
         session.failure shouldBe failure
+      }
+    }
+
+    test("native callback cancellation retains stop and disposal failures without throwing") {
+      runTest {
+        val sessions = PlaybackSessions()
+        val completion = NativePlaybackCompletion(1)
+        val stopFailure = IllegalStateException("stop failed")
+        val disposeFailure = IllegalStateException("dispose failed")
+        var disposals = 0
+        val session = sessions.start { NativePlayback(100, completion) { throw stopFailure } }
+        val result = async(Dispatchers.Unconfined) { runCatching { session.awaitCompletion() } }
+        sessions.cancelFromNativeCallback {
+          disposals++
+          throw disposeFailure
+        }
+        disposals shouldBe 1
+        session.isActive shouldBe false
+        session.failure shouldBe stopFailure
+        stopFailure.suppressedExceptions shouldBe listOf(disposeFailure)
+        result.await().exceptionOrNull() shouldBe stopFailure
+      }
+    }
+
+    test("native playback failure stays primary before or after callback cleanup") {
+      runTest {
+        for (nativeFirst in listOf(true, false)) {
+          val sessions = PlaybackSessions()
+          val completion = NativePlaybackCompletion(1)
+          val nativeFailure = IllegalStateException("native failed")
+          val cleanupFailure = IllegalStateException("stop failed")
+          val session = sessions.start { NativePlayback(100, completion) { throw cleanupFailure } }
+          if (nativeFirst) completion.completePlayer(0, nativeFailure)
+          sessions.cancelFromNativeCallback { }
+          if (!nativeFirst) completion.completePlayer(0, nativeFailure)
+          session.failure shouldBe nativeFailure
+          nativeFailure.suppressedExceptions shouldBe listOf(cleanupFailure)
+          shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe nativeFailure
+        }
+      }
+    }
+
+    test("callback disposal failure is published before an unconfined waiter resumes") {
+      runTest {
+        val sessions = PlaybackSessions()
+        val session = sessions.start { NativePlayback(100, NativePlaybackCompletion(1)) }
+        val failure = IllegalStateException("dispose failed")
+        val result = async(Dispatchers.Unconfined) { runCatching { session.awaitCompletion() } }
+        sessions.cancelFromNativeCallback { throw failure }
+        session.failure shouldBe failure
+        result.await().exceptionOrNull() shouldBe failure
       }
     }
   })
