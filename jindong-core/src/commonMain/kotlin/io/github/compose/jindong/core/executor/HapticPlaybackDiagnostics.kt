@@ -26,11 +26,10 @@ public enum class HapticPlaybackBackend {
   IOS_CORE_HAPTICS,
 }
 
-/** Device capabilities used to select playback, without application-side OS checks. */
+/** Device capabilities with the same meaning across platforms. Native effect support stays in each executor. */
 public data class HapticDeviceCapabilities(
   val supportsHaptics: Boolean,
   val supportsAmplitudeControl: Boolean,
-  val supportsEnvelopeEffects: Boolean = false,
 )
 
 /**

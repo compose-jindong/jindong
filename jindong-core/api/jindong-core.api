@@ -102,16 +102,13 @@ public final class io/github/compose/jindong/core/element/VibrationElement : io/
 }
 
 public final class io/github/compose/jindong/core/executor/HapticDeviceCapabilities {
-	public fun <init> (ZZZ)V
-	public synthetic fun <init> (ZZZILkotlin/jvm/internal/DefaultConstructorMarker;)V
+	public fun <init> (ZZ)V
 	public final fun component1 ()Z
 	public final fun component2 ()Z
-	public final fun component3 ()Z
-	public final fun copy (ZZZ)Lio/github/compose/jindong/core/executor/HapticDeviceCapabilities;
-	public static synthetic fun copy$default (Lio/github/compose/jindong/core/executor/HapticDeviceCapabilities;ZZZILjava/lang/Object;)Lio/github/compose/jindong/core/executor/HapticDeviceCapabilities;
+	public final fun copy (ZZ)Lio/github/compose/jindong/core/executor/HapticDeviceCapabilities;
+	public static synthetic fun copy$default (Lio/github/compose/jindong/core/executor/HapticDeviceCapabilities;ZZILjava/lang/Object;)Lio/github/compose/jindong/core/executor/HapticDeviceCapabilities;
 	public fun equals (Ljava/lang/Object;)Z
 	public final fun getSupportsAmplitudeControl ()Z
-	public final fun getSupportsEnvelopeEffects ()Z
 	public final fun getSupportsHaptics ()Z
 	public fun hashCode ()I
 	public fun toString ()Ljava/lang/String;

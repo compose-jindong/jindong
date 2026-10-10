@@ -143,19 +143,16 @@ final class io.github.compose.jindong.core.element/VibrationElement : io.github.
 }
 
 final class io.github.compose.jindong.core.executor/HapticDeviceCapabilities { // io.github.compose.jindong.core.executor/HapticDeviceCapabilities|null[0]
-    constructor <init>(kotlin/Boolean, kotlin/Boolean, kotlin/Boolean = ...) // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.<init>|<init>(kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+    constructor <init>(kotlin/Boolean, kotlin/Boolean) // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.<init>|<init>(kotlin.Boolean;kotlin.Boolean){}[0]
 
     final val supportsAmplitudeControl // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.supportsAmplitudeControl|{}supportsAmplitudeControl[0]
         final fun <get-supportsAmplitudeControl>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.supportsAmplitudeControl.<get-supportsAmplitudeControl>|<get-supportsAmplitudeControl>(){}[0]
-    final val supportsEnvelopeEffects // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.supportsEnvelopeEffects|{}supportsEnvelopeEffects[0]
-        final fun <get-supportsEnvelopeEffects>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.supportsEnvelopeEffects.<get-supportsEnvelopeEffects>|<get-supportsEnvelopeEffects>(){}[0]
     final val supportsHaptics // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.supportsHaptics|{}supportsHaptics[0]
         final fun <get-supportsHaptics>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.supportsHaptics.<get-supportsHaptics>|<get-supportsHaptics>(){}[0]
 
     final fun component1(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.component1|component1(){}[0]
     final fun component2(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.component2|component2(){}[0]
-    final fun component3(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.component3|component3(){}[0]
-    final fun copy(kotlin/Boolean = ..., kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.compose.jindong.core.executor/HapticDeviceCapabilities // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.copy|copy(kotlin.Boolean;kotlin.Boolean;kotlin.Boolean){}[0]
+    final fun copy(kotlin/Boolean = ..., kotlin/Boolean = ...): io.github.compose.jindong.core.executor/HapticDeviceCapabilities // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.copy|copy(kotlin.Boolean;kotlin.Boolean){}[0]
     final fun equals(kotlin/Any?): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.equals|equals(kotlin.Any?){}[0]
     final fun hashCode(): kotlin/Int // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.hashCode|hashCode(){}[0]
     final fun toString(): kotlin/String // io.github.compose.jindong.core.executor/HapticDeviceCapabilities.toString|toString(){}[0]
