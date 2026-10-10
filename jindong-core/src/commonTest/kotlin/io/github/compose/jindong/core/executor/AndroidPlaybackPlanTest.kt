@@ -217,6 +217,54 @@ class AndroidPlaybackPlanTest :
       plan.diagnostics.approximations.any { "drops sharpness" in it } shouldBe true
     }
 
+    test("long curves coalesce equal amplitudes while retaining zero intervals and compatibility duration") {
+      val event = continuous(intensityCurve = curve(0L to 0f, 300_000L to 1f, 600_000L to 0f, 600_040L to 0f))
+      val plan = planAndroidPlayback(HapticPattern(listOf(event)), capabilities(envelope = false))
+      val waveform = plan.waveform!!
+      plan.diagnostics.backend shouldBe HapticPlaybackBackend.ANDROID_WAVEFORM
+      (waveform.timings.size <= MAX_ANDROID_WAVEFORM_SEGMENTS) shouldBe true
+      waveform.amplitudeAt(300_000L) shouldBe 255
+      waveform.amplitudeAt(600_000L) shouldBe 0
+      waveform.amplitudeAt(600_039L) shouldBe 0
+      plan.diagnostics.logicalDurationMs shouldBe 600_040L
+      waveform.durationMs shouldBe 600_041L
+      plan.diagnostics.estimatedNativeDurationMs shouldBe waveform.durationMs
+      plan.diagnostics.approximations.any { "largest slice 8 ms" in it && "intensity error" in it } shouldBe true
+    }
+
+    test("coalescing does not increase the sampling work budget") {
+      val event = continuous(intensityCurve = curve(0L to 0f, 1_600_000L to 1f, 3_200_000L to 0f))
+      val plan = planAndroidPlayback(HapticPattern(listOf(event)), capabilities(envelope = false))
+      plan.diagnostics.backend shouldBe HapticPlaybackBackend.ANDROID_WAVEFORM
+      plan.waveform!!.durationMs shouldBe 3_200_001L
+      plan.diagnostics.approximations.any { "largest slice 1600000 ms" in it && "intensity error <= 1.0" in it } shouldBe true
+    }
+
+    test("coalesced slices still fit Android native integer durations") {
+      val duration = Int.MAX_VALUE.toLong() * 2L + 1L
+      val event = continuous(intensityCurve = curve(0L to 0.5f, duration to 0.50001f))
+      val plan = planAndroidPlayback(HapticPattern(listOf(event)), capabilities(envelope = false))
+      plan.diagnostics.backend shouldBe HapticPlaybackBackend.ANDROID_WAVEFORM
+      plan.waveform!!.timings.all { it in 1L..Int.MAX_VALUE.toLong() } shouldBe true
+      plan.waveform.durationMs shouldBe duration + 1L
+    }
+
+    test("uncompressible transitions include the compatibility tail in the Binder transport limit") {
+      fun pattern(count: Int) = HapticPattern(
+        List(count) { index ->
+          ScheduledHapticEvent(index.toLong(), 1L, if (index % 2 == 0) HapticIntensity.LIGHT else HapticIntensity.HIGH)
+        },
+      )
+      val supported = planAndroidPlayback(pattern(MAX_ANDROID_WAVEFORM_SEGMENTS - 1), capabilities(envelope = false))
+      supported.diagnostics.backend shouldBe HapticPlaybackBackend.ANDROID_WAVEFORM
+      supported.waveform!!.timings.size shouldBe MAX_ANDROID_WAVEFORM_SEGMENTS
+      val unsupported = planAndroidPlayback(pattern(MAX_ANDROID_WAVEFORM_SEGMENTS), capabilities(envelope = false))
+      unsupported.diagnostics.backend shouldBe HapticPlaybackBackend.UNSUPPORTED
+      unsupported.diagnostics.logicalDurationMs shouldBe MAX_ANDROID_WAVEFORM_SEGMENTS.toLong()
+      unsupported.diagnostics.unsupportedReason!!.contains("Binder transport") shouldBe true
+      unsupported.waveform shouldBe null
+    }
+
     test("overlap reports composition and fractional curve crossing timing approximation") {
       val pattern = HapticPattern(listOf(continuous(), continuous(20L)))
       val plan = planAndroidPlayback(pattern, capabilities(envelope = false))

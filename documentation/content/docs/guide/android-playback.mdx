@@ -57,8 +57,11 @@ The fallback merges overlapping events by maximum intensity. The winning event s
 Curve intersections use the common millisecond time grid. Diagnostics report the possible one-millisecond crossing error for overlapping curves.
 
 Intensity curves use peak-preserving sample-and-hold sections, normally no longer than eight milliseconds.
-Event boundaries, control point peaks, and zero intervals remain present.
-For bounded memory use, the planner limits output to 200,000 samples. Diagnostics report the actual largest slice and intensity error bound.
+Sampling includes event boundaries, control point peaks, and zero intervals.
+Adjacent samples with the same native amplitude are merged without changing the output.
+The planner limits sampling work to 200,000 samples. Diagnostics report the actual largest slice and intensity error bound.
+The final waveform allows at most 512 segments, including compatibility segments, to bound Binder transaction size.
+If the waveform still exceeds this limit after merging, diagnostics report `UNSUPPORTED` with a reason.
 
 Transient pulses last at most ten milliseconds and shorten at the next transient onset.
 On devices without amplitude control, each positive value becomes full-amplitude ON, while zeros remain OFF.

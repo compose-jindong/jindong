@@ -46,6 +46,9 @@ internal data class AndroidPlaybackCapabilities(
 internal data class AndroidEnvelopePoint(val timeMs: Long, val intensity: Float, val sharpness: Float)
 internal data class AndroidPrimitiveStep(val primitive: AndroidPrimitive, val scale: Float, val delayMs: Int)
 
+// SDK 36 parcels 512 StepSegments in about 47 KiB, leaving room below Binder's suggested 64 KiB.
+internal const val MAX_ANDROID_WAVEFORM_SEGMENTS = 512
+
 internal data class AndroidPlaybackPlan(
   val diagnostics: HapticPlaybackDiagnostics,
   val envelope: List<AndroidEnvelopePoint> = emptyList(),
@@ -146,6 +149,9 @@ private fun buildAndroidPlaybackPlan(pattern: HapticPattern, capabilities: Andro
   }
   timings += 1L
   amplitudes += 0
+  if (timings.size > MAX_ANDROID_WAVEFORM_SEGMENTS) {
+    throw HapticPlanningLimitException("Android waveform exceeds $MAX_ANDROID_WAVEFORM_SEGMENTS Binder transport segments")
+  }
   val compatible = AndroidWaveform(timings.toLongArray(), amplitudes.toIntArray())
   approximations += "Device compatibility adds ${if (primer) 3 else 1} ms of native playback, including a trailing OFF segment${if (primer) " and recognition primer" else ""}."
   if (compatible.durationMs > pattern.durationMs) approximations += "Native waveform ends ${compatible.durationMs - pattern.durationMs} ms after logical duration."
@@ -270,24 +276,32 @@ private fun sampledWaveform(segments: List<HapticSegment>, amplitudeControl: Boo
   require(segments.size <= 200_000) { "Android waveform exceeds 200000 timeline segments" }
   val timings = mutableListOf<Long>()
   val amplitudes = mutableListOf<Int>()
+  var sampleCount = 0
   var maxError = 0f
   var largestSampleMs = 0L
   for ((index, segment) in segments.withIndex()) {
     val varying = segment.intensity != segment.endIntensity
     val desiredCount = if (varying) (segment.durationMs - 1L) / 8L + 1L else 1L
-    val count = minOf(desiredCount, (200_000 - timings.size - (segments.size - index - 1)).toLong()).toInt()
+    val count = minOf(desiredCount, (200_000 - sampleCount - (segments.size - index - 1)).toLong()).toInt()
     require(count > 0) { "Android waveform exceeds 200000 samples" }
+    sampleCount += count
     for (sample in 0 until count) {
       val start = segment.durationMs / count * sample + (segment.durationMs % count * sample) / count
       val end = segment.durationMs / count * (sample + 1L) + (segment.durationMs % count * (sample + 1L)) / count
       val from = interpolate(segment.intensity, segment.endIntensity, start.toDouble() / segment.durationMs)
       val to = interpolate(segment.intensity, segment.endIntensity, end.toDouble() / segment.durationMs)
       val intensity = maxOf(from, to)
-      timings += end - start
-      amplitudes += when {
+      val amplitude = when {
         intensity == 0f -> 0
         !amplitudeControl -> 255
         else -> (intensity * 255).toInt().coerceIn(1, 255)
+      }
+      // Android stores each waveform duration in an Int, even though createWaveform takes Longs.
+      if (amplitudes.lastOrNull() == amplitude && timings.last() <= Int.MAX_VALUE.toLong() - (end - start)) {
+        timings[timings.lastIndex] += end - start
+      } else {
+        timings += end - start
+        amplitudes += amplitude
       }
       if (varying) {
         maxError = maxOf(maxError, abs(to - from))

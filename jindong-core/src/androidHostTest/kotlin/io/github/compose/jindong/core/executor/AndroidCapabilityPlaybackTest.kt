@@ -97,6 +97,26 @@ class AndroidCapabilityPlaybackTest {
   }
 
   @Test
+  fun `largest supported waveform stays below the recommended Binder transaction size`() {
+    val pattern = HapticPattern(
+      List(MAX_ANDROID_WAVEFORM_SEGMENTS - 1) { index ->
+        ScheduledHapticEvent(index.toLong(), 1L, if (index % 2 == 0) HapticIntensity.LIGHT else HapticIntensity.HIGH)
+      },
+    )
+    val executor = DefaultAndroidHapticExecutor(context)
+    executor.diagnose(pattern).backend shouldBe HapticPlaybackBackend.ANDROID_WAVEFORM
+    executor.executeAsync(pattern).cancel()
+    val parcel = Parcel.obtain()
+    try {
+      vibrator.effects.single().writeToParcel(parcel, 0)
+      parcel.dataSize() shouldBe 12 + 92 * MAX_ANDROID_WAVEFORM_SEGMENTS
+      (parcel.dataSize() < 64 * 1024) shouldBe true
+    } finally {
+      parcel.recycle()
+    }
+  }
+
+  @Test
   fun `supported primitive composition uses queried native durations`() {
     vibrator.primitiveDurations[7] = 12
     val pattern = HapticPattern(

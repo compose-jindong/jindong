@@ -56,8 +56,8 @@ class AndroidWaveformTest {
       listOf(event(20, 30, 0f), event(50, 50, 1f), event(100, 50, 0f), event(200, 50, 0.5f)),
     ).toWaveform()!!
 
-    waveform.timings shouldBe longArrayOf(20, 30, 50, 50, 50, 50, 1)
-    waveform.amplitudes shouldBe intArrayOf(0, 0, 255, 0, 0, 127, 0)
+    waveform.timings shouldBe longArrayOf(50, 50, 100, 50, 1)
+    waveform.amplitudes shouldBe intArrayOf(0, 255, 0, 127, 0)
   }
 
   @Test
