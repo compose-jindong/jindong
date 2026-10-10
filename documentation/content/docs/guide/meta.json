@@ -6,6 +6,7 @@
     "quick-start",
     "reactive-contract",
     "migration-2",
-    "android-playback"
+    "android-playback",
+    "ios-playback"
   ]
 }
