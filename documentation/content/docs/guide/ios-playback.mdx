@@ -1,0 +1,24 @@
+---
+title: iOS playback
+description: Core Haptics events, independent curves, and playback completion.
+---
+
+The iOS executor renders common `transient` and `continuous` events with Core Haptics. Applications use the same Kotlin pattern as Android.
+
+A supplied curve replaces the corresponding constant value. Intensity curves use a base intensity of 1 with multiplicative controls; sharpness curves use a base sharpness of 0 with additive controls. Each curved event has its own player so its controls cannot change another event. Constant events share a player.
+
+Players are constructed before a common engine start time is chosen. They start 10ms ahead on that clock; diagnostics report the scheduling lead. Continuous events longer than 30 seconds are split without shifting the authored timeline. Diagnostics report possible boundary retriggering.
+
+A session stays active until every native player completes and the logical timeline, including trailing silence, ends. A final transient is allowed to finish even when its logical duration is zero. Natural completion detaches callbacks. Cancellation, replacement, engine reset, and release stop all owned players; old callbacks cannot affect a replacement session. Interrupted UI feedback is not replayed automatically.
+
+```kotlin
+val diagnostics = rememberHapticPlaybackDiagnostics(pattern)
+// diagnostics.backend, capabilities, approximations, logicalDurationMs,
+// estimatedNativeDurationMs, unsupportedReason
+
+Jindong(trigger, playOnInitialComposition = false) {
+    Clip(pattern)
+}
+```
+
+Native startup failures throw. A later native player failure is available from `HapticHandle.failure` and propagates from suspending playback. An unsupported device produces an unsupported plan. Simulator planning, adapter, and callback tests validate scheduling and ownership; an iPhone is required to evaluate physical feedback.
