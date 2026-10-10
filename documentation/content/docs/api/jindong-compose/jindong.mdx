@@ -19,6 +19,13 @@ fun Jindong(
     vararg keys: Any?,
     content: @Composable JindongScope.() -> Unit
 )
+
+@Composable
+fun Jindong(
+    vararg keys: Any?,
+    playOnInitialComposition: Boolean,
+    content: @Composable JindongScope.() -> Unit
+)
 ```
 
 ## Parameters
@@ -26,19 +33,34 @@ fun Jindong(
 | Parameter | Type | Description |
 |-----------|------|-------------|
 | `keys` | `vararg Any?` | Keys that trigger re-execution when changed |
+| `playOnInitialComposition` | `Boolean` | Explicit initial playback policy in the second overload. Defaults to `true` when omitted. |
 | `content` | `@Composable JindongScope.() -> Unit` | DSL block defining the haptic pattern |
 
 ## Description
 
-`Jindong` works similarly to `LaunchedEffect`. When any of the provided keys change, the haptic pattern defined in the content block is compiled and executed.
+Both overloads compile content when `Jindong` enters composition and when a key changes. Entry playback remains enabled by default for compatibility.
+
+To avoid vibrating before user input, explicitly suppress initial playback:
+
+```kotlin
+Jindong(trigger, playOnInitialComposition = false) {
+    Haptic(100.ms)
+}
+```
+
+Later key changes compile the current content and play once. Changing only this option does not trigger compilation or playback. Leaving and re-entering composition resets the initial policy.
+
+Key changes cancel and restart playback, as with `LaunchedEffect`. Existing calls, including `Jindong(Unit)`, retain their entry playback.
+
+Keys detect changes rather than Boolean conditions. A Boolean key triggers on both `false → true` and `true → false`. Put a condition inside the content block when only one state should emit haptics.
 
 ### Key-based Triggering
 
 ```kotlin
 var count by remember { mutableStateOf(0) }
 
-// Executes when count changes
-Jindong(count) {
+// Skips entry playback and executes when count changes
+Jindong(count, playOnInitialComposition = false) {
     Haptic(100.ms)
 }
 ```
@@ -53,7 +75,7 @@ Jindong(key1, key2) {
 
 ### Immediate Execution on Enter
 
-Use `Unit` as a key to execute haptic immediately when the composable enters composition:
+Use a constant key to play once when the composable enters composition:
 
 ```kotlin
 @Composable
@@ -71,6 +93,8 @@ This is useful for:
 - Screen entry feedback
 - Initial greeting haptics
 - One-time notifications
+
+With `playOnInitialComposition = false`, `Jindong(Unit)` and calls without keys never play because their keys never change.
 
 ### Pattern Compilation
 
@@ -101,7 +125,7 @@ See [The Reactive Contract](/docs/guide/reactive-contract) for the full explanat
 fun BasicHaptic() {
     var trigger by remember { mutableStateOf(0) }
 
-    Jindong(trigger) {
+    Jindong(trigger, playOnInitialComposition = false) {
         Haptic(100.ms)
     }
 

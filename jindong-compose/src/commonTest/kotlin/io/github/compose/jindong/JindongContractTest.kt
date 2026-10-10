@@ -30,8 +30,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /**
- * Guards the reactive contract at the [Jindong] level: keys are the only playback trigger, and a
- * value read inside `content` but left out of the keys is frozen at the last key change.
+ * Guards the reactive contract at the [Jindong] level: after entry, keys are the only playback
+ * trigger, and a value read inside `content` but left out of the keys is frozen at the last key change.
  *
  * The Clip-level counterpart lives in [ClipTest]; this covers a parameter read directly by an
  * inline node.
@@ -66,6 +66,16 @@ class JindongContractTest :
         // untouched, so no new pattern is recorded.
         recorder.executedPatterns.size shouldBe 1
         recorder.executedPatterns.last().events.single().durationMs shouldBe 50
+
+        triggerKey.value = 1
+        waitForIdle()
+        recorder.executedPatterns.size shouldBe 2
+        recorder.executedPatterns.last().events.single().durationMs shouldBe 200
+
+        durationMs.value = 300
+        waitForIdle()
+        recorder.executedPatterns.size shouldBe 2
+        recorder.executedPatterns.last().events.single().durationMs shouldBe 200
       }
     }
 

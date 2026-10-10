@@ -46,7 +46,7 @@ class ClipTest :
 
         setContent {
           CompositionLocalProvider(LocalHapticExecutor provides recorder) {
-            Jindong(Unit) {
+            Jindong(Unit, playOnInitialComposition = true) {
               Delay(200.ms)
               Clip(onePulse)
             }
@@ -78,12 +78,14 @@ class ClipTest :
         }
 
         waitForIdle()
+        recorder.executedPatterns.size shouldBe 1
         recorder.executedPatterns.last().events.size shouldBe 1
 
         patternState.value = twoPulses
         waitForIdle()
 
         // The pattern is a key, so the composition recompiles and the new clip's events are emitted.
+        recorder.executedPatterns.size shouldBe 2
         recorder.executedPatterns.last().events.size shouldBe 2
       }
     }
@@ -97,7 +99,7 @@ class ClipTest :
           val pattern by patternState
           CompositionLocalProvider(LocalHapticExecutor provides recorder) {
             // Unit is the only key: swapping patternState never invalidates the compiled result.
-            Jindong(Unit) {
+            Jindong(Unit, playOnInitialComposition = true) {
               Clip(pattern)
             }
           }

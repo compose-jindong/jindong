@@ -22,12 +22,14 @@ Jindong provides a declarative DSL for haptic feedback in Compose Multiplatform 
 **Jindong[tɕindooŋ] (진동)** is the Korean word for "vibration". We chose this name to reflect the library's core purpose, as it's a familiar term for the Korean creators of this library.
 
 ```kotlin
-Jindong(trigger) {
+Jindong(trigger, playOnInitialComposition = false) {
     Haptic(100.ms)
     Delay(50.ms)
     Haptic(50.ms, HapticIntensity.STRONG)
 }
 ```
+
+`Jindong` plays on entry by default to preserve existing behavior. Set `playOnInitialComposition = false` to wait for the first key change, as above. `Jindong(Unit) { ... }` keeps its existing screen-entry playback.
 
 ## Features
 
@@ -73,7 +75,7 @@ fun App() {
     var count by remember { mutableStateOf(0) }
 
     JindongProvider {
-        Jindong(count) {
+        Jindong(count, playOnInitialComposition = false) {
             Haptic(100.ms)
         }
 
