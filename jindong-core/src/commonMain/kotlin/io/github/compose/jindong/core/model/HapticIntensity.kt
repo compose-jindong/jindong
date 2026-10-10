@@ -29,7 +29,8 @@ package io.github.compose.jindong.core.model
  *
  * ## Custom Intensity
  * Use [Custom] to specify any value between 0.0 and 1.0.
- * Values outside this range are automatically coerced.
+ * Finite values outside this range are automatically coerced. Non-finite values are rejected.
+ * An intensity of 0 is silent.
  *
  * ## Usage
  * ```kotlin
@@ -60,7 +61,7 @@ public sealed class HapticIntensity(public val value: Float) {
 
   public data class Custom(private val customValue: Float) : HapticIntensity(customValue.coerceIn(0f, 1f)) {
     init {
-      require(customValue.isFinite()) { "intensity must be finite, was $customValue" }
+      require(customValue.isFinite()) { "Intensity must be finite, was $customValue" }
     }
   }
 }

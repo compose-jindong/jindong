@@ -144,7 +144,7 @@ class MergeToSerialTest :
       tiedSegment.sharpness shouldBe 0.1f
     }
 
-    test("an active zero-intensity event is not flagged as a gap") {
+    test("an explicit zero-intensity interval stays distinct from an implicit gap") {
       val segments = mergeToSerial(
         listOf(event(startTimeMs = 0, durationMs = 100, intensity = HapticIntensity.Custom(0.0f))),
       )
@@ -154,6 +154,20 @@ class MergeToSerialTest :
         intensity shouldBe 0f
         isGap shouldBe false
       }
+    }
+
+    test("zero intensity preserves timing without masking an overlapping positive event") {
+      val segments = mergeToSerial(
+        listOf(
+          event(startTimeMs = 50, durationMs = 150, intensity = HapticIntensity.Custom(0f)),
+          event(startTimeMs = 100, durationMs = 50, intensity = HapticIntensity.MEDIUM),
+        ),
+      )
+
+      segments.map { it.startTimeMs } shouldBe listOf(0L, 50L, 100L, 150L)
+      segments.map { it.intensity } shouldBe listOf(0f, 0f, 0.5f, 0f)
+      segments.map { it.isGap } shouldBe listOf(true, false, false, false)
+      segments.sumOf { it.durationMs } shouldBe 200L
     }
 
     test("operates independently of input ordering") {

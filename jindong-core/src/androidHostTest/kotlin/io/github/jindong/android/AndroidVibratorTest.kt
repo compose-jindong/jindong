@@ -464,8 +464,7 @@ class AndroidVibratorTest {
   }
 
   @Test
-  fun `should handle minimum intensity`() = runTest {
-    // Custom(0.0) should map to amplitude 1 (not 0, as 0 means off)
+  fun `zero intensity should wait without starting a waveform or compat pulse`() = runTest {
     val pattern = HapticPattern(
       listOf(
         ScheduledHapticEvent(
@@ -478,8 +477,16 @@ class AndroidVibratorTest {
 
     executor.execute(pattern)
 
-    shadowVibrator.isVibrating shouldBe true
-    shadowVibrator.pattern shouldBe longArrayOf(100, 1, 1, 1)
+    testScheduler.currentTime shouldBe 100L
+    shadowVibrator.pattern.shouldBeNull()
+    shadowVibrator.isVibrating shouldBe false
+
+    val handle = executor.executeAsync(pattern)
+    handle.isActive shouldBe true
+    shadowVibrator.pattern.shouldBeNull()
+    handle.cancel()
+    handle.isActive shouldBe false
+    shadowVibrator.isCancelled shouldBe false
   }
 
   @Test

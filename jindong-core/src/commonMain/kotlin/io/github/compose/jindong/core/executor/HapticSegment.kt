@@ -22,8 +22,8 @@ package io.github.compose.jindong.core.executor
  * @property durationMs Length of this segment, always greater than 0.
  * @property intensity Winning event's intensity (NOT a sum of overlapping events); 0f when a gap.
  * @property sharpness Carried from the same winning event (iOS Core Haptics parameter).
- * @property isGap True when no event is active here. Distinct from an active event whose intensity
- *   happens to be 0f (e.g. `Custom(0.0)`), which must still floor to a non-zero amplitude.
+ * @property isGap True when no event is present here. A zero-intensity event is also silent, but
+ *   remains distinct so fall ramps cannot borrow time from its explicitly silent interval.
  */
 internal data class HapticSegment(
   val startTimeMs: Long,

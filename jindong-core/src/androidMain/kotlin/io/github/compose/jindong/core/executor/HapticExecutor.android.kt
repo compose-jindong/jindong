@@ -69,8 +69,8 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
 
     // Await the exact waveform that was played, including the primer/trailing compat segments,
     // so the caller resumes when the vibration truly ends rather than a few ms early.
-    val waveform = vibratePattern(pattern) ?: return
-    delay(waveform.playbackDurationMs().milliseconds)
+    val waveform = vibratePattern(pattern)
+    delay((waveform?.playbackDurationMs() ?: pattern.rawSpanMs()).milliseconds)
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
@@ -80,7 +80,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     else -> when (val waveform = vibratePattern(pattern)) {
       // Use the exact waveform length (primer/trailing compat segments included), matching execute(),
       // so isActive estimates completion against what actually played.
-      null -> AndroidHapticHandle(vibrator = null, totalDurationMs = 0L)
+      null -> AndroidHapticHandle(vibrator = null, totalDurationMs = pattern.rawSpanMs())
 
       else -> AndroidHapticHandle(vibrator = vibrator, totalDurationMs = waveform.playbackDurationMs())
     }
@@ -119,7 +119,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
    *                                                                 drop to 0 doesn't ring (LRA only)
    *
    * 3. quantize        timings  = [100,  8, 42, 100]             intensity 0..1 -> amplitude 0..255;
-   *                    amplitudes=[191, 95,  0, 127]             a real gap stays 0, an active slice
+   *                    amplitudes=[191, 95,  0, 127]             zero stays 0; positive intensity
    *                                                              floors to 1 (never silent-by-rounding)
    *
    * 4. applyDeviceCompat timings  = [100, 8, 42, 100, 1]         trailing 1ms-off terminates the
@@ -128,17 +128,17 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
    * ```
    *
    * Returns null (so the caller plays nothing) when [mergeToSerial] yields no active slice — i.e.
-   * an empty, zero-duration, or all-gap pattern. Without this guard step 4 would still append the
+   * an empty, zero-duration, or all-zero pattern. Without this guard step 4 would still append the
    * compat segments, making the motor buzz for a pattern the user meant to be silent.
    *
    * Fall ramps (step 2) only soften `active -> gap` transitions where a real gap follows, not the
    * pattern's final active slice: that trailing drop to 0 is handled by the compat 1ms-off segment
    * (step 4), which lets the driver's active braking settle the actuator rather than a ramp.
    */
-  private fun HapticPattern.toWaveform(): Waveform? {
+  internal fun HapticPattern.toWaveform(): Waveform? {
     // 1. Flatten overlapping events into one serial timeline of [HapticSegment]s.
     val serial = mergeToSerial(events)
-    if (serial.none { !it.isGap }) return null
+    if (serial.none { it.intensity > 0f }) return null
 
     // 2. Soften active->gap amplitude drops, but only where the motor can render the in-between
     //    levels (LRA); on ERM every non-zero amplitude rounds up to full, so a ramp is pointless.
@@ -149,9 +149,7 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     val amplitudes = mutableListOf<Int>()
     for (segment in segments) {
       timings += segment.durationMs
-      // A real gap stays at 0; an active slice floors to 1 via coerceIn, so an event with
-      // 0f intensity (Custom(0.0)) still registers as the faintest buzz rather than silence.
-      amplitudes += if (segment.isGap) 0 else segment.toAmplitude()
+      amplitudes += segment.toAmplitude()
     }
 
     // 4. Append the device-compat segments (Samsung primer + clean trailing termination).
@@ -186,14 +184,14 @@ internal class DefaultAndroidHapticExecutor(context: Context) : HapticExecutor {
     return Waveform(timings.toLongArray(), amplitudes.toIntArray())
   }
 
-  private fun HapticSegment.toAmplitude(): Int = (intensity * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
+  private fun HapticSegment.toAmplitude(): Int = if (intensity == 0f) 0 else (intensity * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
 
   // The played waveform's length is the sum of its slice timings (compat segments included). Signature
   // is asymmetric with iOS's playbackDurationMs() on purpose: playback length is derived from a
   // different input per platform (Android = the waveform actually played, iOS = the pattern).
   private fun Waveform.playbackDurationMs(): Long = timings.sum()
 
-  private data class Waveform(
+  internal data class Waveform(
     val timings: LongArray,
     val amplitudes: IntArray,
   ) {

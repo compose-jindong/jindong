@@ -62,10 +62,14 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
     get() = isSupported
 
   override suspend fun execute(pattern: HapticPattern) {
-    if (!isSupported || pattern.events.isEmpty()) return
+    if (pattern.events.none { it.intensity.value > 0f && it.durationMs > 0L }) {
+      delay(pattern.playbackDurationMs())
+      return
+    }
+    if (!isSupported) return
 
-    val currentEngine = ensureEngine() ?: return
     val chPattern = pattern.toCHHapticPattern() ?: return
+    val currentEngine = ensureEngine() ?: return
 
     memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
@@ -82,12 +86,14 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
   }
 
   override fun executeAsync(pattern: HapticPattern): HapticHandle {
-    if (!isSupported || pattern.events.isEmpty()) {
-      return IosHapticHandle(player = null, totalDurationMs = 0L)
+    if (pattern.events.none { it.intensity.value > 0f && it.durationMs > 0L }) {
+      return IosHapticHandle(player = null, totalDurationMs = pattern.playbackDurationMs())
     }
+    if (!isSupported) return IosHapticHandle(player = null, totalDurationMs = 0L)
 
+    val hapticPattern = pattern.toCHHapticPattern()
+      ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
     val currentEngine = ensureEngine() ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
-    val hapticPattern = pattern.toCHHapticPattern() ?: return IosHapticHandle(player = null, totalDurationMs = 0L)
 
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
@@ -149,8 +155,9 @@ internal class DefaultIosHapticExecutor : HapticExecutor {
   // Core Haptics has no compat segments, so the pattern's raw span already is its playback length.
   private fun HapticPattern.playbackDurationMs(): Long = rawSpanMs()
 
-  private fun HapticPattern.toCHHapticPattern(): CHHapticPattern? {
-    val hapticEvents = events.map { it.toCHHapticEvent() }
+  internal fun HapticPattern.toCHHapticPattern(): CHHapticPattern? {
+    val hapticEvents = events.filter { it.intensity.value > 0f && it.durationMs > 0L }.map { it.toCHHapticEvent() }
+    if (hapticEvents.isEmpty()) return null
     return memScoped {
       val errorPtr = alloc<ObjCObjectVar<NSError?>>()
       val pattern = CHHapticPattern(
