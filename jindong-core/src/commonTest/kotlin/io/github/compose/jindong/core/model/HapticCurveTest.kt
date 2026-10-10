@@ -18,6 +18,7 @@ package io.github.compose.jindong.core.model
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
+import kotlin.time.Duration.Companion.milliseconds
 
 private fun rise(): HapticCurve = HapticCurve(
   listOf(
@@ -108,6 +109,29 @@ class HapticCurveTest :
       shouldThrow<IllegalArgumentException> {
         legacy.copy(iosParameters = IosHapticParameters(sharpness = Float.NaN))
       }
+    }
+
+    test("changing only legacy ADSR parameters preserves an explicit common sharpness") {
+      val legacy = ScheduledHapticEvent(0L, 100L, HapticIntensity.MEDIUM, IosHapticParameters(sharpness = 0.2f))
+      val upgraded = legacy.copy(eventType = HapticEventType.CONTINUOUS, sharpness = 0.9f)
+      val rich = ScheduledHapticEvent(
+        0L,
+        100L,
+        HapticIntensity.MEDIUM,
+        legacy.iosParameters,
+        eventType = HapticEventType.CONTINUOUS,
+        sharpness = 0.9f,
+      )
+      upgraded shouldBe rich
+      val parameters = upgraded.iosParameters!!.copy(attackTime = 10.milliseconds, releaseTime = 20.milliseconds)
+      upgraded.copy(iosParameters = parameters).sharpness shouldBe 0.9f
+      upgraded.copy(iosParameters = parameters) shouldBe rich.copy(iosParameters = parameters)
+      legacy.copy(iosParameters = parameters).sharpness shouldBe 0.2f
+      legacy.copy(iosParameters = parameters.copy(sharpness = 0.7f)).sharpness shouldBe 0.7f
+      ScheduledHapticEvent(0L, 100L, HapticIntensity.MEDIUM)
+        .copy(eventType = HapticEventType.CONTINUOUS, sharpness = 0.9f)
+        .copy(iosParameters = IosHapticParameters(attackTime = 10.milliseconds))
+        .sharpness shouldBe 0.9f
     }
 
     test("scaling changes fixed intensity and curve but preserves sharpness and timing") {
