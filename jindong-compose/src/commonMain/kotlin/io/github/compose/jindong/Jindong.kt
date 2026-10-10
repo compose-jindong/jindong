@@ -15,7 +15,6 @@
  */
 package io.github.compose.jindong
 
-import androidx.compose.runtime.BroadcastFrameClock
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Composition
 import androidx.compose.runtime.LaunchedEffect
@@ -26,9 +25,7 @@ import io.github.compose.jindong.compose.JindongApplier
 import io.github.compose.jindong.core.element.SequenceElement
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.executor.LocalHapticExecutor
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
+import kotlin.coroutines.EmptyCoroutineContext
 
 /**
  * Composable that compiles the haptic pattern in [content] and plays it when [keys] change.
@@ -120,32 +117,21 @@ private class JindongEntry {
  * Internal class that manages the Composition for haptic pattern compilation.
  */
 private class JindongCompositionHost : AutoCloseable {
-  private val clock = BroadcastFrameClock()
-  private val coroutineScope = CoroutineScope(clock)
   private val rootElement = SequenceElement()
   private val applier = JindongApplier(rootElement)
-  private val recomposer = Recomposer(clock)
+  private val recomposer = Recomposer(EmptyCoroutineContext)
   private val composition = Composition(applier, recomposer)
-
-  init {
-    coroutineScope.launch {
-      recomposer.runRecomposeAndApplyChanges()
-    }
-  }
 
   override fun close() {
     dispose()
   }
 
   fun setContent(content: @Composable JindongScope.() -> Unit) {
+    // setContent applies the initial tree synchronously; compilation must never recompose it.
     composition.setContent {
       val scope = JindongScopeImpl()
       scope.content()
     }
-  }
-
-  fun sendFrame() {
-    clock.sendFrame(0L)
   }
 
   fun collectEvents(): HapticPattern {
@@ -155,8 +141,7 @@ private class JindongCompositionHost : AutoCloseable {
 
   fun dispose() {
     composition.dispose()
-    recomposer.close()
-    coroutineScope.cancel()
+    recomposer.cancel()
   }
 }
 
@@ -174,6 +159,5 @@ internal fun compilePattern(
 ): HapticPattern = JindongCompositionHost()
   .use { host ->
     host.setContent(content)
-    host.sendFrame()
     host.collectEvents()
   }
