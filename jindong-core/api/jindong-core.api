@@ -41,6 +41,7 @@ public final class io/github/compose/jindong/core/dsl/HapticPatternScope {
 	public final fun haptic-KLykuaI (JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;)V
 	public static synthetic fun haptic-KLykuaI$default (Lio/github/compose/jindong/core/dsl/HapticPatternScope;JLio/github/compose/jindong/core/model/HapticIntensity;Lio/github/compose/jindong/core/model/IosHapticParameters;ILjava/lang/Object;)V
 	public final fun include (Lio/github/compose/jindong/core/model/HapticPattern;)V
+	public final fun parallel (Lkotlin/jvm/functions/Function1;)V
 	public final fun repeat (ILkotlin/jvm/functions/Function1;)V
 	public final fun repeatWithIndex (ILkotlin/jvm/functions/Function2;)V
 	public final fun sequence (Lkotlin/jvm/functions/Function1;)V
@@ -65,6 +66,13 @@ public abstract interface class io/github/compose/jindong/core/element/HapticEle
 	public abstract fun collectEvents (J)Ljava/util/List;
 	public abstract fun getChildren ()Ljava/util/List;
 	public abstract fun totalDurationMs (J)J
+}
+
+public final class io/github/compose/jindong/core/element/ParallelElement : io/github/compose/jindong/core/element/HapticElement {
+	public fun <init> ()V
+	public fun collectEvents (J)Ljava/util/List;
+	public fun getChildren ()Ljava/util/List;
+	public fun totalDurationMs (J)J
 }
 
 public final class io/github/compose/jindong/core/element/PatternElement : io/github/compose/jindong/core/element/HapticElement {

@@ -74,6 +74,7 @@ final class io.github.compose.jindong.core.dsl/HapticPatternScope { // io.github
     final fun delay(kotlin.time/Duration) // io.github.compose.jindong.core.dsl/HapticPatternScope.delay|delay(kotlin.time.Duration){}[0]
     final fun haptic(kotlin.time/Duration, io.github.compose.jindong.core.model/HapticIntensity = ..., io.github.compose.jindong.core.model/IosHapticParameters? = ...) // io.github.compose.jindong.core.dsl/HapticPatternScope.haptic|haptic(kotlin.time.Duration;io.github.compose.jindong.core.model.HapticIntensity;io.github.compose.jindong.core.model.IosHapticParameters?){}[0]
     final fun include(io.github.compose.jindong.core.model/HapticPattern) // io.github.compose.jindong.core.dsl/HapticPatternScope.include|include(io.github.compose.jindong.core.model.HapticPattern){}[0]
+    final fun parallel(kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.parallel|parallel(kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]
     final fun repeat(kotlin/Int, kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.repeat|repeat(kotlin.Int;kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]
     final fun repeatWithIndex(kotlin/Int, kotlin/Function2<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Int, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.repeatWithIndex|repeatWithIndex(kotlin.Int;kotlin.Function2<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Int,kotlin.Unit>){}[0]
     final fun sequence(kotlin/Function1<io.github.compose.jindong.core.dsl/HapticPatternScope, kotlin/Unit>) // io.github.compose.jindong.core.dsl/HapticPatternScope.sequence|sequence(kotlin.Function1<io.github.compose.jindong.core.dsl.HapticPatternScope,kotlin.Unit>){}[0]
@@ -90,6 +91,16 @@ final class io.github.compose.jindong.core.element/DelayElement : io.github.comp
 
     final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/DelayElement.collectEvents|collectEvents(kotlin.Long){}[0]
     final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/DelayElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
+}
+
+final class io.github.compose.jindong.core.element/ParallelElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/ParallelElement|null[0]
+    constructor <init>() // io.github.compose.jindong.core.element/ParallelElement.<init>|<init>(){}[0]
+
+    final val children // io.github.compose.jindong.core.element/ParallelElement.children|{}children[0]
+        final fun <get-children>(): kotlin.collections/MutableList<io.github.compose.jindong.core.element/HapticElement> // io.github.compose.jindong.core.element/ParallelElement.children.<get-children>|<get-children>(){}[0]
+
+    final fun collectEvents(kotlin/Long): kotlin.collections/List<io.github.compose.jindong.core.model/ScheduledHapticEvent> // io.github.compose.jindong.core.element/ParallelElement.collectEvents|collectEvents(kotlin.Long){}[0]
+    final fun totalDurationMs(kotlin/Long): kotlin/Long // io.github.compose.jindong.core.element/ParallelElement.totalDurationMs|totalDurationMs(kotlin.Long){}[0]
 }
 
 final class io.github.compose.jindong.core.element/PatternElement : io.github.compose.jindong.core.element/HapticElement { // io.github.compose.jindong.core.element/PatternElement|null[0]
