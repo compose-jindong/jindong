@@ -17,6 +17,7 @@ package io.github.compose.jindong.core.dsl
 
 import io.github.compose.jindong.core.element.DelayElement
 import io.github.compose.jindong.core.element.HapticElement
+import io.github.compose.jindong.core.element.ParallelElement
 import io.github.compose.jindong.core.element.PatternElement
 import io.github.compose.jindong.core.element.RepeatElement
 import io.github.compose.jindong.core.element.SequenceElement
@@ -201,6 +202,18 @@ class HapticPatternScope internal constructor() {
     innerScope.block()
     sequenceElement.children.addAll(innerScope.rootElement.children)
     rootElement.children.add(sequenceElement)
+  }
+
+  /**
+   * Starts every direct child at the same time, lasting as long as the longest child.
+   * Use [sequence] inside a branch to place its delay and events consecutively.
+   */
+  fun parallel(block: HapticPatternScope.() -> Unit) {
+    val innerScope = HapticPatternScope()
+    innerScope.block()
+    val parallelElement = ParallelElement()
+    parallelElement.children.addAll(innerScope.rootElement.children)
+    rootElement.children.add(parallelElement)
   }
 
   /**

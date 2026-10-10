@@ -4,6 +4,7 @@
     "haptic",
     "delay",
     "sequence",
+    "parallel",
     "repeat",
     "repeat-with-index",
     "clip"

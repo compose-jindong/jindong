@@ -61,6 +61,10 @@ public final class io/github/compose/jindong/dsl/HapticKt {
 	public static final fun Haptic-NcHsxvU (Lio/github/compose/jindong/JindongScope;JLio/github/compose/jindong/core/model/HapticIntensity;Landroidx/compose/runtime/Composer;II)V
 }
 
+public final class io/github/compose/jindong/dsl/ParallelKt {
+	public static final fun Parallel (Lio/github/compose/jindong/JindongScope;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
+}
+
 public final class io/github/compose/jindong/dsl/RepeatKt {
 	public static final fun Repeat (Lio/github/compose/jindong/JindongScope;ILkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
 }

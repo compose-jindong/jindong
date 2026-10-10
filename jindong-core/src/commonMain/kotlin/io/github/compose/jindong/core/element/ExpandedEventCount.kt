@@ -33,6 +33,8 @@ internal fun HapticElement.expandedEventCount(): Int = when (this) {
 
   is SequenceElement -> children.expandedEventCount()
 
+  is ParallelElement -> children.expandedEventCount()
+
   else -> checkedEventCount(collectEvents(0L).size.toLong(), "custom element")
 }
 

@@ -1,0 +1,40 @@
+---
+title: Parallel
+description: Start haptic branches together and preserve their longest duration.
+---
+
+`Parallel` starts every direct child at the same timeline position. Its duration is the maximum complete child duration, including silence. A 100ms branch beside a 150ms branch lasts 150ms.
+
+```kotlin
+Jindong(trigger, playOnInitialComposition = false) {
+    Parallel {
+        Continuous(150.ms, sharpness = 0.3f)
+        Sequence {
+            Transient(sharpness = 0.9f)
+            Delay(80.ms)
+            Transient(sharpness = 0.9f)
+        }
+    }
+}
+```
+
+Use `Sequence` inside a branch to give its events an internal offset. A direct `Delay` child contributes to the maximum duration; it does not delay its siblings. Transients contribute events with zero logical duration.
+
+The Kotlin builder follows the same rules:
+
+```kotlin
+val pattern = buildHapticPattern {
+    parallel {
+        continuous(150.ms, sharpness = 0.3f)
+        sequence {
+            transient(sharpness = 0.9f)
+            delay(80.ms)
+            transient(sharpness = 0.9f)
+        }
+    }
+}
+```
+
+The common timeline keeps each event and its independent curves. Native executors choose how to render overlapping events. Android uses maximum intensity and the winning event's sharpness; equal intensities retain input order. Intensity crossings are split on a 1ms grid. Approximation details are available from `executor.diagnose(pattern)`.
+
+Mixing is bounded to 100,000 serial intervals and 1,000,000 active-event visits. A plan that exceeds either budget is reported as unsupported. These limits bound planner work; they do not guarantee a particular device latency.
