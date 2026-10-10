@@ -51,14 +51,16 @@ data class TimelineBar(
   val widthFraction: Float,
   val heightFraction: Float,
   val color: Color,
+  val endHeightFraction: Float = heightFraction,
 )
 
 /**
  * Converts a [HapticPattern]'s events into normalized [TimelineBar]s.
  *
  * - `leftFraction = start / window`
- * - `widthFraction = max(0.006, dur / window)` (min 0.6% so an instantaneous tap stays visible)
- * - `heightFraction = max(0.06, intensity * 0.98)` (min 6%)
+ * - `widthFraction = max(0.006, dur / window)` (instantaneous impacts remain visible)
+ * - `heightFraction = intensity * 0.98`; zero intensity remains zero.
+ * - Intensity curves produce one trapezoid per control-point interval.
  */
 object TimelineMapper {
   fun toBars(
@@ -68,13 +70,18 @@ object TimelineMapper {
   ): List<TimelineBar> {
     if (windowMs <= 0L) return emptyList()
     val window = windowMs.toFloat()
-    return pattern.events.map { event ->
-      TimelineBar(
-        leftFraction = (event.startTimeMs / window).coerceIn(0f, 1f),
-        widthFraction = maxOf(0.006f, event.durationMs / window),
-        heightFraction = maxOf(0.06f, event.intensity.value * 0.98f),
-        color = color(event),
+    return pattern.events.flatMap { event ->
+      val tone = color(event)
+      fun bar(start: Long, duration: Long, intensity: Float, endIntensity: Float = intensity): TimelineBar = TimelineBar(
+        leftFraction = (start / window).coerceIn(0f, 1f),
+        widthFraction = maxOf(0.006f, duration / window),
+        heightFraction = intensity * 0.98f,
+        endHeightFraction = endIntensity * 0.98f,
+        color = tone,
       )
+      event.intensityCurve?.points?.zipWithNext { left, right ->
+        bar(event.startTimeMs + left.timeMs, right.timeMs - left.timeMs, left.value, right.value)
+      } ?: listOf(bar(event.startTimeMs, event.durationMs, event.intensity.value))
     }
   }
 }
@@ -165,10 +172,24 @@ private fun DrawScope.drawBar(
   minWidthPx: Float,
   cornerRadiusPx: Float,
 ) {
+  if (bar.heightFraction == 0f && bar.endHeightFraction == 0f) return
   val left = bar.leftFraction * size.width
   val width = maxOf(minWidthPx, bar.widthFraction * size.width)
   val height = bar.heightFraction * size.height
   val top = size.height - height
+  if (bar.endHeightFraction != bar.heightFraction) {
+    drawPath(
+      Path().apply {
+        moveTo(left, size.height)
+        lineTo(left, top)
+        lineTo(left + width, size.height - bar.endHeightFraction * size.height)
+        lineTo(left + width, size.height)
+        close()
+      },
+      bar.color,
+    )
+    return
+  }
   // Top corners rounded only; anchored to the plot bottom.
   val path =
     Path().apply {

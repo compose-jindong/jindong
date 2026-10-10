@@ -22,6 +22,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.defaultMinSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -47,8 +48,12 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import io.github.compose.jindong.Jindong
 import io.github.compose.jindong.dsl.Clip
+import io.github.compose.jindong.rememberHapticPlaybackDiagnostics
 import io.github.compose.jindong.sample.components.HapticTimeline
 import io.github.compose.jindong.sample.components.JindongIcons
+import io.github.compose.jindong.sample.components.MonoLabel
+import io.github.compose.jindong.sample.components.PlayButton
+import io.github.compose.jindong.sample.components.PresetChip
 import io.github.compose.jindong.sample.components.ScreenDescription
 import io.github.compose.jindong.sample.components.TimelineMapper
 import io.github.compose.jindong.sample.components.VGap
@@ -69,11 +74,15 @@ fun PresetGalleryScreen(modifier: Modifier = Modifier) {
   Column(modifier = modifier.fillMaxWidth()) {
     ScreenDescription(
       buildAnnotatedString {
-        append("Ten real-world patterns built from the primitives above. Tap a card to expand its timeline.")
+        append("Explore common rich feedback, or tap a preset card to expand its timeline.")
       },
     )
 
     VGap(16.dp)
+
+    RichFeedbackSection()
+
+    VGap(20.dp)
 
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
       presets.forEach { preset ->
@@ -197,4 +206,71 @@ private fun PresetPlayChip(onClick: () -> Unit) {
       modifier = Modifier.size(13.dp),
     )
   }
+}
+
+/** Shared rich patterns; changing selection previews the value, and only Play changes the key. */
+@Composable
+private fun RichFeedbackSection() {
+  val colors = JindongTheme.colors
+  var selected by remember { mutableIntStateOf(0) }
+  var playTrigger by remember { mutableIntStateOf(0) }
+  val preset = richFeedbackPresets[selected]
+  val pattern = preset.pattern
+  val diagnostic = rememberHapticPlaybackDiagnostics(pattern)
+  val window = presetWindow(pattern.durationMs)
+  val bars = remember(pattern, window, colors.accent) { TimelineMapper.toBars(pattern, window) { colors.accent } }
+
+  Column(
+    modifier = Modifier.fillMaxWidth()
+      .clip(RoundedCornerShape(Dimens.radiusBigCard))
+      .border(Dimens.stroke, colors.border, RoundedCornerShape(Dimens.radiusBigCard))
+      .padding(Dimens.cardPadding),
+  ) {
+    MonoLabel("RICH FEEDBACK")
+    VGap(10.dp)
+    FlowRow(
+      horizontalArrangement = Arrangement.spacedBy(Dimens.rowGapSmall),
+      verticalArrangement = Arrangement.spacedBy(Dimens.rowGapSmall),
+    ) {
+      richFeedbackPresets.forEachIndexed { index, item ->
+        PresetChip(
+          label = item.name,
+          selected = selected == index,
+          onClick = { selected = index },
+          subValue = "${item.pattern.durationMs} ms",
+        )
+      }
+    }
+    VGap(12.dp)
+    HapticTimeline(
+      bars = bars,
+      topLeft = "INTENSITY ▲",
+      topRight = "${pattern.durationMs} ms",
+      minLabel = "0",
+      maxLabel = window.toString(),
+      playheadProgress = 0f,
+      playheadVisible = false,
+    )
+    VGap(12.dp)
+    Text(
+      text = "Backend: ${diagnostic.backend.name.replace('_', ' ')}",
+      style = JindongTheme.typography.bodySmall,
+      color = colors.text2,
+    )
+    Text(
+      text = "Timeline ${diagnostic.logicalDurationMs} ms · Native estimate ${diagnostic.estimatedNativeDurationMs} ms",
+      style = JindongTheme.typography.bodySmall,
+      color = colors.text3,
+    )
+    diagnostic.approximations.forEach { approximation ->
+      Text(text = "• $approximation", style = JindongTheme.typography.bodySmall, color = colors.text3)
+    }
+    diagnostic.unsupportedReason?.let { reason ->
+      Text(text = reason, style = JindongTheme.typography.bodySmall, color = colors.text3)
+    }
+    VGap(14.dp)
+    PlayButton(onClick = { playTrigger++ }, text = "Play ${preset.name}")
+  }
+
+  Jindong(playTrigger, playOnInitialComposition = false) { Clip(pattern) }
 }
