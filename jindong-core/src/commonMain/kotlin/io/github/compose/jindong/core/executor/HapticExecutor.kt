@@ -51,6 +51,18 @@ interface HapticExecutor {
     get() = false
 
   /**
+   * Describes the selected native path and any approximations without playing [pattern].
+   * Custom executors can override this to provide their own planning information.
+   */
+  fun diagnose(pattern: HapticPattern): HapticPlaybackDiagnostics = HapticPlaybackDiagnostics(
+    backend = if (isSupported) HapticPlaybackBackend.CUSTOM else HapticPlaybackBackend.UNSUPPORTED,
+    capabilities = HapticDeviceCapabilities(isSupported, hasAmplitudeControl),
+    logicalDurationMs = pattern.durationMs,
+    estimatedNativeDurationMs = if (isSupported) pattern.durationMs else 0L,
+    unsupportedReason = if (isSupported) null else "Haptic hardware is unavailable",
+  )
+
+  /**
    * Executes haptic pattern. Cancellable via coroutine cancellation.
    * When cancelled, the ongoing vibration is stopped immediately.
    *
