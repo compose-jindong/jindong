@@ -80,7 +80,8 @@ public class ScheduledHapticEvent private constructor(
     iosParameters: IosHapticParameters? = this.iosParameters,
   ): ScheduledHapticEvent = ScheduledHapticEvent(
     startTimeMs, durationMs, intensity, iosParameters, eventType,
-    if (legacy) iosParameters?.sharpness ?: 0.5f else sharpness, intensityCurve, sharpnessCurve, legacy,
+    if (legacy && iosParameters != this.iosParameters) iosParameters?.sharpness ?: 0.5f else sharpness,
+    intensityCurve, sharpnessCurve, legacy,
   )
 
   /** Copies rich properties; [eventType] is required to keep the original overload unambiguous. */

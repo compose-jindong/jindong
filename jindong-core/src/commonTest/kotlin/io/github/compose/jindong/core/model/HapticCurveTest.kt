@@ -99,6 +99,17 @@ class HapticCurveTest :
       (curved() == curved().copy(eventType = HapticEventType.CONTINUOUS, sharpness = 0.7f)) shouldBe false
     }
 
+    test("old copy preserves rich sharpness after upgrading a legacy event") {
+      val legacy = ScheduledHapticEvent(0L, 100L, HapticIntensity.MEDIUM)
+      val upgraded = legacy.copy(eventType = HapticEventType.CONTINUOUS, sharpness = 0.9f)
+      upgraded.copy(startTimeMs = 10L).sharpness shouldBe 0.9f
+      upgraded.copy(iosParameters = upgraded.iosParameters).sharpness shouldBe 0.9f
+      legacy.copy(iosParameters = IosHapticParameters(sharpness = 0.2f)).sharpness shouldBe 0.2f
+      shouldThrow<IllegalArgumentException> {
+        legacy.copy(iosParameters = IosHapticParameters(sharpness = Float.NaN))
+      }
+    }
+
     test("scaling changes fixed intensity and curve but preserves sharpness and timing") {
       val original = HapticPattern(listOf(curved(10L)), 400L)
       val scaled = original.scaleIntensity(2f)
