@@ -31,7 +31,20 @@ public fun HapticPattern.timeStretch(factor: Float): HapticPattern {
       require(event.durationMs == 0L || end > start) {
         "event[$index] rounds to 0ms; use a factor that retains at least 1ms"
       }
-      event.copy(startTimeMs = start, durationMs = end - start)
+      fun stretch(curve: HapticCurve?): HapticCurve? = curve?.let {
+        HapticCurve(
+          it.points.map { point ->
+            point.copy(timeMs = scaleTime(checkedTimeAdd(event.startTimeMs, point.timeMs, "curve time"), factor) - start)
+          },
+        )
+      }
+      event.copy(
+        startTimeMs = start,
+        durationMs = end - start,
+        eventType = event.eventType,
+        intensityCurve = stretch(event.intensityCurve),
+        sharpnessCurve = stretch(event.sharpnessCurve),
+      )
     },
     duration,
   )

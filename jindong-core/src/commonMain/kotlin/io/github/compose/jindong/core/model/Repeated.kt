@@ -20,6 +20,7 @@ public fun HapticPattern.repeated(times: Int): HapticPattern {
   require(times >= 0) { "times must be non-negative, was $times" }
   val duration = checkedTimeMultiply(durationMs, times, "repeated")
   val eventCount = checkedEventCount(events.size.toLong() * times, "repeated")
+  checkedControlPointCount(events.controlPointCount().toLong() * times, "repeated")
   if (eventCount == 0) return HapticPattern(emptyList(), duration)
   return HapticPattern(
     buildList(eventCount) {

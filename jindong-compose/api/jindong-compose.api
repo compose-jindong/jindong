@@ -26,6 +26,10 @@ public final class io/github/compose/jindong/HapticPlatform : java/lang/Enum {
 	public static fun values ()[Lio/github/compose/jindong/HapticPlatform;
 }
 
+public final class io/github/compose/jindong/HapticPlaybackDiagnosticsKt {
+	public static final fun rememberHapticPlaybackDiagnostics (Lio/github/compose/jindong/core/model/HapticPattern;Landroidx/compose/runtime/Composer;I)Lio/github/compose/jindong/core/executor/HapticPlaybackDiagnostics;
+}
+
 public final class io/github/compose/jindong/JindongKt {
 	public static final fun Jindong ([Ljava/lang/Object;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
 	public static final fun Jindong ([Ljava/lang/Object;ZLkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
@@ -43,6 +47,10 @@ public abstract interface annotation class io/github/compose/jindong/JindongScop
 
 public final class io/github/compose/jindong/dsl/ClipKt {
 	public static final fun Clip (Lio/github/compose/jindong/JindongScope;Lio/github/compose/jindong/core/model/HapticPattern;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class io/github/compose/jindong/dsl/ContinuousKt {
+	public static final fun Continuous-LFamP3s (Lio/github/compose/jindong/JindongScope;JLio/github/compose/jindong/core/model/HapticIntensity;FLio/github/compose/jindong/core/model/HapticCurve;Lio/github/compose/jindong/core/model/HapticCurve;Landroidx/compose/runtime/Composer;II)V
 }
 
 public final class io/github/compose/jindong/dsl/DelayKt {
@@ -63,5 +71,9 @@ public final class io/github/compose/jindong/dsl/RepeatWithIndexKt {
 
 public final class io/github/compose/jindong/dsl/SequenceKt {
 	public static final fun Sequence (Lio/github/compose/jindong/JindongScope;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
+}
+
+public final class io/github/compose/jindong/dsl/TransientKt {
+	public static final fun Transient (Lio/github/compose/jindong/JindongScope;Lio/github/compose/jindong/core/model/HapticIntensity;FLandroidx/compose/runtime/Composer;II)V
 }
 

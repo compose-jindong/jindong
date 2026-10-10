@@ -19,6 +19,7 @@ package io.github.compose.jindong.core.model
 public infix fun HapticPattern.then(other: HapticPattern): HapticPattern {
   val duration = checkedTimeAdd(durationMs, other.durationMs, "then")
   checkedEventCount(events.size.toLong() + other.events.size, "then")
+  checkedControlPointCount(events.controlPointCount().toLong() + other.events.controlPointCount(), "then")
   return HapticPattern(
     events + other.events.map { event ->
       event.copy(startTimeMs = checkedTimeAdd(durationMs, event.startTimeMs, "then event"))

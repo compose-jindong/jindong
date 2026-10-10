@@ -21,10 +21,13 @@ import io.github.compose.jindong.core.element.PatternElement
 import io.github.compose.jindong.core.element.RepeatElement
 import io.github.compose.jindong.core.element.SequenceElement
 import io.github.compose.jindong.core.element.VibrationElement
+import io.github.compose.jindong.core.model.HapticCurve
+import io.github.compose.jindong.core.model.HapticEventType
 import io.github.compose.jindong.core.model.HapticIntensity
 import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.IosHapticParameters
 import io.github.compose.jindong.core.model.MAX_PATTERN_EVENTS
+import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import io.github.compose.jindong.core.toHapticMilliseconds
 import kotlin.time.Duration
 
@@ -69,6 +72,51 @@ class HapticPatternScope internal constructor() {
         durationMs = duration.toHapticMilliseconds(),
         intensity = intensity,
         iosParameters = iosParameters,
+      ),
+    )
+  }
+
+  /** Adds an instantaneous impact. Its physical pulse length is chosen by the backend. */
+  fun transient(
+    intensity: HapticIntensity = HapticIntensity.MEDIUM,
+    sharpness: Float = 0.5f,
+  ) {
+    include(
+      HapticPattern(
+        listOf(
+          ScheduledHapticEvent(
+            startTimeMs = 0L,
+            durationMs = 0L,
+            intensity = intensity,
+            eventType = HapticEventType.TRANSIENT,
+            sharpness = sharpness,
+          ),
+        ),
+      ),
+    )
+  }
+
+  /** Adds positive-duration feedback. A supplied curve replaces its corresponding fixed value. */
+  fun continuous(
+    duration: Duration,
+    intensity: HapticIntensity = HapticIntensity.MEDIUM,
+    sharpness: Float = 0.5f,
+    intensityCurve: HapticCurve? = null,
+    sharpnessCurve: HapticCurve? = null,
+  ) {
+    include(
+      HapticPattern(
+        listOf(
+          ScheduledHapticEvent(
+            startTimeMs = 0L,
+            durationMs = duration.toHapticMilliseconds(),
+            intensity = intensity,
+            eventType = HapticEventType.CONTINUOUS,
+            sharpness = sharpness,
+            intensityCurve = intensityCurve,
+            sharpnessCurve = sharpnessCurve,
+          ),
+        ),
       ),
     )
   }

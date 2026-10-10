@@ -27,6 +27,7 @@ public class HapticPattern(
 ) {
   init {
     checkedEventCount(events.size.toLong(), "pattern")
+    events.controlPointCount()
   }
 
   public val events: List<ScheduledHapticEvent> = object : AbstractList<ScheduledHapticEvent>() {

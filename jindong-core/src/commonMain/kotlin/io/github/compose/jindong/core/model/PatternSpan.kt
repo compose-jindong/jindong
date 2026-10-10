@@ -16,6 +16,7 @@
 package io.github.compose.jindong.core.model
 
 internal const val MAX_PATTERN_EVENTS: Int = 10_000
+internal const val MAX_PATTERN_CONTROL_POINTS: Int = 100_000
 
 internal fun List<ScheduledHapticEvent>.eventSpanMs(): Long {
   checkedEventCount(size.toLong(), "pattern")
@@ -41,4 +42,18 @@ internal fun checkedEventCount(count: Long, location: String): Int {
     "$location: expanded event count $count exceeds limit $MAX_PATTERN_EVENTS"
   }
   return count.toInt()
+}
+
+internal fun checkedControlPointCount(count: Long, location: String): Int {
+  require(count in 0L..MAX_PATTERN_CONTROL_POINTS.toLong()) {
+    "$location: control point count $count exceeds limit $MAX_PATTERN_CONTROL_POINTS"
+  }
+  return count.toInt()
+}
+
+internal fun List<ScheduledHapticEvent>.controlPointCount(): Int = fold(0) { count, event ->
+  checkedControlPointCount(
+    count.toLong() + (event.intensityCurve?.points?.size ?: 0) + (event.sharpnessCurve?.points?.size ?: 0),
+    "pattern",
+  )
 }

@@ -19,6 +19,7 @@ import io.github.compose.jindong.core.dsl.HapticPatternScope
 import io.github.compose.jindong.core.dsl.buildHapticPattern
 import io.github.compose.jindong.core.executor.HapticExecutor
 import io.github.compose.jindong.core.executor.HapticHandle
+import io.github.compose.jindong.core.executor.HapticPlaybackDiagnostics
 import io.github.compose.jindong.core.executor.createHapticExecutor
 import io.github.compose.jindong.core.model.HapticPattern
 import kotlinx.coroutines.NonCancellable
@@ -117,6 +118,11 @@ object HapticManager {
     get() = withStateLockBlocking {
       getOrCreateExecutorLocked().isSupported
     }
+
+  /** Returns the selected playback path and approximations without starting [pattern]. */
+  fun diagnose(pattern: HapticPattern): HapticPlaybackDiagnostics = withStateLockBlocking {
+    getOrCreateExecutorLocked().diagnose(pattern)
+  }
 
   /**
    * Executes the given pattern. This is a suspend function that waits for completion.
