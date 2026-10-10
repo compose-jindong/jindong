@@ -2,6 +2,10 @@
 
 Robolectric-based Android tests that run on JVM without requiring an emulator.
 
+Use Java 21 or later for the SDK 36 capability tests, as required by [Robolectric](https://robolectric.org/compatibility_table/).
+The library still targets JVM 17.
+An explicit `org.gradle.java.home` setting overrides `JAVA_HOME`.
+
 ## Running Tests
 
 ```bash
@@ -16,21 +20,16 @@ Robolectric-based Android tests that run on JVM without requiring an emulator.
 
 ## Test Scenarios
 
-To be updated...
-
-| Category | Test | Jindong Mapping |
-|----------|------|-----------------|
-| **OneShot** | High intensity (255) | `HapticIntensity.HIGH` |
-| | Medium intensity (128) | `HapticIntensity.MEDIUM` |
-| | Low intensity (64) | `HapticIntensity.LIGHT` |
-| **Waveform** | Simple sequence | `Sequence { Haptic, Delay, Haptic }` |
-| | Complex sequence | `Repeat { Haptic, Delay }` |
-| **Edge Cases** | Minimum duration (1ms) | - |
-| | Minimum amplitude (1) | - |
-| **Control** | Cancel | `executor.cancel()` |
+- API 26 waveform conversion, intensity zero, compatibility tails, and cancellation.
+- SDK 36 envelope builders with reported hardware limits and waveform fallback.
+- Primitive composition with queried support and native duration.
+- Zero-duration transient completion and native start failure cleanup.
+- Pure Android planning tests for mixed events, curves, primitive spacing, and diagnostics.
 
 
 ## Configuration
 
-- **SDK**: API 26 (Android 8.0)
-- **Runner**: `RobolectricTestRunner`
+- **SDK**: API 26 for existing waveform tests; API 36 for capability playback tests.
+- **Runner**: Kotest on JUnit Platform; adapter tests use `RobolectricTestRunner` through JUnit Vintage.
+
+Robolectric validates effect construction and adapter behavior. These tests do not measure physical haptic quality.

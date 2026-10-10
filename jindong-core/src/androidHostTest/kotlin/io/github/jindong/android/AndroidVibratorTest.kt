@@ -406,13 +406,13 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe false
-    // [50ms HIGH] + [50ms HIGH] + [50ms MEDIUM] + [1ms end], total span 150ms.
-    shadowVibrator.pattern shouldBe longArrayOf(50, 50, 50, 1)
+    // Equal HIGH amplitudes coalesce: [100ms HIGH] + [50ms MEDIUM] + [1ms end].
+    shadowVibrator.pattern shouldBe longArrayOf(100, 50, 1)
   }
 
   @Test
   fun `should handle back-to-back events without gaps`() = runTest {
-    // Pattern: Three consecutive haptics (like Triple Tap)
+    // Three consecutive MEDIUM events have no amplitude change or gap between them.
     val pattern = HapticPattern(
       listOf(
         ScheduledHapticEvent(
@@ -436,8 +436,8 @@ class AndroidVibratorTest {
     executor.execute(pattern)
 
     shadowVibrator.isVibrating shouldBe false
-    // Back-to-back events without gaps in input: [25ms event1] + [25ms event2] + [25ms event3] + [1ms end]
-    shadowVibrator.pattern shouldBe longArrayOf(25, 25, 25, 1)
+    // Equal amplitudes coalesce: [75ms MEDIUM] + [1ms end].
+    shadowVibrator.pattern shouldBe longArrayOf(75, 1)
   }
 
   // ============================================================================

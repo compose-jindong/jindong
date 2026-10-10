@@ -1,0 +1,88 @@
+---
+title: Android Playback
+description: Capability selection, timing, and playback approximations on Android
+---
+
+# Android Playback
+
+Jindong selects one native effect for the complete pattern. Application code uses the same events and curves across platforms.
+The Android implementation requires API 26 or later and compiles against SDK 36.
+
+| Device and pattern | Selected backend |
+|---|---|
+| All intensities are zero, or the pattern contains only delays | `SILENT` |
+| No vibrator | `UNSUPPORTED` |
+| API 36+, envelope support, and a representable timeline | `ANDROID_ENVELOPE` |
+| API 31+, only audible transients, and supported primitives with known durations | `ANDROID_PRIMITIVES` |
+| Other supported patterns | `ANDROID_WAVEFORM` |
+
+Curves replace their corresponding fixed values. A zero intensity curve stays silent even when the fixed intensity is positive.
+Legacy zero-duration continuous events remain silent. Explicit transients can play even when their logical duration is zero.
+
+## Envelope playback
+
+Jindong uses `VibrationEffect.BasicEnvelopeBuilder` with normalized intensity and sharpness.
+It checks both `areEnvelopeEffectsSupported()` and the device's `getEnvelopeEffectInfo()` limits.
+These limits include control point count, minimum and maximum segment duration, and total duration.
+
+The timeline must start and end at intensity zero. Jindong does not add an unrequested ending ramp.
+It joins intensity and sharpness control point times, removes exactly collinear points, and splits long linear sections without changing their duration.
+If the resulting timeline exceeds a device limit, Jindong selects another backend for the complete pattern.
+
+Representable mixed patterns can use triangular envelope pulses for transients.
+Each pulse lasts twice the device's minimum segment duration. Its peak occurs one minimum segment duration after the requested onset.
+The pulse must fit within the logical timeline. Diagnostics report this transient and timing approximation.
+
+See the Android references for [BasicEnvelopeBuilder](https://developer.android.com/reference/android/os/VibrationEffect.BasicEnvelopeBuilder)
+and [VibratorEnvelopeEffectInfo](https://developer.android.com/reference/android/os/vibrator/VibratorEnvelopeEffectInfo).
+
+## Primitive playback
+
+Primitive selection requires support and a positive reported duration for every requested primitive.
+API 30 falls back to waveform playback because primitive durations are unavailable there.
+For each hit, Jindong subtracts the previous primitive's native duration when calculating its pause.
+If native pulses would overlap, Jindong selects waveform playback without delaying the requested hit.
+Zero-intensity transients are omitted, rather than mapped to primitive scale zero.
+
+Sharpness uses a categorical approximation: `LOW_TICK` below 1/3, `CLICK` below 2/3, and `TICK` otherwise.
+This mapping does not preserve continuous sharpness or promise equivalent physical sensations across devices.
+Diagnostics report the mapping and any native tail beyond the logical duration.
+
+See the Android references for [Composition](https://developer.android.com/reference/android/os/VibrationEffect.Composition)
+and [getPrimitiveDurations](https://developer.android.com/reference/android/os/Vibrator#getPrimitiveDurations(int...)).
+
+## Waveform fallback
+
+The fallback merges overlapping events by maximum intensity. The winning event supplies sharpness, which waveform playback then drops.
+Curve intersections use the common millisecond time grid. Diagnostics report the possible one-millisecond crossing error for overlapping curves.
+
+Intensity curves use peak-preserving sample-and-hold sections, normally no longer than eight milliseconds.
+Sampling includes event boundaries, control point peaks, and zero intervals.
+Adjacent samples with the same native amplitude are merged without changing the output.
+The planner limits sampling work to 200,000 samples. Diagnostics report the actual largest slice and intensity error bound.
+The final waveform allows at most 512 segments, including compatibility segments, to bound Binder transaction size.
+If the waveform still exceeds this limit after merging, diagnostics report `UNSUPPORTED` with a reason.
+
+Transient pulses last at most ten milliseconds and shorten at the next transient onset.
+On devices without amplitude control, each positive value becomes full-amplitude ON, while zeros remain OFF.
+Diagnostics report transient approximation, sharpness loss, overlap composition, and amplitude loss.
+
+Constant waveforms retain the existing fall-ramp compatibility behavior on amplitude-capable devices.
+The fall ramp borrows time from a following gap. It never borrows from an explicit zero-intensity event.
+The existing single-event recognition primer and trailing OFF segment add up to three milliseconds of native playback.
+A curve that ends at zero receives no recognition primer. All-zero patterns receive no compatibility pulses.
+
+## Diagnostics and completion
+
+Call `executor.diagnose(pattern)` to inspect the selected backend without starting vibration.
+Execution uses the same plan. Diagnostics include capabilities, logical duration, estimated native duration, approximations, and an unsupported reason.
+
+Logical duration controls composition and repetition spacing. Native pulse and compatibility tails do not change it.
+Execution waits for the longer of the logical duration and estimated native duration.
+These durations estimate actuator completion; they are not physical measurements.
+Native start errors propagate to the caller, and the executor stops any partially started effect.
+
+Share one executor for the application's playback owner. Independent executors cannot guarantee simultaneous output on one Android actuator.
+
+Pure planning tests cover device limits, short curves, mixed patterns, primitive spacing, silence, and timing errors.
+Robolectric tests exercise SDK 36 effect builders and executor cleanup. Physical quality still requires measurements on representative devices.
