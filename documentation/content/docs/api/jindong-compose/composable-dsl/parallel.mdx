@@ -37,4 +37,4 @@ val pattern = buildHapticPattern {
 
 The common timeline keeps each event and its independent curves. Native executors choose how to render overlapping events. Android uses maximum intensity and the winning event's sharpness; equal intensities retain input order. Intensity crossings are split on a 1ms grid. Approximation details are available from `executor.diagnose(pattern)`.
 
-Mixing is bounded to 100,000 serial intervals and 1,000,000 active-event visits. A plan that exceeds either budget is reported as unsupported. These limits bound planner work; they do not guarantee a particular device latency.
+Android serial mixing is bounded to 100,000 serial intervals and 1,000,000 active-event visits. A plan that exceeds either budget is reported as unsupported. These limits bound planner work; they do not guarantee a particular device latency.
