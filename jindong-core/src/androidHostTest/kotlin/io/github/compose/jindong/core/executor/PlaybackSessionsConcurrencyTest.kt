@@ -60,4 +60,42 @@ class PlaybackSessionsConcurrencyTest {
     sessions.release { }
     events.toList() shouldBe listOf("start old", "stop old", "start new", "stop new")
   }
+
+  @Test
+  fun `native callback from another thread can complete synchronously during start`() {
+    val sessions = PlaybackSessions()
+    val callbackFinished = CountDownLatch(1)
+    lateinit var session: HapticHandle
+    val startup = thread {
+      session = sessions.start {
+        val completion = NativePlaybackCompletion(1)
+        thread {
+          completion.completePlayer(0)
+          callbackFinished.countDown()
+        }
+        check(callbackFinished.await(5, TimeUnit.SECONDS))
+        NativePlayback(0, completion)
+      }
+    }
+    startup.join(5_000)
+    startup.isAlive shouldBe false
+    session.isActive shouldBe false
+    sessions.release { }
+  }
+
+  @Test
+  fun `concurrent duplicate callbacks count each player once and cannot cancel a replacement`() {
+    val sessions = PlaybackSessions()
+    val completion = NativePlaybackCompletion(16)
+    val old = sessions.start { NativePlayback(0, completion) }
+    val callbacks = (0 until 15).map { index -> thread { repeat(4) { completion.completePlayer(index) } } }
+    callbacks.forEach { it.join(5_000) }
+    callbacks.any { it.isAlive } shouldBe false
+    old.isActive shouldBe true
+    val next = sessions.start { NativePlayback(10_000) }
+    thread { completion.completePlayer(15) }.join(5_000)
+    completion.finished.isCompleted shouldBe true
+    next.isActive shouldBe true
+    sessions.release { }
+  }
 }

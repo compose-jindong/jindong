@@ -70,6 +70,7 @@ kotlin {
       implementation(libs.kotest.framework.engine)
       implementation(libs.kotest.assertions.core)
       implementation(libs.kotest.property)
+      implementation(libs.kotlinx.coroutines.test)
     }
 
     named("androidHostTest").dependencies {
@@ -77,7 +78,6 @@ kotlin {
         implementation(libs.androidx.test.core)
         implementation(libs.androidx.test.runner)
         implementation(libs.kotest.assertions.core)
-        implementation(libs.kotlinx.coroutines.test)
         implementation(libs.kotest.runner.junit5)
         // JUnit4 Robolectric tests run under the JUnit Platform via the vintage engine.
         runtimeOnly(libs.junit.vintage.engine)

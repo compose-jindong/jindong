@@ -143,7 +143,12 @@ public final class io/github/compose/jindong/core/executor/HapticExecutor_androi
 
 public abstract interface class io/github/compose/jindong/core/executor/HapticHandle {
 	public abstract fun cancel ()V
+	public fun getFailure ()Ljava/lang/Throwable;
 	public abstract fun isActive ()Z
+}
+
+public final class io/github/compose/jindong/core/executor/HapticHandle$DefaultImpls {
+	public static fun getFailure (Lio/github/compose/jindong/core/executor/HapticHandle;)Ljava/lang/Throwable;
 }
 
 public final class io/github/compose/jindong/core/executor/HapticPlaybackBackend : java/lang/Enum {

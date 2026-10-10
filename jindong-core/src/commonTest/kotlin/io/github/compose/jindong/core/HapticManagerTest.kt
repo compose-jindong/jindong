@@ -16,8 +16,14 @@
 package io.github.compose.jindong.core
 
 import io.github.compose.jindong.core.dsl.buildHapticPattern
+import io.github.compose.jindong.core.executor.HapticExecutor
+import io.github.compose.jindong.core.executor.HapticHandle
+import io.github.compose.jindong.core.executor.NativePlayback
+import io.github.compose.jindong.core.executor.NativePlaybackCompletion
+import io.github.compose.jindong.core.executor.PlaybackSessions
 import io.github.compose.jindong.core.fake.FakeHapticExecutor
 import io.github.compose.jindong.core.model.HapticIntensity
+import io.github.compose.jindong.core.model.HapticPattern
 import io.kotest.assertions.assertSoftly
 import io.kotest.assertions.throwables.shouldNotThrowAny
 import io.kotest.core.spec.style.FunSpec
@@ -25,8 +31,10 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldHaveSize
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlinx.coroutines.test.testTimeSource
 import kotlin.time.Duration.Companion.milliseconds
@@ -230,5 +238,39 @@ class HapticManagerTest :
         firstExecutor.asyncExecutedPatterns.shouldBeEmpty()
         secondExecutor.asyncExecutedPatterns shouldHaveSize 1
       }
+    }
+    test("manager suspend playback propagates asynchronous native failures after the logical deadline") {
+      runTest {
+        val sessions = PlaybackSessions(testTimeSource)
+        val completion = NativePlaybackCompletion(1)
+        HapticManager.initializeExecutor(object : HapticExecutor by fakeExecutor {
+          override fun executeAsync(pattern: HapticPattern): HapticHandle = sessions.start { NativePlayback(20, completion) }
+          override fun release() = sessions.release { }
+        })
+        val result = async { runCatching { HapticManager.execute(HapticPattern.Empty) } }
+        runCurrent()
+        advanceTimeBy(30)
+        result.isCompleted shouldBe false
+        val failure = IllegalStateException("native callback failed")
+        completion.completePlayer(0, failure)
+        result.await().exceptionOrNull() shouldBe failure
+      }
+    }
+
+    test("manager async handles expose native failures after cancellation and custom handles default to null") {
+      val sessions = PlaybackSessions()
+      val completion = NativePlaybackCompletion(1)
+      HapticManager.initializeExecutor(object : HapticExecutor by fakeExecutor {
+        override fun executeAsync(pattern: HapticPattern): HapticHandle = sessions.start { NativePlayback(0, completion) }
+        override fun release() = sessions.release { }
+      })
+      val handle = HapticManager.executeAsync(HapticPattern.Empty)
+      val failure = IllegalStateException("native callback failed")
+      completion.completePlayer(0, failure)
+      handle.isActive shouldBe false
+      handle.failure shouldBe failure
+      handle.cancel()
+      handle.failure shouldBe failure
+      fakeExecutor.executeAsync(HapticPattern.Empty).failure shouldBe null
     }
   })

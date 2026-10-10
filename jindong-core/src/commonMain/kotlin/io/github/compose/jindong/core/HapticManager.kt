@@ -171,16 +171,15 @@ object HapticManager {
   }
 
   /**
-   * Suspends until [handle] is no longer active — natural (duration-estimate) completion, or an
-   * external [HapticHandle.cancel] from a concurrent takeover. Polls because neither Android's
-   * `Vibrator` nor iOS' `CHHapticPatternPlayerProtocol` reports per-effect completion; the whole
-   * library already treats completion as a best-effort estimate (see [HandleExpiry]). The delay is a
-   * suspension point, so coroutine cancellation of execute() unwinds here immediately.
+   * Polls the platform handle until native completion, its estimated deadline, or cancellation.
+   * The handle preserves trailing logical silence and exposes asynchronous native failures.
+   * Each delay remains cancellable so execute() cleanup can stop playback immediately.
    */
   private suspend fun awaitCompletion(handle: HapticHandle) {
     while (handle.isActive) {
       delay(COMPLETION_POLL_INTERVAL_MS)
     }
+    handle.failure?.let { throw it }
   }
 
   /**
