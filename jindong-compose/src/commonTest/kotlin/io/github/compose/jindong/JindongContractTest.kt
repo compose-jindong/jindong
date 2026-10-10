@@ -30,8 +30,8 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 
 /**
- * Guards the reactive contract at the [Jindong] level: keys are the only playback trigger, and a
- * value read inside `content` but left out of the keys is frozen at the last key change.
+ * Guards the reactive contract at the [Jindong] level: after entry, keys are the only playback
+ * trigger, and a value read inside `content` but left out of the keys is frozen at the last key change.
  *
  * The Clip-level counterpart lives in [ClipTest]; this covers a parameter read directly by an
  * inline node.
@@ -56,23 +56,25 @@ class JindongContractTest :
         }
 
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 0
+        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.last().events.single().durationMs shouldBe 50
 
         durationMs.value = 200
         waitForIdle()
 
         // Contract: only a key change triggers playback. Mutating a parameter leaves the executor
         // untouched, so no new pattern is recorded.
-        recorder.executedPatterns.size shouldBe 0
+        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.last().events.single().durationMs shouldBe 50
 
         triggerKey.value = 1
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.size shouldBe 2
         recorder.executedPatterns.last().events.single().durationMs shouldBe 200
 
         durationMs.value = 300
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.size shouldBe 2
         recorder.executedPatterns.last().events.single().durationMs shouldBe 200
       }
     }
@@ -94,7 +96,8 @@ class JindongContractTest :
         }
 
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 0
+        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.last().events.single().durationMs shouldBe 50
 
         // Update the parameter first: it stays frozen until a key change picks it up.
         durationMs.value = 200
@@ -103,7 +106,7 @@ class JindongContractTest :
 
         // The key changed, so playback fires again and the recompiled pattern reflects the
         // parameter value read at that point.
-        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.size shouldBe 2
         recorder.executedPatterns.last().events.single().durationMs shouldBe 200
       }
     }

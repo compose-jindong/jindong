@@ -49,14 +49,15 @@ class JindongReactiveTest :
         }
 
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 0
+        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.last().events.size shouldBe 2
 
         countState.value = 5
         waitForIdle()
 
         // After the key changes to 5, the captured content must recompile to 5 events,
         // not return the stale first-compile result.
-        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.size shouldBe 2
         recorder.executedPatterns.last().events.size shouldBe 5
       }
     }

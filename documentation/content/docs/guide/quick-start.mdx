@@ -24,7 +24,7 @@ fun App() {
 
     JindongProvider {
         // Haptic triggers when count changes
-        Jindong(count) {
+        Jindong(count, playOnInitialComposition = false) {
             Haptic(100.ms)
         }
 
@@ -36,6 +36,8 @@ fun App() {
 ```
 
 That's it! Every time you tap the button, a 100ms haptic pulse fires.
+
+The explicit false option suppresses entry playback. Without it, `Jindong` plays on entry as well as on key changes, preserving existing behavior.
 
 ## Understanding the Basics
 
@@ -60,7 +62,7 @@ Jindong(key1, key2, ...) {
 ```
 
 - Key changes cancel and restart playback, as with `LaunchedEffect`
-- Initial entry is silent by default
+- Plays on entry by default; use `playOnInitialComposition = false` to wait for input
 - Executes when any key changes
 - Content block defines the pattern
 
@@ -131,13 +133,13 @@ Jindong(trigger) {
 
 ### Screen Entry Feedback
 
-Request initial playback explicitly to trigger haptic when entering a screen:
+Use a constant key to trigger haptic when entering a screen:
 
 ```kotlin
 @Composable
 fun WelcomeScreen() {
     // Executes once when screen appears
-    Jindong(Unit, playOnInitialComposition = true) {
+    Jindong(Unit) {
         Haptic(100.ms, HapticIntensity.MEDIUM)
     }
 
@@ -152,7 +154,7 @@ fun WelcomeScreen() {
 fun TapButton() {
     var taps by remember { mutableStateOf(0) }
 
-    Jindong(taps) {
+    Jindong(taps, playOnInitialComposition = false) {
         Haptic(50.ms, HapticIntensity.LIGHT)
     }
 
@@ -234,10 +236,10 @@ fun HeartbeatHaptic(trigger: Int) {
 
 | Pattern | Key | Code |
 |---------|-----|------|
-| On screen enter | `Jindong(Unit, playOnInitialComposition = true)` | `Haptic(100.ms)` |
-| Single tap | `Jindong(count)` | `Haptic(50.ms)` |
-| Double tap | `Jindong(count)` | `Repeat(2) { Haptic(40.ms); Delay(40.ms) }` |
-| Long press | `Jindong(count)` | `Haptic(200.ms, HapticIntensity.MEDIUM)` |
+| On screen enter | `Jindong(Unit)` | `Haptic(100.ms)` |
+| Single tap | `Jindong(count, playOnInitialComposition = false)` | `Haptic(50.ms)` |
+| Double tap | `Jindong(count, playOnInitialComposition = false)` | `Repeat(2) { Haptic(40.ms); Delay(40.ms) }` |
+| Long press | `Jindong(count, playOnInitialComposition = false)` | `Haptic(200.ms, HapticIntensity.MEDIUM)` |
 | Success | `Jindong(success)` | `if (success) { Haptic(50.ms); Delay(50.ms); Haptic(100.ms) }` |
 | Error | `Jindong(error)` | `if (error) { Repeat(3) { Haptic(80.ms); Delay(50.ms) } }` |
 

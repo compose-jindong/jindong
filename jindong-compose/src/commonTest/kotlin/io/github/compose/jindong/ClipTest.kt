@@ -78,13 +78,14 @@ class ClipTest :
         }
 
         waitForIdle()
-        recorder.executedPatterns.size shouldBe 0
+        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.last().events.size shouldBe 1
 
         patternState.value = twoPulses
         waitForIdle()
 
         // The pattern is a key, so the composition recompiles and the new clip's events are emitted.
-        recorder.executedPatterns.size shouldBe 1
+        recorder.executedPatterns.size shouldBe 2
         recorder.executedPatterns.last().events.size shouldBe 2
       }
     }

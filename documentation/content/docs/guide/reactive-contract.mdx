@@ -7,7 +7,7 @@ import { Callout } from 'fumadocs-ui/components/callout';
 
 # The Reactive Contract
 
-`Jindong` starts silently. A change to any key compiles and plays its content, cancelling the previous playback as with `LaunchedEffect`. Three rules describe which values it reads and when it fires.
+`Jindong` plays on entry by default, as with `LaunchedEffect`. A change to any key compiles and plays its content, cancelling the previous playback. Three rules describe which values it reads and when it fires.
 
 ## Rule 1: values in content are frozen at compile time
 
@@ -30,15 +30,15 @@ If `level` changes but `trigger` does not, the played pattern keeps the `level` 
 
 A key change is what fires playback. Put a value in the keys exactly when its change should play. Values that only shape the pattern belong inside the block as parameters.
 
-A key is a value to compare, not a Boolean condition. Both `false → true` and `true → false` trigger playback. To emit haptics only when a condition becomes true, keep that condition inside the content:
+A key is a value to compare, not a Boolean condition. Both `false → true` and `true → false` trigger playback. To emit haptics only on changes to a true condition, suppress entry playback and check the condition inside the content:
 
 ```kotlin
-Jindong(success) {
+Jindong(success, playOnInitialComposition = false) {
     if (success) Haptic(100.ms)
 }
 ```
 
-If `success` is already true when this call first enters composition, entry remains silent by default.
+This call stays silent on entry even if `success` is already true. Without the option, a true initial value plays on entry.
 
 The distinction matters most with continuous input. A slider value passed as a key fires a vibration on every drag step:
 
@@ -88,23 +88,27 @@ The cancellation itself is best effort. Neither `Vibrator.cancel()` on Android n
 
 ## Initial playback
 
-By default, `Jindong` waits for the first key change. Initial values establish a baseline and do not play. Request entry feedback explicitly:
+By default, `Jindong` plays once on entry. This preserves existing behavior, including `Jindong(Unit)` and calls without keys.
+
+### Avoiding entry playback
+
+For feedback tied to user input, set `playOnInitialComposition = false`. The initial key values then establish a baseline without playback:
 
 ```kotlin
-Jindong(trigger, playOnInitialComposition = true) {
+Jindong(clickCount, playOnInitialComposition = false) {
     Clip(pattern)
 }
 ```
 
-Later key changes compile the current content and play once. Non-key values stay frozen until a key changes. Changing only the option does not compile or play again.
+This avoids vibrating when `clickCount` starts at zero and plays when the counter changes. Later key changes compile the current content and play once. Non-key values stay frozen until a key changes. Changing only the option does not compile or play again.
 
 After `Jindong` leaves and re-enters composition, the initial policy applies again. Changes while it is absent are not replayed. The option uses temporary composition state and does not persist across entries.
 
-`Jindong(Unit)` and calls without keys remain silent with the default policy because their keys never change. If a conditional branch mounts `Jindong` to play immediately, set `playOnInitialComposition = true` there.
+With the option set to false, constant or absent keys never trigger playback. Conditional entry still uses the selected policy: omitted or true plays on each entry, while false waits for a later key change.
 
-### Migration to 2.0
+### Future 2.x default
 
-Earlier versions played on entry. The 2.0 default changes that behavior while preserving the existing function symbols. Add `playOnInitialComposition = true` to calls that need their previous entry playback. Trigger counters such as `Jindong(clickCount)` can use the new default to wait for user input.
+Changing the default to false is deferred to a separate breaking change for 2.x. This addition preserves both the existing function symbols and entry behavior. Use the explicit false option now when entry playback is unwanted.
 
 ## See also
 
