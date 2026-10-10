@@ -32,12 +32,14 @@ interface HapticHandle {
    * Returns true while the haptic execution is still considered active, i.e. neither cancelled nor
    * completed.
    *
-   * Completion is a **best-effort estimate** based on the pattern's expected playback duration, not
-   * an OS completion notification (neither Android's `Vibrator` nor iOS' base
-   * `CHHapticPatternPlayerProtocol` reports per-effect completion). As a result:
-   * - Natural completion may be off by tens of milliseconds (OS scheduling, Doze, throttling).
-   * - [cancel] flips this to `false` immediately and exactly.
-   * - A silent pattern remains active for its logical duration; an empty pattern ends immediately.
+   * Android completion is estimated from the selected native playback duration. Core Haptics
+   * waits for every advanced player to finish, including the hardware-defined transient pulse.
+   * Both platforms preserve trailing logical silence. Native scheduling may introduce jitter.
+   * [cancel] flips this to `false` immediately; an empty or unsupported pattern ends immediately.
    */
   val isActive: Boolean
+
+  /** Native playback or completion cleanup failure, retained after cancellation; null on success. */
+  val failure: Throwable?
+    get() = null
 }

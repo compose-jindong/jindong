@@ -23,12 +23,10 @@ import kotlin.time.TimeSource
 /**
  * Shared, pull-based expiry judgement for platform [HapticHandle]s.
  *
- * The OS gives no per-effect completion callback (Android [android.os.Vibrator] and iOS
- * `CHHapticPatternPlayerProtocol` both lack one), so "completed" can only be *estimated* from the
- * expected playback length. This holds the start [TimeMark] and the total duration and answers, on
- * each [isExpired] read, whether enough monotonic time has elapsed — no coroutine, scope, or timer.
- *
- * Owned playback sessions delegate to this on both platforms.
+ * Holds the start [TimeMark] and answers whether the expected duration has elapsed, without a
+ * coroutine, scope, or timer. Android uses this as a playback estimate. Core Haptics combines it
+ * with advanced player completion so the logical deadline cannot truncate a native transient.
+ * Silent sessions use the logical duration on both platforms.
  *
  * @param totalDurationMs Expected playback length. A non-positive value means nothing is playing, so
  *   the handle is expired from the start (an empty pattern is never active).

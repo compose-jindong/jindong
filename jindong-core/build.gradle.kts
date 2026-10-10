@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import kotlinx.validation.ExperimentalBCVApi
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -26,7 +27,7 @@ plugins {
 }
 
 apiValidation {
-  @OptIn(kotlinx.validation.ExperimentalBCVApi::class)
+  @OptIn(ExperimentalBCVApi::class)
   klib {
     enabled = true
   }
@@ -70,6 +71,7 @@ kotlin {
       implementation(libs.kotest.framework.engine)
       implementation(libs.kotest.assertions.core)
       implementation(libs.kotest.property)
+      implementation(libs.kotlinx.coroutines.test)
     }
 
     named("androidHostTest").dependencies {
@@ -77,7 +79,6 @@ kotlin {
         implementation(libs.androidx.test.core)
         implementation(libs.androidx.test.runner)
         implementation(libs.kotest.assertions.core)
-        implementation(libs.kotlinx.coroutines.test)
         implementation(libs.kotest.runner.junit5)
         // JUnit4 Robolectric tests run under the JUnit Platform via the vintage engine.
         runtimeOnly(libs.junit.vintage.engine)

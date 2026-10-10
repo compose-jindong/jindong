@@ -60,6 +60,8 @@ abstract interface io.github.compose.jindong.core.executor/HapticExecutor { // i
 abstract interface io.github.compose.jindong.core.executor/HapticHandle { // io.github.compose.jindong.core.executor/HapticHandle|null[0]
     abstract val isActive // io.github.compose.jindong.core.executor/HapticHandle.isActive|{}isActive[0]
         abstract fun <get-isActive>(): kotlin/Boolean // io.github.compose.jindong.core.executor/HapticHandle.isActive.<get-isActive>|<get-isActive>(){}[0]
+    open val failure // io.github.compose.jindong.core.executor/HapticHandle.failure|{}failure[0]
+        open fun <get-failure>(): kotlin/Throwable? // io.github.compose.jindong.core.executor/HapticHandle.failure.<get-failure>|<get-failure>(){}[0]
 
     abstract fun cancel() // io.github.compose.jindong.core.executor/HapticHandle.cancel|cancel(){}[0]
 }

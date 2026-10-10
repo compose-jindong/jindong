@@ -20,11 +20,17 @@ import io.kotest.core.spec.style.FunSpec
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.test.advanceTimeBy
+import kotlinx.coroutines.test.runCurrent
 import kotlinx.coroutines.test.runTest
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.TestTimeSource
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class PlaybackSessionsTest :
   FunSpec({
     test("replacement stops the old native playback before starting the new one") {
@@ -145,6 +151,174 @@ class PlaybackSessionsTest :
         (observed is CancellationException) shouldBe true
         observed!!.suppressedExceptions.single().message shouldBe "stop failed"
         session.isActive shouldBe false
+      }
+    }
+    test("native completion waits for every player after the logical deadline") {
+      runTest {
+        val clock = TestTimeSource()
+        val completion = NativePlaybackCompletion(2)
+        var stops = 0
+        val session = PlaybackSessions(clock).start { NativePlayback(100, completion) { stops++ } }
+        val job = launch { session.awaitCompletion() }
+        runCurrent()
+        advanceTimeBy(100)
+        clock += 100.milliseconds
+        runCurrent()
+        session.isActive shouldBe true
+        job.isCompleted shouldBe false
+        completion.completePlayer(0)
+        completion.completePlayer(0)
+        runCurrent()
+        session.isActive shouldBe true
+        completion.completePlayer(1)
+        job.join()
+        session.isActive shouldBe false
+        stops shouldBe 1
+        testScheduler.currentTime shouldBe 100L
+      }
+    }
+
+    test("a transient at time zero waits for its native callback") {
+      runTest {
+        val completion = NativePlaybackCompletion(1)
+        val session = PlaybackSessions().start { NativePlayback(0, completion) }
+        val job = launch { session.awaitCompletion() }
+        runCurrent()
+        session.isActive shouldBe true
+        job.isCompleted shouldBe false
+        completion.completePlayer(0)
+        job.join()
+        session.isActive shouldBe false
+      }
+    }
+
+    test("early native completion preserves trailing logical silence") {
+      runTest {
+        val completion = NativePlaybackCompletion(1)
+        val session = PlaybackSessions().start { NativePlayback(150, completion) }
+        val job = launch { session.awaitCompletion() }
+        runCurrent()
+        advanceTimeBy(50)
+        completion.completePlayer(0)
+        runCurrent()
+        job.isCompleted shouldBe false
+        job.join()
+        testScheduler.currentTime shouldBe 150L
+      }
+    }
+
+    test("synchronous start completion is retained and an old callback cannot finish its replacement") {
+      runTest {
+        val sessions = PlaybackSessions()
+        val oldCompletion = NativePlaybackCompletion(1)
+        val old = sessions.start { NativePlayback(0, oldCompletion) }
+        val oldJob = launch { old.awaitCompletion() }
+        runCurrent()
+        val nextCompletion = NativePlaybackCompletion(1)
+        val next = sessions.start { NativePlayback(0, nextCompletion) }
+        oldCompletion.completePlayer(0)
+        oldJob.join()
+        next.isActive shouldBe true
+        nextCompletion.completePlayer(0)
+        next.awaitCompletion()
+        sessions.start {
+          val synchronous = NativePlaybackCompletion(1)
+          synchronous.completePlayer(0)
+          NativePlayback(0, synchronous)
+        }.awaitCompletion()
+      }
+    }
+
+    test("native failure propagates and cancellation can wake an unfinished native wait") {
+      runTest {
+        val completion = NativePlaybackCompletion(2)
+        var stops = 0
+        val session = PlaybackSessions().start { NativePlayback(0, completion) { stops++ } }
+        completion.completePlayer(0, IllegalStateException("native failed"))
+        shouldThrow<IllegalStateException> { session.awaitCompletion() }.message shouldBe "native failed"
+        stops shouldBe 1
+        session.failure?.message shouldBe "native failed"
+        val next = PlaybackSessions().start { NativePlayback(0, NativePlaybackCompletion(1)) { stops++ } }
+        val job = launch { next.awaitCompletion() }
+        runCurrent()
+        job.cancel()
+        job.join()
+        stops shouldBe 2
+      }
+    }
+    test("native completion cleanup failures are retained for polling callers") {
+      runTest {
+        val completion = NativePlaybackCompletion(1)
+        val session = PlaybackSessions().start { NativePlayback(0, completion) }
+        val failure = IllegalStateException("completion cleanup failed")
+        completion.completePlayer(0) { throw failure }
+        session.isActive shouldBe false
+        session.failure shouldBe failure
+        shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe failure
+        session.failure shouldBe failure
+      }
+    }
+
+    test("cancellation before awaiting cannot hide a retained native failure") {
+      runTest {
+        val completion = NativePlaybackCompletion(1)
+        val session = PlaybackSessions().start { NativePlayback(100, completion) }
+        val failure = IllegalStateException("native failed before cancellation")
+        completion.completePlayer(0, failure)
+        session.cancel()
+        shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe failure
+        session.failure shouldBe failure
+      }
+    }
+
+    test("native callback cancellation retains stop and disposal failures without throwing") {
+      runTest {
+        val sessions = PlaybackSessions()
+        val completion = NativePlaybackCompletion(1)
+        val stopFailure = IllegalStateException("stop failed")
+        val disposeFailure = IllegalStateException("dispose failed")
+        var disposals = 0
+        val session = sessions.start { NativePlayback(100, completion) { throw stopFailure } }
+        val result = async(Dispatchers.Unconfined) { runCatching { session.awaitCompletion() } }
+        sessions.cancelFromNativeCallback {
+          disposals++
+          throw disposeFailure
+        }
+        disposals shouldBe 1
+        session.isActive shouldBe false
+        session.failure shouldBe stopFailure
+        stopFailure.suppressedExceptions shouldBe listOf(disposeFailure)
+        result.await().exceptionOrNull() shouldBe stopFailure
+      }
+    }
+
+    test("native playback failure stays primary before or after callback cleanup") {
+      runTest {
+        for (nativeFirst in listOf(true, false)) {
+          val sessions = PlaybackSessions()
+          val completion = NativePlaybackCompletion(1)
+          val nativeFailure = IllegalStateException("native failed")
+          val cleanupFailure = IllegalStateException("stop failed")
+          val session = sessions.start { NativePlayback(100, completion) { throw cleanupFailure } }
+          if (nativeFirst) completion.completePlayer(0, nativeFailure)
+          sessions.cancelFromNativeCallback { }
+          if (!nativeFirst) completion.completePlayer(0, nativeFailure)
+          session.failure shouldBe nativeFailure
+          nativeFailure.suppressedExceptions shouldBe listOf(cleanupFailure)
+          shouldThrow<IllegalStateException> { session.awaitCompletion() } shouldBe nativeFailure
+        }
+      }
+    }
+
+    test("callback disposal failure is published before an unconfined waiter resumes") {
+      runTest {
+        val sessions = PlaybackSessions()
+        val session = sessions.start { NativePlayback(100, NativePlaybackCompletion(1)) }
+        val failure = IllegalStateException("dispose failed")
+        val result = async(Dispatchers.Unconfined) { runCatching { session.awaitCompletion() } }
+        sessions.cancelFromNativeCallback { throw failure }
+        session.failure shouldBe failure
+        result.await().exceptionOrNull() shouldBe failure
       }
     }
   })

@@ -40,7 +40,7 @@ class IosSilentPatternTest :
       val executor = DefaultIosHapticExecutor()
       val pattern = HapticPattern(listOf(event(20, 30, 0f), event(100, 50, 0f)))
 
-      with(executor) { pattern.toCHHapticPattern().shouldBeNull() }
+      pattern.iosPlaybackPlan(HapticDeviceCapabilities(true, true)).players.singleOrNull().shouldBeNull()
       val handle = executor.executeAsync(pattern)
       handle.isActive shouldBe true
       handle.cancel()
@@ -64,7 +64,7 @@ class IosSilentPatternTest :
       runTest {
         val executor = DefaultIosHapticExecutor()
         val silence = buildHapticPattern { delay(100.ms) }
-        with(executor) { silence.toCHHapticPattern().shouldBeNull() }
+        silence.iosPlaybackPlan(HapticDeviceCapabilities(true, true)).players.singleOrNull().shouldBeNull()
         executor.execute(silence)
         testScheduler.currentTime shouldBe 100L
         executor.release()
@@ -72,9 +72,8 @@ class IosSilentPatternTest :
     }
 
     test("native adapter omits silent events without shifting a positive event") {
-      val executor = DefaultIosHapticExecutor()
       val pattern = HapticPattern(listOf(event(0, 100, 0f), event(25, 50, 1f), event(100, 50, 0f)))
-      val native = with(executor) { pattern.toCHHapticPattern()!! }
+      val native = pattern.iosPlaybackPlan(HapticDeviceCapabilities(true, true)).players.single().toCHHapticPattern()
       val exported = native.exportDictionaryAndReturnError(null)!!
       val entries = exported[CHHapticPatternKeyPattern] as List<*>
       entries.size shouldBe 1
