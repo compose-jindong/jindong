@@ -26,6 +26,10 @@ public final class io/github/compose/jindong/HapticPlatform : java/lang/Enum {
 	public static fun values ()[Lio/github/compose/jindong/HapticPlatform;
 }
 
+public final class io/github/compose/jindong/HapticPlaybackDiagnosticsKt {
+	public static final fun rememberHapticPlaybackDiagnostics (Lio/github/compose/jindong/core/model/HapticPattern;Landroidx/compose/runtime/Composer;I)Lio/github/compose/jindong/core/executor/HapticPlaybackDiagnostics;
+}
+
 public final class io/github/compose/jindong/JindongKt {
 	public static final fun Jindong ([Ljava/lang/Object;Lkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
 	public static final fun Jindong ([Ljava/lang/Object;ZLkotlin/jvm/functions/Function3;Landroidx/compose/runtime/Composer;I)V
