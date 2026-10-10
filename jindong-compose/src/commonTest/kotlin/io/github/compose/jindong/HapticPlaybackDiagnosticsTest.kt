@@ -17,6 +17,7 @@ package io.github.compose.jindong
 
 import androidx.compose.runtime.CompositionLocalProvider
 import io.github.compose.jindong.core.executor.HapticDeviceCapabilities
+import io.github.compose.jindong.core.executor.HapticExecutor
 import io.github.compose.jindong.core.executor.HapticPlaybackBackend
 import io.github.compose.jindong.core.executor.HapticPlaybackDiagnostics
 import io.github.compose.jindong.core.model.HapticPattern
@@ -29,7 +30,7 @@ class HapticPlaybackDiagnosticsTest :
   FunSpec({
     test("diagnostics use the provider executor without playing the pattern") {
       val expected = HapticPlaybackDiagnostics(HapticPlaybackBackend.IOS_CORE_HAPTICS, HapticDeviceCapabilities(true, true), 120, 100)
-      val executor = object : io.github.compose.jindong.core.executor.HapticExecutor by RecordingHapticExecutor() {
+      val executor = object : HapticExecutor by RecordingHapticExecutor() {
         override fun diagnose(pattern: HapticPattern): HapticPlaybackDiagnostics {
           pattern.durationMs shouldBe 120L
           return expected
