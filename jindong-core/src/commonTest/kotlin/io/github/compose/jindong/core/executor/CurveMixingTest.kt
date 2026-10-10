@@ -19,6 +19,7 @@ import io.github.compose.jindong.core.model.HapticControlPoint
 import io.github.compose.jindong.core.model.HapticCurve
 import io.github.compose.jindong.core.model.HapticEventType
 import io.github.compose.jindong.core.model.HapticIntensity
+import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.core.model.ScheduledHapticEvent
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.core.spec.style.FunSpec
@@ -51,6 +52,14 @@ class CurveMixingTest :
       segments.single().sharpness shouldBe 0.2f
     }
 
+    test("constant curves retain input priority including signed zero") {
+      for (value in listOf(0.5f, -0f)) {
+        val first = ramp(value, value, sharpness = 0.2f)
+        val second = ramp(value + 0f, value + 0f, sharpness = 0.8f)
+        mergeToSerial(listOf(first, second)).single().sharpness shouldBe 0.2f
+      }
+    }
+
     test("hidden intersections do not split the winning curve") {
       val segments = mergeToSerial(listOf(ramp(0f, 0.5f), ramp(0.5f, 0f), ramp(1f, 1f)))
       segments.size shouldBe 1
@@ -62,6 +71,20 @@ class CurveMixingTest :
       val segments = mergeToSerial(listOf(ramp(1f, 0f, duration = 3L), ramp(0f, 1f, duration = 3L)))
       segments.map { it.startTimeMs } shouldBe listOf(0L, 1L, 2L)
       segments.sumOf { it.durationMs } shouldBe 3L
+    }
+
+    test("a point-only winner retains input priority at a fractional crossing midpoint") {
+      val constant = ramp(0.5f, 0.5f, duration = 3L, sharpness = 0.2f)
+      val falling = ramp(1f, 0f, duration = 3L, sharpness = 0.8f)
+      val rising = ramp(0f, 1f, duration = 3L, sharpness = 0.9f)
+      for (events in listOf(listOf(constant, falling, rising), listOf(falling, constant, rising), listOf(rising, falling, constant))) {
+        val segments = mergeToSerial(events)
+        segments.map { it.startTimeMs } shouldBe listOf(0L, 1L, 2L)
+        segments[1].intensity shouldBe events.first().intensityCurve!!.valueAt(1L)
+        segments[1].endIntensity shouldBe events.first().intensityCurve!!.valueAt(2L)
+        segments[1].sharpness shouldBe events.first().sharpness
+        segments[1].endSharpness shouldBe events.first().sharpness
+      }
     }
 
     test("sharpness control points split the timeline even at constant intensity") {
@@ -102,6 +125,27 @@ class CurveMixingTest :
         )
       }
       shouldThrow<HapticPlanningLimitException> { mergeToSerial(events) }
+    }
+
+    test("maximum-size overlapping curves reuse the upper envelope across crossings") {
+      val interval = 20_000L
+      val iterations = 9
+      val events = List(10_000) { index ->
+        val x = index / 9_999.0
+        val from = (0.3 - 0.25 * x * x).toFloat()
+        val to = (0.3 - 0.25 * x * x + 0.5 * x).toFloat()
+        ramp(from, to, duration = interval * iterations).copy(
+          eventType = HapticEventType.CONTINUOUS,
+          intensityCurve = HapticCurve(
+            List(iterations + 1) { point -> HapticControlPoint(interval * point, if (point % 2 == 0) from else to) },
+          ),
+        )
+      }
+      val pattern = HapticPattern(events)
+      val segments = mergeToSerial(pattern.events)
+      segments.sumOf { it.durationMs } shouldBe pattern.durationMs
+      (segments.size in 10_000..100_000) shouldBe true
+      segments.zipWithNext().all { (left, right) -> left.startTimeMs + left.durationMs == right.startTimeMs } shouldBe true
     }
 
     test("random ramps agree with maximum-intensity mixing within the 1ms crossing bound") {

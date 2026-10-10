@@ -68,21 +68,34 @@ internal fun mergeToSerial(events: List<ScheduledHapticEvent>): List<HapticSegme
         val initial = event.intensityAt(start).toDouble()
         MixingLine(event, index, initial, event.intensityAt(end).toDouble() - initial)
       }
-      val splits = crossingBoundaries(lines, start, end)
+      val hull = upperEnvelope(lines)
+      val splits = crossingBoundaries(hull, start, end)
+      var hullCursor = 0
       for (split in 0 until splits.lastIndex) {
         val from = splits[split]
         val to = splits[split + 1]
         val midpoint = ((from - start).toDouble() + (to - from).toDouble() / 2.0) / (end - start).toDouble()
-        val winner = lines.maxWith(compareBy<MixingLine> { it.initial + it.delta * midpoint }.thenBy { -it.index }).event
+        var winner = hull[hullCursor].line
+        var intensity = winner.initial + winner.delta * midpoint
+        while (hullCursor < hull.lastIndex && hull[hullCursor + 1].startsAt <= midpoint) {
+          hullCursor++
+          val candidate = hull[hullCursor].line
+          val candidateIntensity = candidate.initial + candidate.delta * midpoint
+          if (candidateIntensity > intensity || (candidateIntensity == intensity && candidate.index < winner.index)) {
+            winner = candidate
+            intensity = candidateIntensity
+          }
+        }
+        val event = winner.event
         if (size >= MAX_MIX_SEGMENTS) throw HapticPlanningLimitException("Mixing exceeds $MAX_MIX_SEGMENTS serial intervals")
         add(
           HapticSegment(
             startTimeMs = from,
             durationMs = to - from,
-            intensity = winner.intensityAt(from),
-            sharpness = winner.sharpnessAt(from),
-            endIntensity = winner.intensityAt(to),
-            endSharpness = winner.sharpnessAt(to),
+            intensity = event.intensityAt(from),
+            sharpness = event.sharpnessAt(from),
+            endIntensity = event.intensityAt(to),
+            endSharpness = event.sharpnessAt(to),
           ),
         )
       }
@@ -99,8 +112,11 @@ private data class MixingLine(val event: ScheduledHapticEvent, val index: Int, v
 private data class WinningLine(val line: MixingLine, val startsAt: Double)
 
 /** The upper envelope finds relevant crossings without comparing every pair of overlapping events. */
-private fun crossingBoundaries(lines: List<MixingLine>, start: Long, end: Long): List<Long> {
-  if (lines.size == 1 || lines.all { it.delta == 0.0 }) return listOf(start, end)
+private fun upperEnvelope(lines: List<MixingLine>): List<WinningLine> {
+  if (lines.size == 1 || lines.all { it.delta == 0.0 }) {
+    val winner = lines.maxWith(compareBy<MixingLine> { it.initial + it.delta * 0.5 }.thenBy { -it.index })
+    return listOf(WinningLine(winner, Double.NEGATIVE_INFINITY))
+  }
   val hull = mutableListOf<WinningLine>()
   val sorted = lines.sortedWith(compareBy<MixingLine> { it.delta }.thenByDescending { it.initial }.thenBy { it.index })
     .distinctBy { it.delta }
@@ -109,11 +125,16 @@ private fun crossingBoundaries(lines: List<MixingLine>, start: Long, end: Long):
     while (hull.isNotEmpty()) {
       val previous = hull.last()
       crossing = (previous.line.initial - line.initial) / (line.delta - previous.line.delta)
-      if (crossing > previous.startsAt) break
+      // Keep point-only winners so an exact midpoint tie still follows input order.
+      if (crossing >= previous.startsAt) break
       hull.removeAt(hull.lastIndex)
     }
     hull += WinningLine(line, if (hull.isEmpty()) Double.NEGATIVE_INFINITY else crossing)
   }
+  return hull
+}
+
+private fun crossingBoundaries(hull: List<WinningLine>, start: Long, end: Long): List<Long> {
   val width = end - start
   return buildSet {
     add(start)
