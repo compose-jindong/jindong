@@ -24,49 +24,40 @@ import android.os.VibratorManager
 import androidx.annotation.RequiresApi
 import androidx.annotation.RequiresPermission
 import io.github.compose.jindong.core.model.HapticPattern
-import io.github.compose.jindong.core.model.checkedTimeAdd
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlin.time.TimeSource
 
-/**
- * Android implementation of [HapticExecutor] using [VibrationEffect.createWaveform].
- *
- * Uses waveform-based vibration for all patterns (instead of `createOneShot`) because
- * certain Android devices require at least one off/gap segment in the middle of the waveform
- * to recognize and execute the vibration pattern.
- * Single-event patterns are split with a 1ms primer vibration at the end of the main vibration.
- *
- * Requires `<uses-permission android:name="android.permission.VIBRATE"/>` in AndroidManifest.xml
- */
+/** Uses one capability-selected native effect per playback. Requires the VIBRATE permission. */
 @RequiresApi(Build.VERSION_CODES.O)
 internal class DefaultAndroidHapticExecutor(
   context: Context,
   timeSource: TimeSource = TimeSource.Monotonic,
 ) : HapticExecutor {
-
   private val sessions = PlaybackSessions(timeSource)
-
   private val vibrator: Vibrator = when {
     Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-      val vibratorManager =
-        context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
-      vibratorManager.defaultVibrator
+      val manager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+      manager.defaultVibrator
     }
 
     else -> context.getSystemService(Vibrator::class.java)
   }
 
-  override val isSupported: Boolean by lazy {
-    vibrator.hasVibrator()
+  override val isSupported: Boolean by lazy { vibrator.hasVibrator() }
+  override val hasAmplitudeControl: Boolean by lazy { vibrator.hasAmplitudeControl() }
+
+  private val capabilities: AndroidPlaybackCapabilities by lazy {
+    val envelopeSupported = isSupported && Build.VERSION.SDK_INT >= 36 && vibrator.areEnvelopeEffectsSupported()
+    AndroidPlaybackCapabilities(
+      apiLevel = Build.VERSION.SDK_INT,
+      device = HapticDeviceCapabilities(isSupported, hasAmplitudeControl, envelopeSupported),
+      envelopeLimits = if (envelopeSupported && Build.VERSION.SDK_INT >= 36) readEnvelopeLimits() else null,
+      primitiveDurationsMs = if (isSupported && Build.VERSION.SDK_INT >= 31) readPrimitiveDurations() else emptyMap(),
+    )
   }
 
-  // ERM actuators round any non-zero amplitude up to 100%, so per-level intensity is indistinguishable:
-  // callers read this to warn that LIGHT/MEDIUM/STRONG/HIGH feel identical, and toWaveform() gates the
-  // fall ramp on it (a ramp would be lost when every non-zero amplitude rounds up to full).
-  override val hasAmplitudeControl: Boolean by lazy {
-    vibrator.hasAmplitudeControl()
-  }
+  override fun diagnose(pattern: HapticPattern): HapticPlaybackDiagnostics = planAndroidPlayback(pattern, capabilities).diagnostics
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override suspend fun execute(pattern: HapticPattern) {
@@ -76,153 +67,83 @@ internal class DefaultAndroidHapticExecutor(
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun executeAsync(pattern: HapticPattern): PlaybackSessions.Session = sessions.start {
-    if (pattern.events.none { it.durationMs > 0L && it.intensity.value > 0f }) {
-      return@start NativePlayback(pattern.durationMs)
+    val plan = planAndroidPlayback(pattern, capabilities)
+    val effect = when (plan.diagnostics.backend) {
+      HapticPlaybackBackend.SILENT -> return@start NativePlayback(pattern.durationMs)
+
+      HapticPlaybackBackend.UNSUPPORTED -> return@start null
+
+      HapticPlaybackBackend.ANDROID_ENVELOPE -> {
+        check(Build.VERSION.SDK_INT >= 36)
+        envelopeEffect(plan.envelope)
+      }
+
+      HapticPlaybackBackend.ANDROID_PRIMITIVES -> {
+        check(Build.VERSION.SDK_INT >= 31)
+        primitiveEffect(plan.primitives)
+      }
+
+      HapticPlaybackBackend.ANDROID_WAVEFORM -> {
+        val waveform = checkNotNull(plan.waveform)
+        VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
+      }
+
+      else -> error("Unexpected Android playback backend: ${plan.diagnostics.backend}")
     }
-    if (!isSupported) return@start null
-    val waveform = vibratePattern(pattern)
-    if (waveform == null) {
-      NativePlayback(pattern.durationMs)
-    } else {
-      NativePlayback(maxOf(pattern.durationMs, waveform.playbackDurationMs())) { vibrator.cancel() }
+    try {
+      vibrator.vibrate(effect)
+    } catch (failure: Throwable) {
+      try {
+        vibrator.cancel()
+      } catch (stopError: Throwable) {
+        failure.addSuppressed(stopError)
+      }
+      throw failure
     }
+    NativePlayback(maxOf(pattern.durationMs, plan.diagnostics.estimatedNativeDurationMs)) { vibrator.cancel() }
   }
 
   @RequiresPermission(Manifest.permission.VIBRATE)
   override fun release() = sessions.release { }
 
-  /** Plays [pattern] and returns the played waveform, or null when there is nothing to vibrate. */
-  @RequiresPermission(Manifest.permission.VIBRATE)
-  private fun vibratePattern(pattern: HapticPattern): Waveform? {
-    val waveform = pattern.toWaveform() ?: return null
-    waveform.playbackDurationMs()
-    val vibrationEffect = VibrationEffect.createWaveform(waveform.timings, waveform.amplitudes, -1)
-    vibrator.vibrate(vibrationEffect)
-    return waveform
+  /** Retains the waveform inspection path used by the existing host regression tests. */
+  internal fun HapticPattern.toWaveform(): AndroidWaveform? = planAndroidPlayback(
+    this,
+    AndroidPlaybackCapabilities(26, HapticDeviceCapabilities(true, hasAmplitudeControl)),
+  ).waveform
+
+  @RequiresApi(36)
+  private fun readEnvelopeLimits(): AndroidEnvelopeLimits = vibrator.envelopeEffectInfo.let {
+    AndroidEnvelopeLimits(it.maxSize, it.minControlPointDurationMillis, it.maxControlPointDurationMillis, it.maxDurationMillis)
   }
 
-  /**
-   * Translates a [HapticPattern] (events on a timeline) into the two parallel arrays Android's
-   * [VibrationEffect.createWaveform] expects: `timings` (how long each slice lasts) and `amplitudes`
-   * (how hard the motor buzzes during it, 0 = off). Android plays one amplitude at a time, so the
-   * pattern's overlapping, intensity-bearing events must first be flattened into a single serial
-   * track of non-overlapping slices.
-   *
-   * Worked example — `Haptic(100ms, STRONG) + Delay(50ms) + Haptic(100ms, MEDIUM)` on an LRA:
-   * ```
-   * events        STRONG |##########|      MEDIUM |##########|     two overlapping/spaced events
-   *                       0        100  150       250            with intensities, on a timeline
-   *
-   * 1. mergeToSerial   -> [100 @0.75][50 @gap][100 @0.5]         one serial track, gaps explicit;
-   *                                                              overlaps would resolve to the
-   *                                                              louder event (max, not sum)
-   *
-   * 2. insertFallRamps -> [100 @0.75][8 @0.38][42 @gap][100 @0.5]  the 50ms gap lends its first 8ms
-   *                                  \_ramp_/                       to a fade-down step, so a hard
-   *                                                                 drop to 0 doesn't ring (LRA only)
-   *
-   * 3. quantize        timings  = [100,  8, 42, 100]             intensity 0..1 -> amplitude 0..255;
-   *                    amplitudes=[191, 95,  0, 127]             zero stays 0; positive intensity
-   *                                                              floors to 1 (never silent-by-rounding)
-   *
-   * 4. applyDeviceCompat timings  = [100, 8, 42, 100, 1]         trailing 1ms-off terminates the
-   *                      amplitudes=[191,95,  0, 127, 0]         waveform cleanly; a single-event
-   *                                                              pattern also gets a Samsung primer
-   * ```
-   *
-   * Returns null (so the caller plays nothing) when [mergeToSerial] yields no active slice — i.e.
-   * an empty, zero-duration, or all-zero pattern. Without this guard step 4 would still append the
-   * compat segments, making the motor buzz for a pattern the user meant to be silent.
-   *
-   * Fall ramps (step 2) only soften `active -> gap` transitions where a real gap follows, not the
-   * pattern's final active slice: that trailing drop to 0 is handled by the compat 1ms-off segment
-   * (step 4), which lets the driver's active braking settle the actuator rather than a ramp.
-   */
-  internal fun HapticPattern.toWaveform(): Waveform? {
-    // 1. Flatten overlapping events into one serial timeline of [HapticSegment]s.
-    val serial = mergeToSerial(events)
-    if (serial.none { it.intensity > 0f }) return null
-
-    // 2. Soften active->gap amplitude drops, but only where the motor can render the in-between
-    //    levels (LRA); on ERM every non-zero amplitude rounds up to full, so a ramp is pointless.
-    val segments = if (hasAmplitudeControl) insertFallRamps(serial) else serial
-
-    // 3. Quantize each segment into a (timing, amplitude) pair.
-    val timings = mutableListOf<Long>()
-    val amplitudes = mutableListOf<Int>()
-    for (segment in segments) {
-      timings += segment.durationMs
-      amplitudes += segment.toAmplitude()
-    }
-
-    // 4. Append the device-compat segments (Samsung primer + clean trailing termination).
-    return applyDeviceCompat(timings, amplitudes, isSingleEvent = events.size == 1)
+  @RequiresApi(31)
+  private fun readPrimitiveDurations(): Map<AndroidPrimitive, Int> {
+    val primitives = AndroidPrimitive.entries
+    val ids = primitives.map { it.id }.toIntArray()
+    val supported = vibrator.arePrimitivesSupported(*ids)
+    val durations = vibrator.getPrimitiveDurations(*ids)
+    return primitives.mapIndexedNotNull { index, primitive ->
+      if (supported.getOrNull(index) == true && (durations.getOrNull(index) ?: 0) > 0) primitive to durations[index] else null
+    }.toMap()
   }
 
-  /**
-   * Post-processes the quantized waveform with device-compat segments:
-   * single-event patterns get a 1ms off + 1ms on primer (Samsung), and every pattern gets a
-   * trailing 1ms gap so the waveform terminates cleanly.
-   *
-   * The primer exists so devices that drop a single-segment [VibrationEffect.createWaveform]
-   * (they need an off-segment to recognize it as a real pattern) still fire — it is a recognition
-   * aid, not a motor warm-up, so it is appended after the active slice rather than prepended. A
-   * leading pair would add a perceptible pre-buzz; the 1ms tail here is imperceptible.
-   */
-  private fun applyDeviceCompat(
-    timings: MutableList<Long>,
-    amplitudes: MutableList<Int>,
-    isSingleEvent: Boolean,
-  ): Waveform {
-    if (isSingleEvent) {
-      timings += 1L
-      amplitudes += 0
-      timings += 1L
-      amplitudes += 1
-    }
-
-    timings += 1L
-    amplitudes += 0
-
-    return Waveform(timings.toLongArray(), amplitudes.toIntArray())
+  @RequiresApi(36)
+  private fun envelopeEffect(points: List<AndroidEnvelopePoint>): VibrationEffect {
+    val builder = VibrationEffect.BasicEnvelopeBuilder().setInitialSharpness(points.first().sharpness)
+    for ((start, end) in points.zipWithNext()) builder.addControlPoint(end.intensity, end.sharpness, end.timeMs - start.timeMs)
+    return builder.build()
   }
 
-  private fun HapticSegment.toAmplitude(): Int = if (intensity == 0f) 0 else (intensity * MAX_AMPLITUDE).toInt().coerceIn(1, MAX_AMPLITUDE)
-
-  // The played waveform's length is the sum of its slice timings (compat segments included). Signature
-  // is asymmetric with iOS's playbackDurationMs() on purpose: playback length is derived from a
-  // different input per platform (Android = the waveform actually played, iOS = the pattern).
-  private fun Waveform.playbackDurationMs(): Long = timings.fold(0L) { total, timing -> checkedTimeAdd(total, timing, "native waveform duration") }
-
-  internal data class Waveform(
-    val timings: LongArray,
-    val amplitudes: IntArray,
-  ) {
-    override fun equals(other: Any?): Boolean {
-      if (this === other) return true
-      if (other !is Waveform) return false
-      return timings.contentEquals(other.timings) && amplitudes.contentEquals(other.amplitudes)
-    }
-
-    override fun hashCode(): Int {
-      var result = timings.contentHashCode()
-      result = 31 * result + amplitudes.contentHashCode()
-      return result
-    }
-  }
-
-  companion object {
-    private const val MAX_AMPLITUDE = 255
+  @RequiresApi(31)
+  private fun primitiveEffect(steps: List<AndroidPrimitiveStep>): VibrationEffect {
+    val builder = VibrationEffect.startComposition()
+    for (step in steps) builder.addPrimitive(step.primitive.id, step.scale, step.delayMs)
+    return builder.compose()
   }
 }
 
-/**
- * Creates an Android-specific [HapticExecutor].
- *
- * @param context Must be an instance of `android.content.Context`
- * @return AndroidHapticExecutor implementation
- * @throws IllegalArgumentException if context is null or not a Context
- */
+/** Creates an Android executor. [context] must be an Android [Context]. */
 @RequiresApi(Build.VERSION_CODES.O)
 actual fun createHapticExecutor(context: Any?): HapticExecutor {
   requireNotNull(context) { "Context is required for Android HapticExecutor" }
