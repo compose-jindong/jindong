@@ -5,6 +5,7 @@
   "description": "Figma plugin that turns designed haptic patterns into Jindong code",
   "license": "Apache-2.0",
   "scripts": {
+    "build:main": "esbuild src/main/main.ts --bundle --target=es2020 --outfile=dist/main.js",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "golden": "UPDATE_GOLDEN=1 vitest run test/golden.test.ts"
