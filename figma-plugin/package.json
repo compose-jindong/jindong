@@ -5,17 +5,32 @@
   "description": "Figma plugin that turns designed haptic patterns into Jindong code",
   "license": "Apache-2.0",
   "scripts": {
+    "build": "yarn build:main && yarn build:ui",
     "build:main": "esbuild src/main/main.ts --bundle --target=es2020 --outfile=dist/main.js",
+    "build:ui": "vite build",
+    "preview:ui": "vite --open /preview.html",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "golden": "UPDATE_GOLDEN=1 vitest run test/golden.test.ts"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.142.0",
+    "@testing-library/dom": "^10.4.2",
+    "@testing-library/react": "^16",
     "@types/node": "^22.15.29",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@vitejs/plugin-react": "^5",
     "esbuild": "^0.25.0",
+    "jsdom": "^26.1.0",
     "typescript": "~5.9.3",
+    "vite": "^7.3.0",
+    "vite-plugin-singlefile": "^2.3.0",
     "vitest": "^3.2.4"
   },
-  "packageManager": "yarn@1.22.22"
+  "packageManager": "yarn@1.22.22",
+  "dependencies": {
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  }
 }

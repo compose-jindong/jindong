@@ -1,0 +1,103 @@
+import { useState, type CSSProperties } from "react";
+import { displayWindowMs, layoutBars } from "../core/cardLayout";
+import { TONE_HEX, toTimeline, type PatternSpec } from "../core/model";
+
+interface TimelineProps {
+  pattern: PatternSpec;
+  width: number;
+  height: number;
+  selectedIndex?: number;
+  onSelect?: (index: number) => void;
+  /** Adds the axis labels and a button that replays the rhythm in real time. */
+  detailed?: boolean;
+}
+
+const HIT_WIDTH = 12;
+
+export function Timeline({ pattern, width, height, selectedIndex, onSelect, detailed = false }: TimelineProps) {
+  const [playCount, setPlayCount] = useState(0);
+  const [playing, setPlaying] = useState(false);
+  const timeline = toTimeline(pattern);
+  const windowMs = displayWindowMs(timeline.durationMs);
+  const inset = detailed ? 8 : 4;
+  const box = { x: inset, y: inset, width: width - inset * 2, height: height - inset };
+  const bars = layoutBars(timeline, box, windowMs);
+  const tone = TONE_HEX[pattern.tone];
+  const sweep = (timeline.durationMs / windowMs) * box.width;
+
+  return (
+    <div className={detailed ? "timeline timeline-detailed" : "timeline"}>
+      <svg
+        key={playCount}
+        viewBox={`0 0 ${width} ${height}`}
+        className={playing ? "timeline-svg playing" : "timeline-svg"}
+        aria-hidden={!detailed}
+        role={detailed ? "img" : undefined}
+        aria-label={detailed ? `${pattern.name} rhythm, ${timeline.durationMs} ms` : undefined}
+      >
+        {bars.map((bar) => {
+          const event = timeline.events[bar.index];
+          const selected = bar.index === selectedIndex;
+          const style = {
+            "--delay": `${event.startMs}ms`,
+            "--flash": `${Math.max(event.durationMs, 160)}ms`,
+          } as CSSProperties;
+          const hitX = bar.kind === "continuous" ? bar.x : bar.x - HIT_WIDTH / 2;
+          const hitWidth = bar.kind === "continuous" ? Math.max(bar.width, HIT_WIDTH) : HIT_WIDTH;
+          return (
+            <g key={bar.index} className={selected ? "bar selected" : "bar"} style={style}>
+              {bar.kind === "continuous" ? (
+                <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} rx={1.5} fill={tone} />
+              ) : (
+                <>
+                  <rect x={bar.x} y={bar.y} width={2} height={bar.height} fill={tone} />
+                  <circle cx={bar.x + 1} cy={bar.y} r={3} fill={tone} />
+                </>
+              )}
+              {onSelect && (
+                <rect
+                  className="bar-hit"
+                  x={hitX}
+                  y={0}
+                  width={hitWidth}
+                  height={height}
+                  onClick={() => onSelect(bar.index)}
+                />
+              )}
+            </g>
+          );
+        })}
+        {playing && (
+          <line
+            className="playhead"
+            x1={box.x}
+            x2={box.x}
+            y1={0}
+            y2={height}
+            style={{ "--sweep": `${sweep}px`, animationDuration: `${timeline.durationMs}ms` } as CSSProperties}
+            onAnimationEnd={() => setPlaying(false)}
+          />
+        )}
+      </svg>
+      {detailed && (
+        <div className="timeline-meta">
+          <span>0</span>
+          <button
+            type="button"
+            className="play-button"
+            onClick={() => {
+              setPlayCount((count) => count + 1);
+              setPlaying(true);
+            }}
+          >
+            <svg viewBox="0 0 10 10" width="8" height="8" aria-hidden="true">
+              <path d="M2 1 9 5 2 9Z" fill="currentColor" />
+            </svg>
+            Preview rhythm
+          </button>
+          <span>{windowMs} ms</span>
+        </div>
+      )}
+    </div>
+  );
+}
