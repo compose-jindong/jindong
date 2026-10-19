@@ -33,11 +33,12 @@ jindong-compose ──depends on──▶ jindong-core
 | Platform | Minimum Version |
 |----------|-----------------|
 | Android | API 26 |
-| iOS | iOS 13 |
+| iOS | iOS 15 |
 
 ### Project Requirements
 
-- Kotlin 2.0+
+- Kotlin 2.4.0+ for Kotlin Multiplatform projects with iOS targets
+- Kotlin 2.3.0+ for Android-only projects
 - Compose Multiplatform (for `jindong-compose`)
 
 ## Installation
@@ -111,7 +112,7 @@ Add the vibration permission to your `AndroidManifest.xml`:
 
 ### iOS
 
-No additional setup required. Core Haptics is available on iOS 13+.
+No additional setup required. Set your app's deployment target to iOS 15 or later.
 
 <Callout type="warn">
 Not all iOS devices support haptic feedback. Jindong gracefully handles devices without haptic capabilities.
@@ -221,7 +222,7 @@ Run on a physical device (haptics don't work on emulators/simulators) and tap th
 
 - Test on a physical device
   + Simulators don't support haptics
-- Verify iOS 13+ deployment target
+- Verify iOS 15+ deployment target
 - Some older devices don't have haptic hardware
 
 ### Compilation errors
