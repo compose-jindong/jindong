@@ -471,3 +471,212 @@ input[type="range"] {
 .primary:disabled {
   opacity: 0.35;
 }
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  gap: 16px;
+  margin: -4px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabs button {
+  margin-bottom: -1px;
+  padding: 6px 0 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+}
+
+.tabs button[aria-selected="true"] {
+  border-bottom-color: var(--text);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Link panel */
+
+.link-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.link-header {
+  display: grid;
+  gap: 2px;
+}
+
+.link-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.link-header h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.callout {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.current-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.current-link p {
+  margin: 0;
+}
+
+.current-link-broken p {
+  color: var(--warning);
+}
+
+.link-section {
+  display: grid;
+  gap: 8px;
+}
+
+.link-section h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.card-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.card-option {
+  display: grid;
+  grid-template-columns: 8px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  text-align: left;
+}
+
+.card-option:first-child {
+  border-top: 0;
+}
+
+.card-option:hover {
+  background: var(--bg-hover);
+}
+
+.card-option[aria-checked="true"] {
+  background: var(--bg-subtle);
+  box-shadow: inset 2px 0 0 var(--text);
+}
+
+.card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.card-option-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-option[aria-checked="true"] .card-option-name {
+  font-weight: 600;
+}
+
+.card-option-page {
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.link-panel .segmented {
+  display: flex;
+}
+
+.link-panel .segmented button {
+  flex: 1;
+  padding: 4px 6px;
+}
+
+/* Code */
+
+.code-panel {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 16px;
+}
+
+.code-intro {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.code-block {
+  display: grid;
+  gap: 6px;
+}
+
+.code-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-block-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.code-hint {
+  flex: 1;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.code-block-head .secondary {
+  height: 24px;
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  font: 11px/1.55 "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+  tab-size: 4;
+}

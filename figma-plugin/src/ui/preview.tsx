@@ -108,10 +108,11 @@ const TARGETS: [string, string][] = [
   ["multiple", "Two layers"],
 ];
 
-// &autoplay=1 presses "Preview rhythm" once, for screenshots of the playback.
-if (params.get("autoplay") === "1") {
+// &click=<button text> presses that button once after load, for screenshots ("Preview rhythm", "Code").
+const autoClick = params.get("click");
+if (autoClick) {
   setTimeout(() => {
-    const button = [...document.querySelectorAll("button")].find((b) => b.textContent?.includes("Preview rhythm"));
+    const button = [...document.querySelectorAll("button")].find((b) => b.textContent?.trim() === autoClick);
     button?.click();
   }, 200);
 }
