@@ -24,6 +24,11 @@ export function annotationMarkdown(cardName: string, trigger: Trigger): string {
   return `**${MARKER}:** ${cardName} · ${TRIGGER_LABEL[trigger]}\nMade with [Jindong](${DOCS_URL})`;
 }
 
+/** The same note without markdown, for when Figma refuses links in notes. */
+export function annotationLabel(cardName: string, trigger: Trigger): string {
+  return `${MARKER}: ${cardName} · ${TRIGGER_LABEL[trigger]} — made with Jindong`;
+}
+
 export function isJindongAnnotation(a: AnnotationLike): boolean {
   return (a.labelMarkdown ?? a.label ?? "").includes(MARKER);
 }

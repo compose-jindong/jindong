@@ -1,4 +1,10 @@
-import { ANNOTATION_CATEGORY, annotationMarkdown, mergeJindongAnnotation, type AnnotationLike } from "../core/annotation";
+import {
+  ANNOTATION_CATEGORY,
+  annotationLabel,
+  annotationMarkdown,
+  mergeJindongAnnotation,
+  type AnnotationLike,
+} from "../core/annotation";
 import { SCHEMA_VERSION, type Trigger } from "../core/model";
 import { insideInstance } from "./selection";
 import { clearLink, readPattern, writeLink } from "./storage";
@@ -13,9 +19,11 @@ export async function linkLayer(nodeId: string, cardId: string, trigger: Trigger
 
   writeLink(node, { schema: SCHEMA_VERSION, cardId, trigger });
   const categoryId = await hapticsCategoryId();
-  const note: AnnotationLike = { labelMarkdown: annotationMarkdown(pattern.name, trigger) };
-  if (categoryId) note.categoryId = categoryId;
-  return { annotation: setJindongAnnotation(node, note) };
+  const markdown: AnnotationLike = { labelMarkdown: annotationMarkdown(pattern.name, trigger) };
+  const plain: AnnotationLike = { label: annotationLabel(pattern.name, trigger) };
+  // Try the note with a docs link first, then plain text that still names Jindong, then without the category.
+  const notes = categoryId ? [{ ...markdown, categoryId }, { ...plain, categoryId }, plain] : [markdown, plain];
+  return { annotation: notes.some((note) => setJindongAnnotation(node, note)) };
 }
 
 export async function unlinkLayer(nodeId: string): Promise<void> {
