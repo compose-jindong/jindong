@@ -72,6 +72,11 @@ kotlin {
             implementation(libs.compose.ui.test)
             implementation(libs.kotlinx.coroutines.test)
         }
+
+        commonTest.configure {
+            // Kotlin emitted by the Figma plugin's code generator; see figma-plugin/README.md.
+            kotlin.srcDir(rootProject.file("figma-plugin/golden/compose"))
+        }
     }
 }
 

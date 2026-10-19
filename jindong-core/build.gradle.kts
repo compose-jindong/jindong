@@ -74,6 +74,11 @@ kotlin {
       implementation(libs.kotlinx.coroutines.test)
     }
 
+    commonTest.configure {
+      // Kotlin emitted by the Figma plugin's code generator; see figma-plugin/README.md.
+      kotlin.srcDir(rootProject.file("figma-plugin/golden/core"))
+    }
+
     named("androidHostTest").dependencies {
         implementation(libs.robolectric)
         implementation(libs.androidx.test.core)
