@@ -31,11 +31,11 @@ export function clearLink(node: BaseNode): void {
   node.setSharedPluginData(NAMESPACE, LINK_KEY, "");
 }
 
-/** Every card frame in the file, across pages. */
-export async function findCards(): Promise<FrameNode[]> {
+/** Every card in the file, across pages, including cards a designer turned into components. */
+export async function findCards(): Promise<(FrameNode | ComponentNode)[]> {
   await figma.loadAllPagesAsync();
   return figma.root.findAllWithCriteria({
-    types: ["FRAME"],
+    types: ["FRAME", "COMPONENT"],
     sharedPluginData: { namespace: NAMESPACE, keys: [PATTERN_KEY] },
   });
 }
