@@ -1,0 +1,17 @@
+{
+  "name": "jindong-figma-plugin",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Figma plugin that turns designed haptic patterns into Jindong code",
+  "license": "Apache-2.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.29",
+    "typescript": "~5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "packageManager": "yarn@1.22.22"
+}
