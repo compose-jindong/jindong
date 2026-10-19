@@ -122,7 +122,7 @@ function Preview() {
   if (params.get("chrome") === "0") return <App bridge={bridge} />;
   return (
     <div style={{ display: "flex", gap: 24, padding: 24, alignItems: "flex-start", background: "#ececec", minHeight: "100%" }}>
-      <div style={{ width: 360, height: 640, background: "var(--bg)", boxShadow: "0 2px 12px rgb(0 0 0 / 15%)", borderRadius: 8, overflow: "hidden" }}>
+      <div style={{ flexShrink: 0, width: 360, height: 640, background: "var(--bg)", boxShadow: "0 2px 12px rgb(0 0 0 / 15%)", borderRadius: 8, overflow: "hidden" }}>
         <App bridge={bridge} />
       </div>
       <div style={{ display: "grid", gap: 6 }}>
