@@ -10,7 +10,9 @@
     "golden": "UPDATE_GOLDEN=1 vitest run test/golden.test.ts"
   },
   "devDependencies": {
+    "@figma/plugin-typings": "^1.142.0",
     "@types/node": "^22.15.29",
+    "esbuild": "^0.25.0",
     "typescript": "~5.9.3",
     "vitest": "^3.2.4"
   },
