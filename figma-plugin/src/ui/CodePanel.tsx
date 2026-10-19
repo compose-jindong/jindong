@@ -9,9 +9,10 @@ const SECTION_HINT: Record<CodeSection["title"], string> = {
   Jindong: "",
 };
 
-export function CodePanel({ sections }: { sections: CodeSection[] }) {
+export function CodePanel({ sections, notice }: { sections: CodeSection[]; notice?: string }) {
   return (
     <div className="code-panel">
+      {notice && <p className="callout">{notice}</p>}
       <p className="code-intro">
         Send this to your developer. With Dev Mode, they can also select the layer and pick Jindong (Compose) in
         the code panel.

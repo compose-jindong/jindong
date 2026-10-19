@@ -144,6 +144,18 @@ describe("App", () => {
     expect(screen.getByText(/jindong-compose:2\.0\.0/)).toBeTruthy();
   });
 
+  test("the Code tab says when the card has unsaved changes", () => {
+    const unsaved = "This card has unsaved changes. Press Update card to include them in the code.";
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.click(screen.getByRole("tab", { name: "Code" }));
+    expect(screen.queryByText(unsaved)).toBeNull();
+    fireEvent.click(screen.getByRole("tab", { name: "Edit" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+    fireEvent.click(screen.getByRole("tab", { name: "Code" }));
+    expect(screen.getByText(unsaved)).toBeTruthy();
+  });
+
   test("a linked layer's Code tab shows the Jindong call", () => {
     const { emit } = setup();
     emit({

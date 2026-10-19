@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { insertEventAfter, removeEvent, setEventType, updateEvent } from "../core/editing";
 import { LIMITS, TONE_HEX, normalizePattern, validatePattern, type PatternSpec, type Tone } from "../core/model";
 import { EventInspector, RangeField } from "./EventInspector";
@@ -9,15 +9,22 @@ interface EditorProps {
   initial: PatternSpec;
   onSubmit: (pattern: PatternSpec) => void;
   onBack?: () => void;
+  /** Reports whether the draft differs from [initial], the pattern last saved to the card. */
+  onDirtyChange?: (dirty: boolean) => void;
 }
 
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
-export function Editor({ mode, initial, onSubmit, onBack }: EditorProps) {
+export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange }: EditorProps) {
   const [draft, setDraft] = useState(initial);
   const [selected, setSelected] = useState(0);
   const index = Math.min(selected, draft.events.length - 1);
   const validation = validatePattern(draft);
+  const dirty = JSON.stringify(normalizePattern(draft)) !== JSON.stringify(normalizePattern(initial));
+
+  useEffect(() => {
+    onDirtyChange?.(dirty);
+  }, [dirty, onDirtyChange]);
 
   return (
     <div className="editor">

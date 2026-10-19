@@ -12,6 +12,7 @@ type Status = Extract<MainToUi, { type: "status" }>;
 type Tab = "main" | "code";
 
 const STATUS_MS = 4000;
+const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to include them in the code.";
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
@@ -19,6 +20,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [cards, setCards] = useState<CardSummary[] | null>(null);
   const [tab, setTab] = useState<Tab>("main");
   const [status, setStatus] = useState<Status | null>(null);
+  const [unsaved, setUnsaved] = useState(false);
   const selectedNodeId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -26,7 +28,10 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
       if (message.type === "selection") {
         // The main thread re-sends the selection after every change; only a new layer resets the tab.
         const nodeId = nodeIdOf(message.state);
-        if (nodeId !== selectedNodeId.current) setTab("main");
+        if (nodeId !== selectedNodeId.current) {
+          setTab("main");
+          setUnsaved(false);
+        }
         selectedNodeId.current = nodeId;
         setSelection(message.state);
         // A new card or layer takes over the window, so an unsaved preset pick ends here.
@@ -74,13 +79,19 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
             mainLabel="Edit"
             tab={tab}
             onTab={setTab}
-            code={<CodePanel sections={codeSections({ pattern, link: null, linkedPattern: null })} />}
+            code={
+              <CodePanel
+                sections={codeSections({ pattern, link: null, linkedPattern: null })}
+                notice={unsaved ? UNSAVED_NOTICE : undefined}
+              />
+            }
           >
             <Editor
               key={nodeId}
               mode="update"
               initial={pattern}
               onSubmit={(next) => bridge.send({ type: "update-card", nodeId, pattern: next })}
+              onDirtyChange={setUnsaved}
             />
           </Tabbed>
         );
