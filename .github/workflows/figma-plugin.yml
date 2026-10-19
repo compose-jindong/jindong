@@ -1,0 +1,50 @@
+name: Figma Plugin
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'figma-plugin/**'
+      - '.github/workflows/figma-plugin.yml'
+      - 'jindong-core/build.gradle.kts'
+  pull_request:
+    branches: [main, 'feature/**']
+    paths:
+      - 'figma-plugin/**'
+      - '.github/workflows/figma-plugin.yml'
+      - 'jindong-core/build.gradle.kts'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: figma-plugin
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+          cache-dependency-path: figma-plugin/yarn.lock
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Type check
+        run: yarn typecheck
+
+      # Includes the golden check: the committed Kotlin in figma-plugin/golden must match the generator.
+      - name: Test
+        run: yarn test
+
+      - name: Build
+        run: yarn build
