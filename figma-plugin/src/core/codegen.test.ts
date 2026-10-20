@@ -198,6 +198,19 @@ describe("codeSections", () => {
     ]);
   });
 
+  test("a broken link names the card it remembers", () => {
+    const [notice] = codeSections({
+      pattern: null,
+      link: { schema: 1, cardId: "9:9", trigger: "tap", cardName: "Success" },
+      linkedPattern: null,
+    });
+    expect(notice).toEqual({
+      title: "Jindong",
+      language: "PLAINTEXT",
+      code: "This layer was linked to the Jindong haptic card “Success”, which was moved or deleted.\nAsk your designer to link it again with the Jindong Figma plugin.",
+    });
+  });
+
   test("an unreadable card says it can't be read", () => {
     expect(codeSections({ pattern: null, link: null, linkedPattern: null, unreadableCard: true })).toEqual([
       { title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_CARD_NOTICE },

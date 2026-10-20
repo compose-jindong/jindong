@@ -191,7 +191,13 @@ export function codeSections(input: {
       setup,
     ];
   }
-  if (input.link) return [{ title: "Jindong", language: "PLAINTEXT", code: BROKEN_LINK_NOTICE }];
+  if (input.link) {
+    const name = input.link.cardName;
+    const code = name
+      ? `This layer was linked to the Jindong haptic card “${name}”, which was moved or deleted.\nAsk your designer to link it again with the Jindong Figma plugin.`
+      : BROKEN_LINK_NOTICE;
+    return [{ title: "Jindong", language: "PLAINTEXT", code }];
+  }
   return [{ title: "Jindong", language: "PLAINTEXT", code: NO_HAPTIC_NOTICE }];
 }
 
