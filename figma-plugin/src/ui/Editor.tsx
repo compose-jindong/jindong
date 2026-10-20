@@ -110,7 +110,7 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = 
         <button
           type="button"
           className="primary"
-          disabled={!validation.ok || busy}
+          disabled={!validation.ok || busy || (mode === "update" && !dirty)}
           onClick={() => {
             if (validation.ok) onSubmit(normalizePattern(validation.pattern));
           }}

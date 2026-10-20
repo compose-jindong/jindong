@@ -116,6 +116,14 @@ describe("App", () => {
     expect(length.value).toBe("50");
   });
 
+  test("Update card waits for a change", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", true);
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", false);
+  });
+
   test("an invalid draft disables the button and says why", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
