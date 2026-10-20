@@ -21,6 +21,8 @@ export type SelectionState =
       link: HapticLink | null;
       linkedPattern: PatternSpec | null;
       warning: LayerWarning;
+      /** The link comes from the main component of this instance, so only the main component can remove it. */
+      linkInherited?: boolean;
     };
 
 export interface CardSummary {

@@ -81,6 +81,18 @@ describe("readSelection", () => {
     expect(await readSelection()).toMatchObject({ kind: "layer", warning: "main-component" });
   });
 
+  test("an instance whose link comes from its main component says so", async () => {
+    const main = fakeNode("6:3", "COMPONENT", page);
+    writeLink(main as unknown as SceneNode, { schema: 1, cardId: "9:9", trigger: "tap" });
+    select(instanceOf("6:4", main, page));
+    expect(await readSelection()).toMatchObject({ kind: "layer", nodeId: "6:4", linkInherited: true });
+
+    const own = instanceOf("6:5", main, page);
+    writeLink(own as unknown as SceneNode, { schema: 1, cardId: "9:8", trigger: "enter" });
+    select(own);
+    expect(await readSelection()).toMatchObject({ kind: "layer", nodeId: "6:5", linkInherited: false });
+  });
+
   test("an ordinary layer stays a layer", async () => {
     const frame = fakeNode("5:1", "FRAME", page);
     const button = fakeNode("5:2", "INSTANCE", frame);

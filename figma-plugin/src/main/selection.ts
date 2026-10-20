@@ -1,6 +1,6 @@
 import type { LayerWarning, SelectionState } from "../shared/messages";
 import { clashesWith } from "../core/codegen";
-import { NAMESPACE } from "../core/model";
+import { NAMESPACE, type HapticLink } from "../core/model";
 import { findCard, readLink, readPattern } from "./storage";
 
 export async function readSelection(): Promise<SelectionState> {
@@ -17,7 +17,23 @@ export async function readSelection(): Promise<SelectionState> {
 
   const link = readLink(node);
   const linkedPattern = link ? readPattern(await figma.getNodeByIdAsync(link.cardId)) : null;
-  return { kind: "layer", nodeId: node.id, nodeName: node.name, link, linkedPattern, warning: warningFor(node) };
+  return {
+    kind: "layer",
+    nodeId: node.id,
+    nodeName: node.name,
+    link,
+    linkedPattern,
+    warning: warningFor(node),
+    linkInherited: link ? await inheritsLink(node, link) : false,
+  };
+}
+
+// Figma lets an instance read its main component's plugin data, so a link set on the component shows here too.
+async function inheritsLink(node: SceneNode, link: HapticLink): Promise<boolean> {
+  if (node.type !== "INSTANCE") return false;
+  const main = await node.getMainComponentAsync();
+  const mainLink = main ? readLink(main) : null;
+  return mainLink !== null && mainLink.cardId === link.cardId && mainLink.trigger === link.trigger;
 }
 
 /** True for layers inside an instance; links belong on the instance itself. */

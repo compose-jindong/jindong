@@ -251,6 +251,20 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "On state change" }).getAttribute("aria-pressed")).toBe("true");
   });
 
+  test("a link inherited from the main component can't be removed here, and the panel says where", () => {
+    const { emit } = setup();
+    emit({
+      type: "selection",
+      state: layer({
+        link: { schema: 1, cardId: "9:1", trigger: "tap" },
+        linkedPattern: presetNamed("Success"),
+        linkInherited: true,
+      }),
+    });
+    expect(screen.getByText("Linked to Success · On tap through its main component.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Remove link" })).toBeNull();
+  });
+
   test("a deleted linked card shows a notice and Remove link unlinks", () => {
     const { sent, emit } = setup();
     emit({ type: "selection", state: layer({ link: { schema: 1, cardId: "9:9", trigger: "tap" } }) });

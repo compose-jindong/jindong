@@ -19,7 +19,7 @@ interface LinkPanelProps {
 const TRIGGERS: Trigger[] = ["tap", "enter", "state"];
 
 export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy = false }: LinkPanelProps) {
-  const { link, linkedPattern, warning } = state;
+  const { link, linkedPattern, warning, linkInherited } = state;
   const [cardId, setCardId] = useState<string | null>(link && linkedPattern ? link.cardId : null);
   const [trigger, setTrigger] = useState<Trigger>(link?.trigger ?? "tap");
 
@@ -64,14 +64,16 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
             <div className={linkedPattern ? "current-link" : "current-link current-link-broken"}>
               <p>
                 {linkedPattern
-                  ? `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}`
+                  ? `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}${linkInherited ? " through its main component." : ""}`
                   : suggestion
                     ? `The linked card was moved or deleted. “${suggestion.name}” on ${suggestion.pageName} looks like it. Press Link haptic to link it again.`
                     : "The linked card was deleted. Link another card or remove the link."}
               </p>
-              <button type="button" className="secondary" onClick={onUnlink} disabled={busy}>
-                Remove link
-              </button>
+              {!linkInherited && (
+                <button type="button" className="secondary" onClick={onUnlink} disabled={busy}>
+                  Remove link
+                </button>
+              )}
             </div>
           )}
 
