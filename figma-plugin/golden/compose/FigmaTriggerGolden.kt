@@ -57,3 +57,19 @@ internal fun TwoTapTriggersGolden() {
     }
     // In the element's onClick: secondGoldenTaps++
 }
+
+@Composable
+internal fun SharedHapticTriggersGolden() {
+    // Call inside JindongProvider { ... }
+    var payButtonTaps by remember { mutableIntStateOf(0) }
+    Jindong(payButtonTaps, playOnInitialComposition = false) {
+        Clip(TriggerGoldenHaptic)
+    }
+    // In the element's onClick: payButtonTaps++
+    // Call inside JindongProvider { ... }
+    var confirmButtonTaps by remember { mutableIntStateOf(0) }
+    Jindong(confirmButtonTaps, playOnInitialComposition = false) {
+        Clip(TriggerGoldenHaptic)
+    }
+    // In the element's onClick: confirmButtonTaps++
+}

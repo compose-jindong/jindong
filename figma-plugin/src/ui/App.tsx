@@ -156,7 +156,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
             mainLabel="Link"
             tab={tab}
             onTab={setTab}
-            code={<CodePanel sections={codeSections({ pattern: null, link, linkedPattern })} />}
+            code={<CodePanel sections={codeSections({ pattern: null, link, linkedPattern, layerName: selection.nodeName })} />}
           >
             {panel}
           </Tabbed>

@@ -32,13 +32,18 @@ export function formatUnit(x: number): string {
 
 /** PascalCase of the card name plus `Haptic`; Kotlin identifiers allow only letters and decimal digits here. */
 export function patternVariableName(cardName: string): string {
-  const pascal = cardName
+  const pascal = pascalWords(cardName);
+  if (pascal.length === 0) return "CustomHaptic";
+  return /^\p{Nd}/u.test(pascal) ? `Haptic${pascal}` : `${pascal}Haptic`;
+}
+
+// The letters and digits of [text] as PascalCase words; Kotlin names allow nothing else here.
+function pascalWords(text: string): string {
+  return text
     .split(/[^\p{L}\p{Nd}]+/u)
     .filter((word) => word.length > 0)
     .map((word) => withFirstCase(word, "upper"))
     .join("");
-  if (pascal.length === 0) return "CustomHaptic";
-  return /^\p{Nd}/u.test(pascal) ? `Haptic${pascal}` : `${pascal}Haptic`;
 }
 
 // Changes the first letter's case, unless that turns it into more than one character ("İ" → "i̇", "ǰ" → "J̌"):
@@ -95,12 +100,18 @@ const TAP_IMPORTS = [
   "androidx.compose.runtime.setValue",
 ];
 
-export function hapticCodeParts(variableName: string, trigger: Trigger): { imports: string[]; body: string } {
+/** [layerName] names the tap counter, so buttons sharing one haptic in one composable don't collide. */
+export function hapticCodeParts(
+  variableName: string,
+  trigger: Trigger,
+  layerName?: string,
+): { imports: string[]; body: string } {
   const clip = `${INDENT}Clip(${variableName})`;
   switch (trigger) {
     case "tap": {
-      // Named after the haptic, so two tappable elements in one composable get separate counters.
-      const base = variableName.replace(/Haptic$/, "");
+      // Named after the layer when it has a usable name, otherwise after the haptic.
+      const fromLayer = layerName ? pascalWords(layerName) : "";
+      const base = fromLayer && !/^\p{Nd}/u.test(fromLayer) ? fromLayer : variableName.replace(/Haptic$/, "");
       const counter = `${withFirstCase(base, "lower")}Taps`;
       return {
         imports: [...TAP_IMPORTS, ...CALL_IMPORTS],
@@ -139,8 +150,8 @@ export function hapticCodeParts(variableName: string, trigger: Trigger): { impor
   }
 }
 
-export function hapticCode(variableName: string, trigger: Trigger): string {
-  const { imports, body } = hapticCodeParts(variableName, trigger);
+export function hapticCode(variableName: string, trigger: Trigger, layerName?: string): string {
+  const { imports, body } = hapticCodeParts(variableName, trigger, layerName);
   return `${importLines(imports)}\n\n${body}`;
 }
 
@@ -164,6 +175,8 @@ export function codeSections(input: {
   linkedPattern: PatternSpec | null;
   /** The layer is a card whose data this plugin version can't read. */
   unreadableCard?: boolean;
+  /** The linked layer's name, for naming its tap counter. */
+  layerName?: string;
 }): CodeSection[] {
   if (input.unreadableCard) return [{ title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_CARD_NOTICE }];
   const setup: CodeSection = { title: "Setup", language: "KOTLIN", code: setupCode() };
@@ -173,7 +186,7 @@ export function codeSections(input: {
   if (input.link && input.linkedPattern) {
     const name = patternVariableName(input.linkedPattern.name);
     return [
-      { title: "Haptic", language: "KOTLIN", code: hapticCode(name, input.link.trigger) },
+      { title: "Haptic", language: "KOTLIN", code: hapticCode(name, input.link.trigger, input.layerName) },
       { title: "Pattern", language: "KOTLIN", code: patternCode(input.linkedPattern) },
       setup,
     ];

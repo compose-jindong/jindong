@@ -59,6 +59,15 @@ describe("Dev Mode codegen", () => {
     expect(results[0].code).toContain("Jindong(Unit) {\n    Clip(SuccessHaptic)\n}");
   });
 
+  test("the tap counter is named after the linked layer", async () => {
+    card("9:1");
+    const button = fakeNode("5:7");
+    (button as unknown as { name: string }).name = "Pay button";
+    writeLink(button, { schema: 1, cardId: "9:1", trigger: "tap" });
+    const [haptic] = await generate({ node: button, language: "jindong" });
+    expect(haptic.code).toContain("var payButtonTaps by remember");
+  });
+
   test("a link to a deleted card says the link is broken", async () => {
     const button = fakeNode("5:1");
     writeLink(button, { schema: 1, cardId: "9:404", trigger: "tap" });

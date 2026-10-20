@@ -9,7 +9,7 @@ export function registerCodegen(): void {
     const link = card ? null : readLink(node);
     const linkedPattern = link ? readPattern(await figma.getNodeByIdAsync(link.cardId)) : null;
     const unreadableCard = card !== null && pattern === null;
-    return codeSections({ pattern, link, linkedPattern, unreadableCard }).map(({ title, language, code }) => ({
+    return codeSections({ pattern, link, linkedPattern, unreadableCard, layerName: node.name }).map(({ title, language, code }) => ({
       title,
       language,
       code,

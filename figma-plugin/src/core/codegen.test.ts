@@ -123,6 +123,8 @@ describe("patternCode", () => {
   });
 });
 
+const LINK: HapticLink = { schema: 1, cardId: "1:2", trigger: "tap" };
+
 describe("hapticCode", () => {
   test("tap remembers a counter and waits for the first tap", () => {
     expect(hapticCode("SuccessHaptic", "tap")).toBe(TAP_CODE);
@@ -136,6 +138,17 @@ describe("hapticCode", () => {
     expect(counter(hapticCode("성공진동Haptic", "tap"))).toBe("성공진동Taps");
     // Lowercasing "İ" adds a combining dot, which Kotlin names can't contain.
     expect(counter(hapticCode("İptalHaptic", "tap"))).toBe("İptalTaps");
+  });
+
+  test("buttons sharing one haptic get counters named after each button", () => {
+    const counter = (code: string) => code.match(/^var (\S+) by remember/m)?.[1];
+    expect(counter(hapticCode("SuccessHaptic", "tap", "Pay button"))).toBe("payButtonTaps");
+    expect(counter(hapticCode("SuccessHaptic", "tap", "Confirm button"))).toBe("confirmButtonTaps");
+    expect(counter(hapticCode("SuccessHaptic", "tap", "🎉"))).toBe("successTaps");
+    expect(counter(hapticCode("SuccessHaptic", "tap", "3rd button"))).toBe("successTaps");
+    expect(
+      codeSections({ pattern: null, link: LINK, linkedPattern: presetNamed("Success"), layerName: "Pay button" })[0].code,
+    ).toContain("Jindong(payButtonTaps, playOnInitialComposition = false)");
   });
 
   test("enter plays on entry", () => {

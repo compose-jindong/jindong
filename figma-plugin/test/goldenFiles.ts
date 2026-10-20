@@ -142,6 +142,16 @@ function triggerFile(): string {
       "}",
     ].join("\n"),
   );
+  // Two buttons linked to the same haptic, each pasted with its layer name.
+  functions.push(
+    [
+      "@Composable",
+      "internal fun SharedHapticTriggersGolden() {",
+      ...hapticCodeParts("TriggerGoldenHaptic", "tap", "Pay button").body.split("\n").map((line) => INDENT + line),
+      ...hapticCodeParts("TriggerGoldenHaptic", "tap", "Confirm button").body.split("\n").map((line) => INDENT + line),
+      "}",
+    ].join("\n"),
+  );
   return [
     HEADER,
     PACKAGE,
