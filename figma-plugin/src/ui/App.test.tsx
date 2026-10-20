@@ -248,6 +248,21 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "unlink", nodeId: "5:1" });
   });
 
+  test("a link broken by moving its card offers the card with the same name", () => {
+    const { sent, emit } = setup();
+    emit({
+      type: "selection",
+      state: layer({ link: { schema: 1, cardId: "9:9", trigger: "enter", cardName: "Success" } }),
+    });
+    emit({ type: "cards", cards: [{ id: "9:1", name: "Success", tone: "green", pageName: "Haptics" }] });
+    expect(
+      screen.getByText("The linked card was moved or deleted. “Success” on Haptics looks like it. Press Link haptic to link it again."),
+    ).toBeTruthy();
+    expect(screen.getByRole("radio", { name: /Success/ }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "Link haptic" }));
+    expect(sent).toContainEqual({ type: "link", nodeId: "5:1", cardId: "9:1", trigger: "enter" });
+  });
+
   test("a layer inside an instance shows guidance and no Link button", () => {
     const { emit } = setup();
     emit({ type: "selection", state: layer({ warning: "inside-instance" }) });

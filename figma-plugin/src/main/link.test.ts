@@ -62,7 +62,7 @@ describe("linkLayer", () => {
     const layer = fakeLayer("5:1");
     nodes.set("5:1", layer);
     expect((await linkLayer("5:1", "9:1", "tap")).annotation).toBe("added");
-    expect(readLink(layer as unknown as SceneNode)).toEqual({ schema: 1, cardId: "9:1", trigger: "tap" });
+    expect(readLink(layer as unknown as SceneNode)).toEqual({ schema: 1, cardId: "9:1", trigger: "tap", cardName: "Success" });
     expect(layer.annotations[0]).toEqual({ label: "Spacing note" });
     expect(layer.annotations[1]).toMatchObject({ categoryId: "category:haptics" });
     expect(layer.annotations[1].labelMarkdown).toContain("[Jindong](");
@@ -83,7 +83,7 @@ describe("linkLayer", () => {
     const group = fakeGroup("5:2");
     nodes.set("5:2", group);
     expect((await linkLayer("5:2", "9:1", "tap")).annotation).toBe("unsupported");
-    expect(readLink(group as unknown as SceneNode)).toEqual({ schema: 1, cardId: "9:1", trigger: "tap" });
+    expect(readLink(group as unknown as SceneNode)).toEqual({ schema: 1, cardId: "9:1", trigger: "tap", cardName: "Success" });
   });
 
   test("a layer that refuses every note is reported as rejected", async () => {

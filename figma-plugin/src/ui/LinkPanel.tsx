@@ -28,6 +28,13 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
     if (cards === null) onRequestCards();
   }, [cards, onRequestCards]);
 
+  // A cut and paste gives a card a new id; a card with the remembered name is probably the same one.
+  const suggestion =
+    link && !linkedPattern && link.cardName ? cards?.find((card) => card.name === link.cardName) : undefined;
+  useEffect(() => {
+    if (suggestion) setCardId((current) => current ?? suggestion.id);
+  }, [suggestion]);
+
   const chosen = cards?.find((card) => card.id === cardId);
 
   return (
@@ -52,7 +59,9 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
               <p>
                 {linkedPattern
                   ? `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}`
-                  : "The linked card was deleted. Link another card or remove the link."}
+                  : suggestion
+                    ? `The linked card was moved or deleted. “${suggestion.name}” on ${suggestion.pageName} looks like it. Press Link haptic to link it again.`
+                    : "The linked card was deleted. Link another card or remove the link."}
               </p>
               <button type="button" className="secondary" onClick={onUnlink} disabled={busy}>
                 Remove link

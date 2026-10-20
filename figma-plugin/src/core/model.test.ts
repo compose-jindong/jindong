@@ -96,6 +96,15 @@ describe("parsing", () => {
     expect(parsePatternJson(JSON.stringify(SUCCESS))).toEqual(SUCCESS);
   });
 
+  test("keeps the card name a link remembers", () => {
+    expect(parseLinkJson(JSON.stringify({ schema: 1, cardId: "1:2", trigger: "tap", cardName: "Success" }))).toEqual({
+      schema: 1,
+      cardId: "1:2",
+      trigger: "tap",
+      cardName: "Success",
+    });
+  });
+
   test("reads only known link triggers", () => {
     expect(parseLinkJson(JSON.stringify({ schema: 1, cardId: "1:2", trigger: "hover" }))).toBeNull();
     expect(parseLinkJson(JSON.stringify({ schema: 1, cardId: "1:2", trigger: "tap" }))).toEqual({

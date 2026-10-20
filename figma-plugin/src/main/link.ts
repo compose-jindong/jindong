@@ -24,7 +24,7 @@ export async function linkLayer(
   if (!pattern) throw new Error("That card no longer exists.");
   if (insideInstance(node)) throw new Error("Select the instance itself, not a layer inside it.");
 
-  writeLink(node, { schema: SCHEMA_VERSION, cardId, trigger });
+  writeLink(node, { schema: SCHEMA_VERSION, cardId, trigger, cardName: pattern.name });
   if (!("annotations" in node)) return { annotation: "unsupported", layerType: node.type };
 
   const categoryId = await hapticsCategoryId();

@@ -40,6 +40,8 @@ export interface HapticLink {
   schema: 1;
   cardId: string;
   trigger: Trigger;
+  /** The card's name when linked, for finding it again after a cut and paste gives it a new id. */
+  cardName?: string;
 }
 
 export interface TimelineEvent {
@@ -117,7 +119,9 @@ export function parseLinkJson(json: string): HapticLink | null {
   try {
     const v: unknown = JSON.parse(json);
     if (isRecord(v) && v.schema === SCHEMA_VERSION && typeof v.cardId === "string" && v.cardId && isTrigger(v.trigger)) {
-      return { schema: SCHEMA_VERSION, cardId: v.cardId, trigger: v.trigger };
+      const link: HapticLink = { schema: SCHEMA_VERSION, cardId: v.cardId, trigger: v.trigger };
+      if (typeof v.cardName === "string") link.cardName = v.cardName;
+      return link;
     }
   } catch {
     // Unreadable link data reads as no link.
