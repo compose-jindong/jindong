@@ -94,6 +94,28 @@ describe("App", () => {
     expect(screen.getByText("Event 2 of 3")).toBeTruthy();
   });
 
+  test("a number box can be emptied and retyped", () => {
+    const { sent, emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    const length = screen.getByLabelText("Length (ms)") as HTMLInputElement;
+    fireEvent.change(length, { target: { value: "" } });
+    expect(length.value).toBe("");
+    fireEvent.change(length, { target: { value: "250" } });
+    expect(length.value).toBe("250");
+    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
+    const update = sent.find((m) => m.type === "update-card");
+    expect(update?.type === "update-card" && update.pattern.events[0]).toMatchObject({ durationMs: 250 });
+  });
+
+  test("leaving an emptied number box puts the value back", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    const length = screen.getByLabelText("Length (ms)") as HTMLInputElement;
+    fireEvent.change(length, { target: { value: "" } });
+    fireEvent.blur(length);
+    expect(length.value).toBe("50");
+  });
+
   test("an invalid draft disables the button and says why", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });

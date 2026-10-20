@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useEffect, useId, useState } from "react";
 import type { BuzzEvent, HapticEvent } from "../core/model";
 
 type EventPatch = Partial<Omit<BuzzEvent, "type">>;
@@ -142,20 +142,47 @@ export function RangeField({ label, unit, value, min, sliderMax, max, onChange }
         onChange={(e) => onChange(e.target.valueAsNumber)}
       />
       <span className="number-field">
-        <input
-          type="number"
-          aria-label={`${label} (${unit})`}
-          min={min}
-          max={max}
-          value={value}
-          onChange={(e) => {
-            const next = e.target.valueAsNumber;
-            if (Number.isFinite(next)) onChange(next);
-          }}
-        />
+        <NumberInput label={`${label} (${unit})`} value={value} min={min} max={max} onChange={onChange} />
         <span className="unit">{unit}</span>
       </span>
     </div>
+  );
+}
+
+// Keeps what is typed, even an empty box mid-edit, and shows the real value again on blur.
+function NumberInput({
+  label,
+  value,
+  min,
+  max,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  onChange: (value: number) => void;
+}) {
+  const [text, setText] = useState(String(value));
+
+  useEffect(() => {
+    setText(String(value));
+  }, [value]);
+
+  return (
+    <input
+      type="number"
+      aria-label={label}
+      min={min}
+      max={max}
+      value={text}
+      onChange={(e) => {
+        setText(e.target.value);
+        const next = e.target.valueAsNumber;
+        if (Number.isFinite(next)) onChange(next);
+      }}
+      onBlur={() => setText(String(value))}
+    />
   );
 }
 
