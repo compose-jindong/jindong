@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { insertEventAfter, removeEvent, setEventType, setTrailing, updateEvent } from "../core/editing";
 import { LIMITS, TONE_HEX, normalizePattern, validatePattern, type PatternSpec, type Tone } from "../core/model";
 import { EventInspector, RangeField } from "./EventInspector";
@@ -24,7 +24,16 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = 
   const [selected, setSelected] = useState(0);
   const index = Math.min(selected, draft.events.length - 1);
   const validation = validatePattern(draft);
-  const dirty = JSON.stringify(normalizePattern(draft)) !== JSON.stringify(normalizePattern(initial));
+  const dirty = !samePattern(draft, initial);
+
+  // The saved card can change underneath (undo, a teammate's edit). Without unsaved edits, show the new values;
+  // with them, keep the edits so Update card is a deliberate overwrite.
+  const saved = useRef(initial);
+  useEffect(() => {
+    if (saved.current === initial) return;
+    setDraft((current) => (samePattern(current, saved.current) ? initial : current));
+    saved.current = initial;
+  }, [initial]);
 
   useEffect(() => {
     onDirtyChange?.(dirty);
@@ -126,4 +135,8 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = 
       </div>
     </div>
   );
+}
+
+function samePattern(a: PatternSpec, b: PatternSpec): boolean {
+  return JSON.stringify(normalizePattern(a)) === JSON.stringify(normalizePattern(b));
 }

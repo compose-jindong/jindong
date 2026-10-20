@@ -137,6 +137,28 @@ describe("App", () => {
     expect(length.value).toBe("50");
   });
 
+  test("a card changed elsewhere (undo, a teammate) shows the new values when nothing is unsaved", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    emit({
+      type: "selection",
+      state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } },
+    });
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Paid");
+    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", true);
+  });
+
+  test("unsaved edits are kept when the card changes elsewhere", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+    emit({
+      type: "selection",
+      state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } },
+    });
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
+  });
+
   test("Update card waits for a change", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
