@@ -37,11 +37,11 @@ import io.github.compose.jindong.Jindong
 import io.github.compose.jindong.dsl.Clip
 
 // Call inside JindongProvider { ... }
-var taps by remember { mutableIntStateOf(0) }
-Jindong(taps, playOnInitialComposition = false) {
+var successTaps by remember { mutableIntStateOf(0) }
+Jindong(successTaps, playOnInitialComposition = false) {
     Clip(SuccessHaptic)
 }
-// In the element's onClick: taps++`;
+// In the element's onClick: successTaps++`;
 
 describe("patternVariableName", () => {
   test.each([
@@ -124,6 +124,14 @@ describe("patternCode", () => {
 describe("hapticCode", () => {
   test("tap remembers a counter and waits for the first tap", () => {
     expect(hapticCode("SuccessHaptic", "tap")).toBe(TAP_CODE);
+  });
+
+  test("two tap haptics pasted into one composable don't declare the same counter", () => {
+    const counter = (code: string) => code.match(/^var (\S+) by remember/m)?.[1];
+    expect(counter(hapticCode("SuccessHaptic", "tap"))).toBe("successTaps");
+    expect(counter(hapticCode("ErrorHaptic", "tap"))).toBe("errorTaps");
+    expect(counter(hapticCode("Haptic3Taps", "tap"))).toBe("haptic3TapsTaps");
+    expect(counter(hapticCode("성공진동Haptic", "tap"))).toBe("성공진동Taps");
   });
 
   test("enter plays on entry", () => {

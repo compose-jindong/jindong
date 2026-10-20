@@ -12,15 +12,16 @@ import io.github.compose.jindong.core.model.HapticPattern
 import io.github.compose.jindong.dsl.Clip
 
 private val TriggerGoldenHaptic: HapticPattern = buildHapticPattern { transient() }
+private val SecondGoldenHaptic: HapticPattern = buildHapticPattern { transient() }
 
 @Composable
 internal fun TapTriggerGolden() {
     // Call inside JindongProvider { ... }
-    var taps by remember { mutableIntStateOf(0) }
-    Jindong(taps, playOnInitialComposition = false) {
+    var triggerGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(triggerGoldenTaps, playOnInitialComposition = false) {
         Clip(TriggerGoldenHaptic)
     }
-    // In the element's onClick: taps++
+    // In the element's onClick: triggerGoldenTaps++
 }
 
 @Composable
@@ -39,4 +40,20 @@ internal fun StateTriggerGolden(state: Any?) {
     Jindong(state, playOnInitialComposition = false) {
         Clip(TriggerGoldenHaptic)
     }
+}
+
+@Composable
+internal fun TwoTapTriggersGolden() {
+    // Call inside JindongProvider { ... }
+    var triggerGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(triggerGoldenTaps, playOnInitialComposition = false) {
+        Clip(TriggerGoldenHaptic)
+    }
+    // In the element's onClick: triggerGoldenTaps++
+    // Call inside JindongProvider { ... }
+    var secondGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(secondGoldenTaps, playOnInitialComposition = false) {
+        Clip(SecondGoldenHaptic)
+    }
+    // In the element's onClick: secondGoldenTaps++
 }

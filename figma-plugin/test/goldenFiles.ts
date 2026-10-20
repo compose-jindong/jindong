@@ -129,6 +129,16 @@ function triggerFile(): string {
       "}",
     ].join("\n"),
   );
+  // Two tappable elements in one composable: their pasted snippets must not collide.
+  functions.push(
+    [
+      "@Composable",
+      "internal fun TwoTapTriggersGolden() {",
+      ...hapticCodeParts("TriggerGoldenHaptic", "tap").body.split("\n").map((line) => INDENT + line),
+      ...hapticCodeParts("SecondGoldenHaptic", "tap").body.split("\n").map((line) => INDENT + line),
+      "}",
+    ].join("\n"),
+  );
   return [
     HEADER,
     PACKAGE,
@@ -136,6 +146,7 @@ function triggerFile(): string {
     ...[...imports].sort().map((name) => `import ${name}`),
     "",
     "private val TriggerGoldenHaptic: HapticPattern = buildHapticPattern { transient() }",
+    "private val SecondGoldenHaptic: HapticPattern = buildHapticPattern { transient() }",
     "",
     functions.join("\n\n"),
     "",

@@ -90,18 +90,22 @@ const TAP_IMPORTS = [
 export function hapticCodeParts(variableName: string, trigger: Trigger): { imports: string[]; body: string } {
   const clip = `${INDENT}Clip(${variableName})`;
   switch (trigger) {
-    case "tap":
+    case "tap": {
+      // Named after the haptic, so two tappable elements in one composable get separate counters.
+      const base = variableName.replace(/Haptic$/, "");
+      const counter = `${base[0].toLowerCase()}${base.slice(1)}Taps`;
       return {
         imports: [...TAP_IMPORTS, ...CALL_IMPORTS],
         body: [
           "// Call inside JindongProvider { ... }",
-          "var taps by remember { mutableIntStateOf(0) }",
-          "Jindong(taps, playOnInitialComposition = false) {",
+          `var ${counter} by remember { mutableIntStateOf(0) }`,
+          `Jindong(${counter}, playOnInitialComposition = false) {`,
           clip,
           "}",
-          "// In the element's onClick: taps++",
+          `// In the element's onClick: ${counter}++`,
         ].join("\n"),
       };
+    }
     case "enter":
       return {
         imports: [...CALL_IMPORTS],
