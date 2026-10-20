@@ -11,19 +11,46 @@ import { clearLink, readPattern, writeLink } from "./storage";
 
 // A link points a UI layer at a card. The Dev Mode note is written once, when linking.
 
-export async function linkLayer(nodeId: string, cardId: string, trigger: Trigger): Promise<{ annotation: boolean }> {
+/** Whether the Dev Mode note went on: some layer types (groups, sections…) can't carry notes at all. */
+export type NoteResult = "added" | "unsupported" | "rejected";
+
+export async function linkLayer(
+  nodeId: string,
+  cardId: string,
+  trigger: Trigger,
+): Promise<{ annotation: NoteResult; layerType: string }> {
   const node = await sceneNode(nodeId);
   const pattern = readPattern(await figma.getNodeByIdAsync(cardId));
   if (!pattern) throw new Error("That card no longer exists.");
   if (insideInstance(node)) throw new Error("Select the instance itself, not a layer inside it.");
 
   writeLink(node, { schema: SCHEMA_VERSION, cardId, trigger });
+  if (!("annotations" in node)) return { annotation: "unsupported", layerType: node.type };
+
   const categoryId = await hapticsCategoryId();
   const markdown: AnnotationLike = { labelMarkdown: annotationMarkdown(pattern.name, trigger) };
   const plain: AnnotationLike = { label: annotationLabel(pattern.name, trigger) };
   // Try the note with a docs link first, then plain text that still names Jindong, then without the category.
   const notes = categoryId ? [{ ...markdown, categoryId }, { ...plain, categoryId }, plain] : [markdown, plain];
-  return { annotation: notes.some((note) => setJindongAnnotation(node, note)) };
+  const added = notes.some((note) => setJindongAnnotation(node, note));
+  return { annotation: added ? "added" : "rejected", layerType: node.type };
+}
+
+export function linkNoteStatus(result: NoteResult, layerType: string): { tone: "success" | "warning"; message: string } {
+  switch (result) {
+    case "added":
+      return { tone: "success", message: "Linked. Developers will see it in Dev Mode." };
+    case "unsupported": {
+      const kind = layerType.toLowerCase().replace(/_/g, " ");
+      const article = /^[aeiou]/.test(kind) ? "an" : "a";
+      return {
+        tone: "warning",
+        message: `Linked. Figma can't put a Dev Mode note on ${article} ${kind}, so only developers using this plugin will see it. Link a frame or instance to show a note.`,
+      };
+    }
+    case "rejected":
+      return { tone: "warning", message: "Linked, but Figma did not accept the Dev Mode note." };
+  }
 }
 
 export async function unlinkLayer(nodeId: string): Promise<void> {

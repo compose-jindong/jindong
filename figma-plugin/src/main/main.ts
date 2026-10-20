@@ -3,7 +3,7 @@ import { validatePattern, type PatternSpec } from "../core/model";
 import type { CardSummary, MainToUi, UiToMain } from "../shared/messages";
 import { createCard, updateCard } from "./card";
 import { registerCodegen } from "./devmode";
-import { linkLayer, unlinkLayer } from "./link";
+import { linkLayer, linkNoteStatus, unlinkLayer } from "./link";
 import { readSelection } from "./selection";
 import { findCards, pageOf, readPattern } from "./storage";
 
@@ -62,9 +62,9 @@ async function handle(message: UiToMain): Promise<void> {
         return;
       }
       case "link": {
-        const { annotation } = await linkLayer(message.nodeId, message.cardId, message.trigger);
-        if (annotation) await finish("success", "Linked. Developers will see it in Dev Mode.");
-        else await finish("warning", "Linked, but Figma did not accept the Dev Mode note.");
+        const { annotation, layerType } = await linkLayer(message.nodeId, message.cardId, message.trigger);
+        const status = linkNoteStatus(annotation, layerType);
+        await finish(status.tone, status.message);
         return;
       }
       case "unlink":
