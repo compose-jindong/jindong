@@ -2,6 +2,7 @@ import { describe, expect, test } from "vitest";
 import {
   BROKEN_LINK_NOTICE,
   NO_HAPTIC_NOTICE,
+  UNREADABLE_CARD_NOTICE,
   clashesWith,
   codeSections,
   hapticCode,
@@ -170,6 +171,15 @@ describe("codeSections", () => {
     expect(codeSections({ pattern: null, link, linkedPattern: null })).toEqual([
       { title: "Jindong", language: "PLAINTEXT", code: BROKEN_LINK_NOTICE },
     ]);
+  });
+
+  test("an unreadable card says it can't be read", () => {
+    expect(codeSections({ pattern: null, link: null, linkedPattern: null, unreadableCard: true })).toEqual([
+      { title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_CARD_NOTICE },
+    ]);
+    expect(UNREADABLE_CARD_NOTICE).toBe(
+      "This haptic card can't be read. It may come from a newer version of the Jindong Figma plugin.",
+    );
   });
 
   test("any other layer gets a short hint", () => {

@@ -19,6 +19,9 @@ ${DOCS_URL}`;
 export const BROKEN_LINK_NOTICE = `This layer was linked to a Jindong haptic card that no longer exists.
 Ask your designer to link it again with the Jindong Figma plugin.`;
 
+export const UNREADABLE_CARD_NOTICE =
+  "This haptic card can't be read. It may come from a newer version of the Jindong Figma plugin.";
+
 const INDENT = "    ";
 const NAMED_INTENSITY: Record<number, string> = { 0.25: "LIGHT", 0.75: "STRONG", 1: "HIGH" };
 
@@ -147,7 +150,10 @@ export function codeSections(input: {
   pattern: PatternSpec | null;
   link: HapticLink | null;
   linkedPattern: PatternSpec | null;
+  /** The layer is a card whose data this plugin version can't read. */
+  unreadableCard?: boolean;
 }): CodeSection[] {
+  if (input.unreadableCard) return [{ title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_CARD_NOTICE }];
   const setup: CodeSection = { title: "Setup", language: "KOTLIN", code: setupCode() };
   if (input.pattern) {
     return [{ title: "Pattern", language: "KOTLIN", code: patternCode(input.pattern) }, setup];

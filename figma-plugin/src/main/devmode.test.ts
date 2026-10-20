@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { BROKEN_LINK_NOTICE, NO_HAPTIC_NOTICE } from "../core/codegen";
+import { BROKEN_LINK_NOTICE, NO_HAPTIC_NOTICE, UNREADABLE_CARD_NOTICE } from "../core/codegen";
 import { presetNamed } from "../core/presets";
 import { registerCodegen } from "./devmode";
 import { writeLink, writePattern } from "./storage";
@@ -73,6 +73,14 @@ describe("Dev Mode codegen", () => {
     (bar as unknown as { parent: SceneNode }).parent = parent;
     const results = await generate({ node: bar, language: "jindong" });
     expect(results.map((r) => r.title)).toEqual(["Pattern", "Setup"]);
+  });
+
+  test("a card this plugin version can't read says so instead of claiming there's no haptic", async () => {
+    const node = fakeNode("9:3");
+    node.setSharedPluginData("jindong", "pattern", JSON.stringify({ ...presetNamed("Success"), schema: 2 }));
+    expect(await generate({ node, language: "jindong" })).toEqual([
+      { title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_CARD_NOTICE },
+    ]);
   });
 
   test("a plain layer gets the hint", async () => {
