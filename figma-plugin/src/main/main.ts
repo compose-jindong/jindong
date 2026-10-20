@@ -1,6 +1,6 @@
 import { clashesWith, uniqueCardName } from "../core/codegen";
 import { validatePattern, type PatternSpec } from "../core/model";
-import type { CardSummary, MainToUi, UiToMain } from "../shared/messages";
+import type { CardSummary, MainToUi, SelectionState, UiToMain } from "../shared/messages";
 import { createCard, updateCard } from "./card";
 import { registerCodegen } from "./devmode";
 import { linkLayer, linkNoteStatus, unlinkLayer } from "./link";
@@ -8,6 +8,15 @@ import { readSelection } from "./selection";
 import { findCards, pageOf, readPattern } from "./storage";
 
 // Design Mode: the editor window. Dev Mode: code generation only.
+
+// Reading a selection waits on card lookups, so an older read can finish after a newer one; only the
+// latest read reaches the window.
+let selectionReads = 0;
+
+// Undo or a teammate's edit can change the shown card without changing the selection, so changes to the
+// selected layer or its card re-send the selection.
+let watchedIds = new Set<string>();
+let watchedPage: PageNode | null = null;
 
 if (figma.editorType === "dev") {
   if (figma.mode === "codegen") {
@@ -18,8 +27,12 @@ if (figma.editorType === "dev") {
   }
 } else {
   figma.showUI(__html__, { width: 360, height: 640, themeColors: true });
+  watchCurrentPage();
   figma.on("selectionchange", () => void pushSelection().catch(postError));
-  figma.on("currentpagechange", () => void pushSelection().catch(postError));
+  figma.on("currentpagechange", () => {
+    watchCurrentPage();
+    void pushSelection().catch(postError);
+  });
   figma.ui.onmessage = (message: UiToMain) => void handle(message);
 }
 
@@ -27,14 +40,30 @@ function post(message: MainToUi): void {
   figma.ui.postMessage(message);
 }
 
-// Reading a selection waits on card lookups, so an older read can finish after a newer one; only the
-// latest read reaches the window.
-let selectionReads = 0;
 
 async function pushSelection(): Promise<void> {
   const read = ++selectionReads;
   const state = await readSelection();
-  if (read === selectionReads) post({ type: "selection", state });
+  if (read !== selectionReads) return;
+  watchedIds = new Set(nodeIdsOf(state));
+  post({ type: "selection", state });
+}
+
+
+function watchCurrentPage(): void {
+  watchedPage?.off("nodechange", onNodeChange);
+  watchedPage = figma.currentPage;
+  watchedPage.on("nodechange", onNodeChange);
+}
+
+function onNodeChange(event: NodeChangeEvent): void {
+  if (event.nodeChanges.some((change) => watchedIds.has(change.id))) void pushSelection().catch(postError);
+}
+
+function nodeIdsOf(state: SelectionState): string[] {
+  if (state.kind === "card") return [state.nodeId];
+  if (state.kind === "layer") return state.link ? [state.nodeId, state.link.cardId] : [state.nodeId];
+  return [];
 }
 
 async function handle(message: UiToMain): Promise<void> {

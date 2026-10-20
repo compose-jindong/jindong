@@ -18,6 +18,7 @@ test("a failed card search still answers with a list, so the Link panel doesn't 
     showUI: () => {},
     on: () => {},
     ui,
+    currentPage: { selection: [], on: () => {}, off: () => {} },
     loadAllPagesAsync: async () => {
       throw new Error("Couldn't load every page.");
     },
@@ -40,7 +41,7 @@ test("a slow read of an earlier selection never overwrites the current one", asy
   // A is linked, so reading it waits on the card lookup; B is a plain layer and reads at once.
   const a = { id: "1:1", type: "FRAME", name: "A", parent: null, getSharedPluginData: data('{"schema":1,"cardId":"9:9","trigger":"tap"}') };
   const b = { id: "1:2", type: "FRAME", name: "B", parent: null, getSharedPluginData: data("") };
-  const page = { selection: [a] as unknown[] };
+  const page = { selection: [a] as unknown[], on: () => {}, off: () => {} };
   let releaseCard: (node: null) => void = () => {};
   vi.stubGlobal("__html__", "<html></html>");
   vi.stubGlobal("figma", {
@@ -66,6 +67,39 @@ test("a slow read of an earlier selection never overwrites the current one", asy
   expect(selections).not.toContain("1:1");
 });
 
+test("a change to the selected card (undo, a teammate) re-sends the selection; other changes don't", async () => {
+  const posted: { type: string }[] = [];
+  const pageHandlers = new Map<string, (event: unknown) => void>();
+  const ui: { postMessage: (message: { type: string }) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  const card = { id: "7:1", type: "FRAME", name: "Haptic / Success", parent: null, getSharedPluginData: () => "" };
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: {
+      selection: [card],
+      on: (event: string, handler: (event: unknown) => void) => pageHandlers.set(event, handler),
+      off: () => {},
+    },
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "ready" });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  pageHandlers.get("nodechange")?.({ nodeChanges: [{ type: "PROPERTY_CHANGE", id: "9:9", properties: ["x"] }] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(posted.filter((m) => m.type === "selection")).toHaveLength(1);
+  pageHandlers.get("nodechange")?.({ nodeChanges: [{ type: "PROPERTY_CHANGE", id: "7:1", properties: ["pluginData"] }] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(posted.filter((m) => m.type === "selection")).toHaveLength(2);
+});
+
 test("each finished action is its own undo step", async () => {
   const posted: { type: string }[] = [];
   const commits: number[] = [];
@@ -81,7 +115,7 @@ test("each finished action is its own undo step", async () => {
     showUI: () => {},
     on: () => {},
     ui,
-    currentPage: { selection: [] },
+    currentPage: { selection: [], on: () => {}, off: () => {} },
     getNodeByIdAsync: async () => layer,
     commitUndo: () => commits.push(posted.length),
   });
@@ -104,8 +138,12 @@ test("a failing selection read is reported to the window instead of escaping", a
     showUI: () => {},
     on: (event: string, handler: () => void) => handlers.set(event, handler),
     ui: { postMessage: (message: unknown) => posted.push(message), onmessage: null },
-    get currentPage(): never {
-      throw new Error("The page isn't loaded yet.");
+    currentPage: {
+      get selection(): never {
+        throw new Error("The page isn't loaded yet.");
+      },
+      on: () => {},
+      off: () => {},
     },
   });
 
