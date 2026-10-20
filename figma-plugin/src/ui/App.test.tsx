@@ -150,6 +150,26 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "link", nodeId: "5:1", cardId: "9:1", trigger: "enter" });
   });
 
+  test("linking keeps the card list instead of searching the file again", () => {
+    const { sent, emit } = setup();
+    emit({ type: "selection", state: layer() });
+    emit({ type: "cards", cards: [{ id: "9:1", name: "Success", tone: "green", pageName: "Haptics" }] });
+    emit({
+      type: "selection",
+      state: layer({ link: { schema: 1, cardId: "9:1", trigger: "tap" }, linkedPattern: presetNamed("Success") }),
+    });
+    expect(screen.queryByText("Finding cards…")).toBeNull();
+    expect(sent.filter((m) => m.type === "list-cards")).toHaveLength(1);
+  });
+
+  test("selecting another layer asks for the card list again", () => {
+    const { sent, emit } = setup();
+    emit({ type: "selection", state: layer() });
+    emit({ type: "cards", cards: [] });
+    emit({ type: "selection", state: layer({ nodeId: "5:9" }) });
+    expect(sent.filter((m) => m.type === "list-cards")).toHaveLength(2);
+  });
+
   test("an empty file explains how to make a card", () => {
     const { emit } = setup();
     emit({ type: "selection", state: layer() });

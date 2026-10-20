@@ -29,17 +29,18 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   useEffect(() => {
     const unsubscribe = bridge.subscribe((message) => {
       if (message.type === "selection") {
-        // The main thread re-sends the selection after every change; only a new layer resets the tab.
+        // The main thread re-sends the selection after every change; only a new layer resets the tab
+        // and the card list (re-reading the list means searching every page).
         const nodeId = nodeIdOf(message.state);
         if (nodeId !== selectedNodeId.current) {
           setTab("main");
           setUnsaved(false);
+          setCards(null);
         }
         selectedNodeId.current = nodeId;
         setSelection(message.state);
         // A new card or layer takes over the window, so an unsaved preset pick ends here.
         if (message.state.kind !== "none") setDraft(null);
-        setCards(null);
       } else if (message.type === "cards") {
         setCards(message.cards);
       } else {
