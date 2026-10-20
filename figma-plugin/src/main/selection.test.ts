@@ -74,6 +74,13 @@ describe("readSelection", () => {
     expect(await readSelection()).toMatchObject({ kind: "card", nodeId: "7:6", nameClash: true });
   });
 
+  test("a component set is told apart from a component, since its instances inherit from variants", async () => {
+    select(fakeNode("6:1", "COMPONENT_SET", page));
+    expect(await readSelection()).toMatchObject({ kind: "layer", warning: "component-set" });
+    select(fakeNode("6:2", "COMPONENT", page));
+    expect(await readSelection()).toMatchObject({ kind: "layer", warning: "main-component" });
+  });
+
   test("an ordinary layer stays a layer", async () => {
     const frame = fakeNode("5:1", "FRAME", page);
     const button = fakeNode("5:2", "INSTANCE", frame);

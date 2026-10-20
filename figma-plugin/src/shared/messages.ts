@@ -2,7 +2,7 @@ import type { HapticLink, PatternSpec, Tone, Trigger } from "../core/model";
 
 // Messages between the plugin window (UI) and the Figma main thread.
 
-export type LayerWarning = "main-component" | "inside-instance" | null;
+export type LayerWarning = "main-component" | "component-set" | "inside-instance" | null;
 
 export type SelectionState =
   | { kind: "none" }

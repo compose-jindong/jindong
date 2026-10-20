@@ -292,6 +292,16 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Link haptic" })).toBeTruthy();
   });
 
+  test("a component set explains that its instances won't get the link", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: layer({ warning: "component-set" }) });
+    expect(
+      screen.getByText(
+        "This is a component set. Instances get links from their variant, not the set — link a variant or an instance instead.",
+      ),
+    ).toBeTruthy();
+  });
+
   test("a card's Code tab shows the pattern and setup", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });

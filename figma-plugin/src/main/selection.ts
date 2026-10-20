@@ -30,7 +30,9 @@ export function insideInstance(node: BaseNode): boolean {
 
 // A link on a main component reaches every instance, so the Link panel says so.
 function warningFor(node: SceneNode): LayerWarning {
-  if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") return "main-component";
+  if (node.type === "COMPONENT") return "main-component";
+  // Instances inherit from their variant, never from the set that holds it.
+  if (node.type === "COMPONENT_SET") return "component-set";
   return insideInstance(node) ? "inside-instance" : null;
 }
 

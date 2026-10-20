@@ -48,6 +48,12 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
         <p className="callout">This layer is inside an instance. Select the instance itself to link a haptic.</p>
       ) : (
         <>
+          {warning === "component-set" && (
+            <p className="callout">
+              This is a component set. Instances get links from their variant, not the set — link a variant or an
+              instance instead.
+            </p>
+          )}
           {warning === "main-component" && (
             <p className="callout">
               This is a main component, so every instance of it gets this link. To give one button its own haptic, link that instance instead.
