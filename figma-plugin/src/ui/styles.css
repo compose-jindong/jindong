@@ -361,6 +361,35 @@ input[type="range"] {
 
 .inspector-title {
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.icon-button:disabled {
+  opacity: 0.3;
 }
 
 .segmented {

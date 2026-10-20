@@ -57,6 +57,19 @@ describe("App", () => {
     });
   });
 
+  test("events can be stepped through without clicking the timeline", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    expect(screen.getByText("Event 1 of 3")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Previous event" })).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Next event" }));
+    fireEvent.click(screen.getByRole("button", { name: "Next event" }));
+    expect(screen.getByText("Event 3 of 3")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Next event" })).toHaveProperty("disabled", true);
+    fireEvent.click(screen.getByRole("button", { name: "Previous event" }));
+    expect(screen.getByText("Event 2 of 3")).toBeTruthy();
+  });
+
   test("an invalid draft disables the button and says why", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });

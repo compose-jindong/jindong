@@ -88,6 +88,7 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange }: Edito
           setDraft(removeEvent(draft, index));
           setSelected(Math.max(0, index - 1));
         }}
+        onSelect={setSelected}
       />
 
       <div className="pattern-settings">

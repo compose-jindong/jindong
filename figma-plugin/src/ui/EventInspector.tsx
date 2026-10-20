@@ -12,15 +12,51 @@ interface EventInspectorProps {
   onType: (type: HapticEvent["type"]) => void;
   onAddAfter: () => void;
   onRemove: () => void;
+  /** Moves to another event; the timeline's bars can be too close together to click, and aren't keyboard reachable. */
+  onSelect: (index: number) => void;
 }
 
-export function EventInspector({ event, index, count, canAdd, onChange, onType, onAddAfter, onRemove }: EventInspectorProps) {
+export function EventInspector({
+  event,
+  index,
+  count,
+  canAdd,
+  onChange,
+  onType,
+  onAddAfter,
+  onRemove,
+  onSelect,
+}: EventInspectorProps) {
   return (
     <section className="inspector" aria-label="Selected event">
       <div className="inspector-head">
-        <span className="inspector-title">
-          Event {index + 1} of {count}
-        </span>
+        <div className="event-stepper">
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Previous event"
+            disabled={index === 0}
+            onClick={() => onSelect(index - 1)}
+          >
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+              <path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          </button>
+          <span className="inspector-title">
+            Event {index + 1} of {count}
+          </span>
+          <button
+            type="button"
+            className="icon-button"
+            aria-label="Next event"
+            disabled={index >= count - 1}
+            onClick={() => onSelect(index + 1)}
+          >
+            <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+              <path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            </svg>
+          </button>
+        </div>
         <Segmented
           label="Event type"
           value={event.type}
