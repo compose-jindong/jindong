@@ -1,4 +1,4 @@
-import { useState, type CSSProperties } from "react";
+import { useEffect, useState, type CSSProperties } from "react";
 import { displayWindowMs, layoutBars } from "../core/cardLayout";
 import { TONE_HEX, toTimeline, type PatternSpec } from "../core/model";
 
@@ -13,6 +13,7 @@ interface TimelineProps {
 }
 
 const HIT_WIDTH = 12;
+const FLASH_MS = 160;
 
 export function Timeline({ pattern, width, height, selectedIndex, onSelect, detailed = false }: TimelineProps) {
   const [playCount, setPlayCount] = useState(0);
@@ -24,6 +25,14 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
   const bars = layoutBars(timeline, box, windowMs);
   const tone = TONE_HEX[pattern.tone];
   const sweep = (timeline.durationMs / windowMs) * box.width;
+  // Playback ends on a timer rather than on the playhead's animation, which never runs under Reduce Motion.
+  const playMs = Math.max(timeline.durationMs, ...timeline.events.map((e) => e.startMs + Math.max(e.durationMs, FLASH_MS)));
+
+  useEffect(() => {
+    if (!playing) return;
+    const timer = setTimeout(() => setPlaying(false), playMs);
+    return () => clearTimeout(timer);
+  }, [playing, playCount, playMs]);
 
   return (
     <div className={detailed ? "timeline timeline-detailed" : "timeline"}>
@@ -40,7 +49,7 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
           const selected = bar.index === selectedIndex;
           const style = {
             "--delay": `${event.startMs}ms`,
-            "--flash": `${Math.max(event.durationMs, 160)}ms`,
+            "--flash": `${Math.max(event.durationMs, FLASH_MS)}ms`,
           } as CSSProperties;
           const hitX = bar.kind === "continuous" ? bar.x : bar.x - HIT_WIDTH / 2;
           const hitWidth = bar.kind === "continuous" ? Math.max(bar.width, HIT_WIDTH) : HIT_WIDTH;
@@ -75,7 +84,6 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
             y1={0}
             y2={height}
             style={{ "--sweep": `${sweep}px`, animationDuration: `${timeline.durationMs}ms` } as CSSProperties}
-            onAnimationEnd={() => setPlaying(false)}
           />
         )}
       </svg>

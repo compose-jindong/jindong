@@ -235,9 +235,11 @@ button:disabled {
   }
 }
 
-.playing .bar {
-  opacity: 0.3;
-  animation: flash var(--flash) ease-out var(--delay) forwards;
+@media (prefers-reduced-motion: no-preference) {
+  .playing .bar {
+    opacity: 0.3;
+    animation: flash var(--flash) ease-out var(--delay) forwards;
+  }
 }
 
 @keyframes flash {
@@ -252,10 +254,6 @@ button:disabled {
 @media (prefers-reduced-motion: reduce) {
   .playhead {
     display: none;
-  }
-
-  .playing .bar {
-    animation: none;
   }
 }
 

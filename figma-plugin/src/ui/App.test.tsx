@@ -295,6 +295,21 @@ describe("App", () => {
     expect(screen.queryByRole("tab", { name: "Code" })).toBeNull();
   });
 
+  test("Preview rhythm ends on time even when no animation runs (Reduce Motion)", () => {
+    vi.useFakeTimers();
+    try {
+      const { emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.click(screen.getByRole("button", { name: /Preview rhythm/ }));
+      const svg = () => screen.getByRole("img", { name: /Success rhythm/ });
+      expect(svg().getAttribute("class")).toContain("playing");
+      act(() => vi.advanceTimersByTime(460 + 300));
+      expect(svg().getAttribute("class")).not.toContain("playing");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("warnings stay long enough to read; confirmations clear quickly", () => {
     vi.useFakeTimers();
     try {
