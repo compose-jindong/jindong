@@ -70,8 +70,10 @@ button:disabled {
   line-height: 1.45;
 }
 
+/* Collapsed but still rendered: a live region that appears together with its text often isn't announced. */
 .status:empty {
-  display: none;
+  padding: 0;
+  border-top: 0;
 }
 
 .status-success {
