@@ -19,6 +19,14 @@ export function isCard(node: BaseNode): boolean {
   return node.getSharedPluginData(NAMESPACE, PATTERN_KEY) !== "";
 }
 
+/** The card that [node] is or sits inside; layers picked from a card's layer list belong to the card. */
+export function cardOf(node: BaseNode): BaseNode | null {
+  for (let current: BaseNode | null = node; current && current.type !== "PAGE"; current = current.parent) {
+    if (isCard(current)) return current;
+  }
+  return null;
+}
+
 export function readLink(node: BaseNode): HapticLink | null {
   return parseLinkJson(node.getSharedPluginData(NAMESPACE, LINK_KEY));
 }

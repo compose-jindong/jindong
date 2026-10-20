@@ -1,5 +1,5 @@
 import type { LayerWarning, SelectionState } from "../shared/messages";
-import { isCard, readLink, readPattern } from "./storage";
+import { cardOf, readLink, readPattern } from "./storage";
 
 export async function readSelection(): Promise<SelectionState> {
   const selection = figma.currentPage.selection;
@@ -7,7 +7,8 @@ export async function readSelection(): Promise<SelectionState> {
   if (selection.length > 1) return { kind: "multiple" };
 
   const node = selection[0];
-  if (isCard(node)) return { kind: "card", nodeId: node.id, pattern: readPattern(node) };
+  const card = cardOf(node);
+  if (card) return { kind: "card", nodeId: card.id, pattern: readPattern(card) };
 
   const link = readLink(node);
   const linkedPattern = link ? readPattern(await figma.getNodeByIdAsync(link.cardId)) : null;

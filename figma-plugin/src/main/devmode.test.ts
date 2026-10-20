@@ -67,6 +67,14 @@ describe("Dev Mode codegen", () => {
     ]);
   });
 
+  test("a layer inside a card shows the card's code", async () => {
+    const parent = card("9:1");
+    const bar = fakeNode("9:2");
+    (bar as unknown as { parent: SceneNode }).parent = parent;
+    const results = await generate({ node: bar, language: "jindong" });
+    expect(results.map((r) => r.title)).toEqual(["Pattern", "Setup"]);
+  });
+
   test("a plain layer gets the hint", async () => {
     expect(await generate({ node: fakeNode("5:2"), language: "jindong" })).toEqual([
       { title: "Jindong", language: "PLAINTEXT", code: NO_HAPTIC_NOTICE },
