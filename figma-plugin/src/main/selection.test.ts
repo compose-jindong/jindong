@@ -19,6 +19,21 @@ function fakeNode(id: string, type: string, parent: FakeNode | null = null): Fak
   };
 }
 
+// Like Figma, an instance reads its main component's shared plugin data unless it has its own value.
+function instanceOf(id: string, main: FakeNode, parent: FakeNode | null): FakeNode {
+  const own = new Map<string, string>();
+  const read = main.getSharedPluginData as (namespace: string, key: string) => string;
+  return {
+    id,
+    type: "INSTANCE",
+    name: `INSTANCE ${id}`,
+    parent,
+    getSharedPluginData: (namespace: string, key: string) => own.get(`${namespace}/${key}`) || read(namespace, key),
+    setSharedPluginData: (namespace: string, key: string, value: string) => own.set(`${namespace}/${key}`, value),
+    getMainComponentAsync: async () => main,
+  };
+}
+
 function select(...nodes: FakeNode[]) {
   vi.stubGlobal("figma", {
     currentPage: { selection: nodes },
@@ -41,11 +56,10 @@ describe("readSelection", () => {
     expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:1", pattern: presetNamed("Success") });
   });
 
-  test("an instance of a card that became a component opens that card", async () => {
+  test("an instance of a card that became a component opens that card, not the instance", async () => {
     const component = fakeNode("7:3", "COMPONENT", page);
     writePattern(component as unknown as SceneNode, presetNamed("Heartbeat"));
-    const instance = fakeNode("8:1", "INSTANCE", page);
-    instance.getMainComponentAsync = async () => component;
+    const instance = instanceOf("8:1", component, page);
     select(instance);
     expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:3", pattern: presetNamed("Heartbeat") });
   });

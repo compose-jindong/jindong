@@ -19,22 +19,19 @@ export function isCard(node: BaseNode): boolean {
   return node.getSharedPluginData(NAMESPACE, PATTERN_KEY) !== "";
 }
 
-/** The card that [node] is or sits inside; layers picked from a card's layer list belong to the card. */
-export function cardOf(node: BaseNode): BaseNode | null {
-  for (let current: BaseNode | null = node; current && current.type !== "PAGE"; current = current.parent) {
-    if (isCard(current)) return current;
-  }
-  return null;
-}
-
-/** Like [cardOf], but also finds the card behind an instance of a card that became a component. */
+/**
+ * The card that [node] is or sits inside, so layers picked from a card's layer list belong to the card.
+ * An instance of a card that became a component resolves to that component: Figma lets the instance read
+ * the component's plugin data, but only the component can be redrawn.
+ */
 export async function findCard(node: BaseNode): Promise<BaseNode | null> {
-  const direct = cardOf(node);
-  if (direct) return direct;
   for (let current: BaseNode | null = node; current && current.type !== "PAGE"; current = current.parent) {
-    if (current.type !== "INSTANCE") continue;
-    const main = await current.getMainComponentAsync();
-    if (main && isCard(main)) return main;
+    if (current.type === "INSTANCE") {
+      const main = await current.getMainComponentAsync();
+      if (main && isCard(main)) return main;
+    } else if (isCard(current)) {
+      return current;
+    }
   }
   return null;
 }
