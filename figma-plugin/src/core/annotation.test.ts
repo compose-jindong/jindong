@@ -8,6 +8,13 @@ test("the Dev Mode note names the haptic, the moment and Jindong", () => {
   expect(annotationMarkdown("Paid", "state")).toContain("Paid · On state change");
 });
 
+test("a card name can't add formatting or links to the note", () => {
+  expect(annotationMarkdown("Pay *now* [promo](https://x.y) `v2`", "tap")).toBe(
+    "**Jindong haptic:** Pay \\*now\\* \\[promo\\](https://x.y) \\`v2\\` · On tap\nMade with [Jindong](https://compose-jindong.github.io/jindong)",
+  );
+  expect(annotationMarkdown("snake_case_name", "enter")).toContain("snake\\_case\\_name");
+});
+
 describe("mergeJindongAnnotation", () => {
   const other = { label: "Spacing note" };
   const old = { labelMarkdown: "**Jindong haptic:** Old · On tap" };

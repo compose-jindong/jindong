@@ -21,7 +21,12 @@ export interface AnnotationLike {
 }
 
 export function annotationMarkdown(cardName: string, trigger: Trigger): string {
-  return `**${MARKER}:** ${cardName} · ${TRIGGER_LABEL[trigger]}\nMade with [Jindong](${DOCS_URL})`;
+  return `**${MARKER}:** ${escapeMarkdown(cardName)} · ${TRIGGER_LABEL[trigger]}\nMade with [Jindong](${DOCS_URL})`;
+}
+
+// A card name is shown as written, never as emphasis, code or a link.
+function escapeMarkdown(text: string): string {
+  return text.replace(/[\\`*_[\]<>#]/g, "\\$&");
 }
 
 /** The same note without markdown, for when Figma refuses links in notes. */
