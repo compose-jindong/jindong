@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, test } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { presetNamed } from "../core/presets";
 import type { MainToUi, SelectionState, UiToMain } from "../shared/messages";
 import { App } from "./App";
@@ -292,6 +292,24 @@ describe("App", () => {
     const { emit } = setup();
     emit({ type: "selection", state: layer() });
     expect(screen.queryByRole("tab", { name: "Code" })).toBeNull();
+  });
+
+  test("warnings stay long enough to read; confirmations clear quickly", () => {
+    vi.useFakeTimers();
+    try {
+      const { emit } = setup();
+      emit({ type: "selection", state: { kind: "none" } });
+      emit({ type: "status", tone: "success", message: "Card created." });
+      act(() => vi.advanceTimersByTime(4500));
+      expect(screen.getByRole("status").textContent).toBe("");
+      emit({ type: "status", tone: "warning", message: "Linked, but Figma did not accept the Dev Mode note." });
+      act(() => vi.advanceTimersByTime(6000));
+      expect(screen.getByRole("status").textContent).toBe("Linked, but Figma did not accept the Dev Mode note.");
+      act(() => vi.advanceTimersByTime(4000));
+      expect(screen.getByRole("status").textContent).toBe("");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("status messages from the main thread are shown", () => {

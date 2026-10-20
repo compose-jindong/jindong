@@ -11,7 +11,8 @@ import { LinkPanel } from "./LinkPanel";
 type Status = Extract<MainToUi, { type: "status" }>;
 type Tab = "main" | "code";
 
-const STATUS_MS = 4000;
+// Confirmations clear quickly; warnings and errors stay long enough to read.
+const STATUS_MS = { success: 4000, warning: 10_000, error: 10_000 } as const;
 const BUSY_TIMEOUT_MS = 10_000;
 const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to include them in the code.";
 
@@ -62,7 +63,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
 
   useEffect(() => {
     if (!status) return;
-    const timer = setTimeout(() => setStatus(null), STATUS_MS);
+    const timer = setTimeout(() => setStatus(null), STATUS_MS[status.tone]);
     return () => clearTimeout(timer);
   }, [status]);
 
