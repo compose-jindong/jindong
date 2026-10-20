@@ -13,11 +13,13 @@ interface EditorProps {
   onDirtyChange?: (dirty: boolean) => void;
   /** An earlier request is still being handled. */
   busy?: boolean;
+  /** Receives every edit, so a new haptic's tweaks can outlive this editor. */
+  onDraftChange?: (pattern: PatternSpec) => void;
 }
 
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
-export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = false }: EditorProps) {
+export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = false, onDraftChange }: EditorProps) {
   const [draft, setDraft] = useState(initial);
   const [selected, setSelected] = useState(0);
   const index = Math.min(selected, draft.events.length - 1);
@@ -27,6 +29,10 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = 
   useEffect(() => {
     onDirtyChange?.(dirty);
   }, [dirty, onDirtyChange]);
+
+  useEffect(() => {
+    onDraftChange?.(draft);
+  }, [draft, onDraftChange]);
 
   return (
     <div className="editor">

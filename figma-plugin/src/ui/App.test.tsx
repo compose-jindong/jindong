@@ -45,6 +45,27 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "create-card", pattern: presetNamed("Success") });
   });
 
+  test("tweaks to a new haptic survive selecting a layer and coming back", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "none" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+    emit({ type: "selection", state: layer() });
+    emit({ type: "selection", state: { kind: "none" } });
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
+  });
+
+  test("once the card is created, clearing the selection shows the presets again", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "none" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Create card" }));
+    emit({ type: "selection", state: { kind: "card", nodeId: "8:1", pattern: presetNamed("Success") } });
+    emit({ type: "status", tone: "success", message: "Card created." });
+    emit({ type: "selection", state: { kind: "none" } });
+    expect(screen.getByRole("heading", { name: "Jindong" })).toBeTruthy();
+  });
+
   test("a double click creates one card, and the button comes back after the reply", () => {
     const { sent, emit } = setup();
     emit({ type: "selection", state: { kind: "none" } });

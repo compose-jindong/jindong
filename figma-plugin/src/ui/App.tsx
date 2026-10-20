@@ -17,7 +17,11 @@ const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to incl
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
-  const [draft, setDraft] = useState<PatternSpec | null>(null);
+  // A new haptic being shaped before it becomes a card. It outlives selection changes, so clicking a
+  // layer and coming back doesn't throw the tweaks away; a created card ends it.
+  const [draft, setDraft] = useState<{ id: number; pattern: PatternSpec } | null>(null);
+  const draftIds = useRef(0);
+  const creating = useRef(false);
   const [cards, setCards] = useState<CardSummary[] | null>(null);
   const [tab, setTab] = useState<Tab>("main");
   const [status, setStatus] = useState<Status | null>(null);
@@ -39,12 +43,14 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         }
         selectedNodeId.current = nodeId;
         setSelection(message.state);
-        // A new card or layer takes over the window, so an unsaved preset pick ends here.
-        if (message.state.kind !== "none") setDraft(null);
       } else if (message.type === "cards") {
         setCards(message.cards);
       } else {
         setStatus(message);
+        if (creating.current) {
+          creating.current = false;
+          if (message.tone !== "error") setDraft(null);
+        }
         // Every action ends with a status, success or error, so the buttons come back here.
         busyRef.current = false;
         setBusy(false);
@@ -66,9 +72,15 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   function act(message: UiToMain) {
     if (busyRef.current) return;
     busyRef.current = true;
+    creating.current = message.type === "create-card";
     setBusy(true);
     bridge.send(message);
   }
+
+  const keepDraft = useCallback(
+    (pattern: PatternSpec) => setDraft((current) => (current && current.pattern !== pattern ? { ...current, pattern } : current)),
+    [],
+  );
 
   // If the main thread never answers, don't leave the buttons disabled for good.
   useEffect(() => {
@@ -87,15 +99,16 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
       case "none":
         return draft ? (
           <Editor
-            key={draft.name}
+            key={draft.id}
             mode="create"
-            initial={draft}
+            initial={draft.pattern}
             onBack={() => setDraft(null)}
             onSubmit={(pattern) => act({ type: "create-card", pattern })}
+            onDraftChange={keepDraft}
             busy={busy}
           />
         ) : (
-          <Gallery onPick={setDraft} />
+          <Gallery onPick={(pattern) => setDraft({ id: ++draftIds.current, pattern })} />
         );
       case "card": {
         const { nodeId, pattern } = selection;
