@@ -45,6 +45,30 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "create-card", pattern: presetNamed("Success") });
   });
 
+  test("a double click creates one card, and the button comes back after the reply", () => {
+    const { sent, emit } = setup();
+    emit({ type: "selection", state: { kind: "none" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+    const create = screen.getByRole("button", { name: "Create card" });
+    fireEvent.click(create);
+    fireEvent.click(create);
+    expect(sent.filter((m) => m.type === "create-card")).toHaveLength(1);
+    expect(create).toHaveProperty("disabled", true);
+    emit({ type: "status", tone: "error", message: "Font missing." });
+    expect(screen.getByRole("button", { name: "Create card" })).toHaveProperty("disabled", false);
+  });
+
+  test("a double click links once", () => {
+    const { sent, emit } = setup();
+    emit({ type: "selection", state: layer() });
+    emit({ type: "cards", cards: [{ id: "9:1", name: "Success", tone: "green", pageName: "Haptics" }] });
+    fireEvent.click(screen.getByRole("radio", { name: /Success/ }));
+    const link = screen.getByRole("button", { name: "Link haptic" });
+    fireEvent.click(link);
+    fireEvent.click(link);
+    expect(sent.filter((m) => m.type === "link")).toHaveLength(1);
+  });
+
   test("editing a selected card sends update-card", () => {
     const { sent, emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });

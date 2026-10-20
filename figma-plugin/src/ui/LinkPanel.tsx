@@ -12,11 +12,13 @@ interface LinkPanelProps {
   onRequestCards: () => void;
   onLink: (cardId: string, trigger: Trigger) => void;
   onUnlink: () => void;
+  /** An earlier request is still being handled. */
+  busy?: boolean;
 }
 
 const TRIGGERS: Trigger[] = ["tap", "enter", "state"];
 
-export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink }: LinkPanelProps) {
+export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy = false }: LinkPanelProps) {
   const { link, linkedPattern, warning } = state;
   const [cardId, setCardId] = useState<string | null>(link && linkedPattern ? link.cardId : null);
   const [trigger, setTrigger] = useState<Trigger>(link?.trigger ?? "tap");
@@ -52,7 +54,7 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink }: Li
                   ? `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}`
                   : "The linked card was deleted. Link another card or remove the link."}
               </p>
-              <button type="button" className="secondary" onClick={onUnlink}>
+              <button type="button" className="secondary" onClick={onUnlink} disabled={busy}>
                 Remove link
               </button>
             </div>
@@ -77,7 +79,7 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink }: Li
             <button
               type="button"
               className="primary"
-              disabled={!chosen}
+              disabled={!chosen || busy}
               onClick={() => chosen && onLink(chosen.id, trigger)}
             >
               Link haptic

@@ -11,11 +11,13 @@ interface EditorProps {
   onBack?: () => void;
   /** Reports whether the draft differs from [initial], the pattern last saved to the card. */
   onDirtyChange?: (dirty: boolean) => void;
+  /** An earlier request is still being handled. */
+  busy?: boolean;
 }
 
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
-export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange }: EditorProps) {
+export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = false }: EditorProps) {
   const [draft, setDraft] = useState(initial);
   const [selected, setSelected] = useState(0);
   const index = Math.min(selected, draft.events.length - 1);
@@ -108,7 +110,7 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange }: Edito
         <button
           type="button"
           className="primary"
-          disabled={!validation.ok}
+          disabled={!validation.ok || busy}
           onClick={() => {
             if (validation.ok) onSubmit(normalizePattern(validation.pattern));
           }}

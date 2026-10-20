@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, type ReactNode } from "react";
 import { codeSections } from "../core/codegen";
 import type { PatternSpec } from "../core/model";
-import type { CardSummary, MainToUi, SelectionState } from "../shared/messages";
+import type { CardSummary, MainToUi, SelectionState, UiToMain } from "../shared/messages";
 import { figmaBridge, type Bridge } from "./bridge";
 import { CodePanel } from "./CodePanel";
 import { Editor } from "./Editor";
@@ -12,6 +12,7 @@ type Status = Extract<MainToUi, { type: "status" }>;
 type Tab = "main" | "code";
 
 const STATUS_MS = 4000;
+const BUSY_TIMEOUT_MS = 10_000;
 const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to include them in the code.";
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
@@ -21,6 +22,8 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [tab, setTab] = useState<Tab>("main");
   const [status, setStatus] = useState<Status | null>(null);
   const [unsaved, setUnsaved] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const busyRef = useRef(false);
   const selectedNodeId = useRef<string | null>(null);
 
   useEffect(() => {
@@ -41,6 +44,9 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         setCards(message.cards);
       } else {
         setStatus(message);
+        // Every action ends with a status, success or error, so the buttons come back here.
+        busyRef.current = false;
+        setBusy(false);
       }
     });
     bridge.send({ type: "ready" });
@@ -55,6 +61,24 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
 
   const requestCards = useCallback(() => bridge.send({ type: "list-cards" }), [bridge]);
 
+  // A double click must not create two cards: one action at a time until its status arrives.
+  function act(message: UiToMain) {
+    if (busyRef.current) return;
+    busyRef.current = true;
+    setBusy(true);
+    bridge.send(message);
+  }
+
+  // If the main thread never answers, don't leave the buttons disabled for good.
+  useEffect(() => {
+    if (!busy) return;
+    const timer = setTimeout(() => {
+      busyRef.current = false;
+      setBusy(false);
+    }, BUSY_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [busy]);
+
   function screen() {
     switch (selection?.kind) {
       case undefined:
@@ -66,7 +90,8 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
             mode="create"
             initial={draft}
             onBack={() => setDraft(null)}
-            onSubmit={(pattern) => bridge.send({ type: "create-card", pattern })}
+            onSubmit={(pattern) => act({ type: "create-card", pattern })}
+            busy={busy}
           />
         ) : (
           <Gallery onPick={setDraft} />
@@ -90,8 +115,9 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
               key={nodeId}
               mode="update"
               initial={pattern}
-              onSubmit={(next) => bridge.send({ type: "update-card", nodeId, pattern: next })}
+              onSubmit={(next) => act({ type: "update-card", nodeId, pattern: next })}
               onDirtyChange={setUnsaved}
+              busy={busy}
             />
           </Tabbed>
         );
@@ -104,8 +130,9 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
             state={selection}
             cards={cards}
             onRequestCards={requestCards}
-            onLink={(cardId, trigger) => bridge.send({ type: "link", nodeId, cardId, trigger })}
-            onUnlink={() => bridge.send({ type: "unlink", nodeId })}
+            onLink={(cardId, trigger) => act({ type: "link", nodeId, cardId, trigger })}
+            onUnlink={() => act({ type: "unlink", nodeId })}
+            busy={busy}
           />
         );
         if (!link || !linkedPattern) return panel;
