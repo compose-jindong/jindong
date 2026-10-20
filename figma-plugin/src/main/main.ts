@@ -38,7 +38,13 @@ async function handle(message: UiToMain): Promise<void> {
         await pushSelection();
         return;
       case "list-cards":
-        post({ type: "cards", cards: await cardSummaries() });
+        try {
+          post({ type: "cards", cards: await cardSummaries() });
+        } catch (error) {
+          // The Link panel waits for a list; give it one before reporting what went wrong.
+          post({ type: "cards", cards: [] });
+          throw error;
+        }
         return;
       case "create-card": {
         const pattern = valid(message.pattern);
