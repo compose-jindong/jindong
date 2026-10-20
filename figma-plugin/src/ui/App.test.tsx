@@ -79,6 +79,24 @@ describe("App", () => {
     expect(screen.getByRole("button", { name: "Create card" })).toHaveProperty("disabled", false);
   });
 
+  test("a slow request says it's still working instead of re-enabling the button", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "none" } });
+      fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+      fireEvent.click(screen.getByRole("button", { name: "Create card" }));
+      act(() => vi.advanceTimersByTime(12_000));
+      expect(screen.getByRole("status").textContent).toBe("Still working… Large files can take a moment.");
+      fireEvent.click(screen.getByRole("button", { name: "Create card" }));
+      expect(sent.filter((m) => m.type === "create-card")).toHaveLength(1);
+      act(() => vi.advanceTimersByTime(60_000));
+      expect(screen.getByRole("button", { name: "Create card" })).toHaveProperty("disabled", false);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("a double click links once", () => {
     const { sent, emit } = setup();
     emit({ type: "selection", state: layer() });

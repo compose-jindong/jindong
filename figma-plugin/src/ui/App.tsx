@@ -13,7 +13,8 @@ type Tab = "main" | "code";
 
 // Confirmations clear quickly; warnings and errors stay long enough to read.
 const STATUS_MS = { success: 4000, warning: 10_000, error: 10_000 } as const;
-const BUSY_TIMEOUT_MS = 10_000;
+const STILL_WORKING_MS = 10_000;
+const BUSY_TIMEOUT_MS = 60_000;
 const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to include them in the code.";
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
@@ -83,14 +84,22 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
     [],
   );
 
-  // If the main thread never answers, don't leave the buttons disabled for good.
+  // Large files can make a request slow: say so rather than re-enabling the button for a second click, and
+  // only give up waiting if the main thread never answers.
   useEffect(() => {
     if (!busy) return;
-    const timer = setTimeout(() => {
+    const stillWorking = setTimeout(
+      () => setStatus({ type: "status", tone: "warning", message: "Still working… Large files can take a moment." }),
+      STILL_WORKING_MS,
+    );
+    const giveUp = setTimeout(() => {
       busyRef.current = false;
       setBusy(false);
     }, BUSY_TIMEOUT_MS);
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(stillWorking);
+      clearTimeout(giveUp);
+    };
   }, [busy]);
 
   function screen() {
