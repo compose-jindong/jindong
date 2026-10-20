@@ -85,6 +85,9 @@ export async function updateCard(nodeId: string, p: PatternSpec): Promise<CardNo
   if (!node || (node.type !== "FRAME" && node.type !== "COMPONENT") || !isCard(node)) {
     throw new Error("That card no longer exists.");
   }
+  if (node.type === "COMPONENT" && node.remote) {
+    throw new Error("This card comes from a library. Edit it in the library's file.");
+  }
   await renderCard(node, p);
   writePattern(node, p);
   return node;

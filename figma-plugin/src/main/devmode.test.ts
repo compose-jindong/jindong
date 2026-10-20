@@ -75,6 +75,15 @@ describe("Dev Mode codegen", () => {
     expect(results.map((r) => r.title)).toEqual(["Pattern", "Setup"]);
   });
 
+  test("an instance of a card component shows the card's code", async () => {
+    const component = card("9:4");
+    const instance = fakeNode("9:5") as unknown as Record<string, unknown>;
+    instance.type = "INSTANCE";
+    instance.getMainComponentAsync = async () => component;
+    const results = await generate({ node: instance as unknown as SceneNode, language: "jindong" });
+    expect(results.map((r) => r.title)).toEqual(["Pattern", "Setup"]);
+  });
+
   test("a card this plugin version can't read says so instead of claiming there's no haptic", async () => {
     const node = fakeNode("9:3");
     node.setSharedPluginData("jindong", "pattern", JSON.stringify({ ...presetNamed("Success"), schema: 2 }));

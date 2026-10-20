@@ -14,6 +14,8 @@ function fakeNode(id: string, type: string, parent: FakeNode | null = null): Fak
     parent,
     getSharedPluginData: (namespace: string, key: string) => data.get(`${namespace}/${key}`) ?? "",
     setSharedPluginData: (namespace: string, key: string, value: string) => data.set(`${namespace}/${key}`, value),
+    // Every Figma instance has a main component; these tests' instances point at an ordinary one.
+    ...(type === "INSTANCE" ? { getMainComponentAsync: async () => fakeNode(`main-of-${id}`, "COMPONENT") } : {}),
   };
 }
 
@@ -37,6 +39,15 @@ describe("readSelection", () => {
     const bar = fakeNode("7:2", "RECTANGLE", card);
     select(bar);
     expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:1", pattern: presetNamed("Success") });
+  });
+
+  test("an instance of a card that became a component opens that card", async () => {
+    const component = fakeNode("7:3", "COMPONENT", page);
+    writePattern(component as unknown as SceneNode, presetNamed("Heartbeat"));
+    const instance = fakeNode("8:1", "INSTANCE", page);
+    instance.getMainComponentAsync = async () => component;
+    select(instance);
+    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:3", pattern: presetNamed("Heartbeat") });
   });
 
   test("an ordinary layer stays a layer", async () => {

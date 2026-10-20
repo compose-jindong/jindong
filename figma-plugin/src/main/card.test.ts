@@ -124,6 +124,14 @@ describe("cards a designer has reshaped", () => {
     expect(node.children.length).toBe(drawn + 2);
   });
 
+  test("a card from a library file says where to edit it", async () => {
+    const node = card("COMPONENT", "7:8");
+    node.remote = true;
+    await expect(updateCard("7:8", presetNamed("Success"))).rejects.toThrow(
+      "This card comes from a library. Edit it in the library's file.",
+    );
+  });
+
   test("updating something that is not a card still says the card is gone", async () => {
     nodes.set("7:6", fakeNode("RECTANGLE", "7:6"));
     await expect(updateCard("7:6", presetNamed("Success"))).rejects.toThrow("That card no longer exists.");

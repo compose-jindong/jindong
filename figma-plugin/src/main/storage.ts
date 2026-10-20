@@ -27,6 +27,18 @@ export function cardOf(node: BaseNode): BaseNode | null {
   return null;
 }
 
+/** Like [cardOf], but also finds the card behind an instance of a card that became a component. */
+export async function findCard(node: BaseNode): Promise<BaseNode | null> {
+  const direct = cardOf(node);
+  if (direct) return direct;
+  for (let current: BaseNode | null = node; current && current.type !== "PAGE"; current = current.parent) {
+    if (current.type !== "INSTANCE") continue;
+    const main = await current.getMainComponentAsync();
+    if (main && isCard(main)) return main;
+  }
+  return null;
+}
+
 export function readLink(node: BaseNode): HapticLink | null {
   return parseLinkJson(node.getSharedPluginData(NAMESPACE, LINK_KEY));
 }
