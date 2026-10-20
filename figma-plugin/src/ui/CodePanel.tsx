@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { CodeSection } from "../core/codegen";
 import { copyText } from "./copy";
 
@@ -25,25 +25,37 @@ export function CodePanel({ sections, notice }: { sections: CodeSection[]; notic
 }
 
 function CodeBlock({ section }: { section: CodeSection }) {
-  const [copied, setCopied] = useState(false);
+  const [copy, setCopy] = useState<"idle" | "copied" | "failed">("idle");
+  const code = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (!copied) return;
-    const timer = setTimeout(() => setCopied(false), 1500);
+    if (copy !== "copied") return;
+    const timer = setTimeout(() => setCopy("idle"), 1500);
     return () => clearTimeout(timer);
-  }, [copied]);
+  }, [copy]);
+
+  async function onCopy() {
+    if (await copyText(section.code)) {
+      setCopy("copied");
+      return;
+    }
+    // Leave the code selected so ⌘C still works when the plugin isn't allowed to copy.
+    if (code.current) window.getSelection()?.selectAllChildren(code.current);
+    setCopy("failed");
+  }
 
   return (
     <section className="code-block">
       <header className="code-block-head">
         <h3>{section.title}</h3>
         {SECTION_HINT[section.title] && <span className="code-hint">{SECTION_HINT[section.title]}</span>}
-        <button type="button" className="secondary" onClick={async () => setCopied(await copyText(section.code))}>
-          {copied ? "Copied" : "Copy"}
+        <button type="button" className="secondary" onClick={onCopy}>
+          {copy === "copied" ? "Copied" : copy === "failed" ? "Copy failed" : "Copy"}
         </button>
       </header>
+      {copy === "failed" && <p className="form-error">The code is selected. Press ⌘C to copy it.</p>}
       <pre>
-        <code>{section.code}</code>
+        <code ref={code}>{section.code}</code>
       </pre>
     </section>
   );

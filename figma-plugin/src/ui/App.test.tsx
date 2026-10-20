@@ -264,6 +264,20 @@ describe("App", () => {
     expect(screen.getByText(unsaved)).toBeTruthy();
   });
 
+  test("a failed copy says so instead of looking copied", async () => {
+    Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+    document.execCommand = () => false;
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.click(screen.getByRole("tab", { name: "Code" }));
+    await act(async () => {
+      fireEvent.click(screen.getAllByRole("button", { name: "Copy" })[0]);
+    });
+    expect(screen.getByRole("button", { name: "Copy failed" })).toBeTruthy();
+    expect(screen.getByText("The code is selected. Press ⌘C to copy it.")).toBeTruthy();
+    expect(window.getSelection()?.toString()).toContain("val SuccessHaptic");
+  });
+
   test("a linked layer's Code tab shows the Jindong call", () => {
     const { emit } = setup();
     emit({
