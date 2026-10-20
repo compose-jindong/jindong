@@ -45,7 +45,6 @@ function post(message: MainToUi): void {
   figma.ui.postMessage(message);
 }
 
-
 async function pushSelection(): Promise<void> {
   const read = ++selectionReads;
   const state = await readSelection();
@@ -53,7 +52,6 @@ async function pushSelection(): Promise<void> {
   watchedIds = new Set(nodeIdsOf(state));
   post({ type: "selection", state });
 }
-
 
 function watchCurrentPage(): void {
   watchedPage?.off("nodechange", onNodeChange);
