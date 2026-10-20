@@ -66,6 +66,34 @@ test("a slow read of an earlier selection never overwrites the current one", asy
   expect(selections).not.toContain("1:1");
 });
 
+test("each finished action is its own undo step", async () => {
+  const posted: { type: string }[] = [];
+  const commits: number[] = [];
+  const ui: { postMessage: (message: { type: string }) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  const layer = { id: "5:1", type: "GROUP", parent: null, getSharedPluginData: () => "", setSharedPluginData: () => {} };
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: { selection: [] },
+    getNodeByIdAsync: async () => layer,
+    commitUndo: () => commits.push(posted.length),
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "unlink", nodeId: "5:1" });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  expect(posted.map((m) => m.type)).toEqual(["selection", "status"]);
+  expect(commits).toEqual([2]);
+});
+
 test("a failing selection read is reported to the window instead of escaping", async () => {
   const handlers = new Map<string, () => void>();
   const posted: unknown[] = [];

@@ -97,6 +97,8 @@ function postError(error: unknown): void {
 async function finish(tone: "success" | "warning", message: string): Promise<void> {
   await pushSelection();
   post({ type: "status", tone, message });
+  // Without this, one Cmd+Z would undo every plugin action since the window opened.
+  figma.commitUndo();
 }
 
 function valid(pattern: PatternSpec): PatternSpec {
