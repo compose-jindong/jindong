@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { NEW_BUZZ, insertEventAfter, removeEvent, setEventType, updateEvent } from "./editing";
+import { NEW_BUZZ, insertEventAfter, removeEvent, setEventType, setTrailing, updateEvent } from "./editing";
 import { toTimeline } from "./model";
 import { presetNamed } from "./presets";
 
@@ -37,6 +37,17 @@ test("switching type keeps the data valid", () => {
 test("edits are clamped into valid data", () => {
   const p = updateEvent(presetNamed("Success"), 0, { gapBeforeMs: -10, intensity: 0.333 });
   expect(p.events[0]).toMatchObject({ gapBeforeMs: 0, intensity: 0.33 });
+});
+
+test("editing an event leaves the name being typed alone", () => {
+  expect(updateEvent({ ...presetNamed("Success"), name: "Pay " }, 0, { gapBeforeMs: 10 }).name).toBe("Pay ");
+});
+
+test("silence after is clamped without touching the name", () => {
+  const p = setTrailing({ ...presetNamed("Success"), name: " Pay" }, -5);
+  expect(p.trailingMs).toBe(0);
+  expect(p.name).toBe(" Pay");
+  expect(setTrailing(presetNamed("Success"), 12.4).trailingMs).toBe(12);
 });
 
 test("edits leave the preset itself untouched", () => {

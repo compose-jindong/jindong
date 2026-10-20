@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { insertEventAfter, removeEvent, setEventType, updateEvent } from "../core/editing";
+import { insertEventAfter, removeEvent, setEventType, setTrailing, updateEvent } from "../core/editing";
 import { LIMITS, TONE_HEX, normalizePattern, validatePattern, type PatternSpec, type Tone } from "../core/model";
 import { EventInspector, RangeField } from "./EventInspector";
 import { Timeline } from "./Timeline";
@@ -101,7 +101,7 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = 
           min={0}
           sliderMax={1000}
           max={10_000}
-          onChange={(trailingMs) => setDraft(normalizePattern({ ...draft, trailingMs }))}
+          onChange={(trailingMs) => setDraft(setTrailing(draft, trailingMs))}
         />
       </div>
 

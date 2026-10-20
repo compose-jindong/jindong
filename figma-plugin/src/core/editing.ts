@@ -24,7 +24,12 @@ export function updateEvent(
   patch: Partial<Omit<BuzzEvent, "type">>,
 ): PatternSpec {
   const events = p.events.map((e, i) => (i === index ? ({ ...e, ...patch } as HapticEvent) : e));
-  return normalizePattern({ ...p, events });
+  // Only the events are clamped: the name may be mid-typing ("Pay "), and is tidied when the card is saved.
+  return { ...p, events: normalizePattern({ ...p, events }).events };
+}
+
+export function setTrailing(p: PatternSpec, trailingMs: number): PatternSpec {
+  return { ...p, trailingMs: normalizePattern({ ...p, trailingMs }).trailingMs };
 }
 
 export function setEventType(p: PatternSpec, index: number, type: HapticEvent["type"]): PatternSpec {
