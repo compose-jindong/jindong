@@ -108,6 +108,24 @@ const TARGETS: [string, string][] = [
   ["multiple", "Two layers"],
 ];
 
+// &theme=dark sets the variables Figma provides in its dark theme (approximate values).
+if (params.get("theme") === "dark") {
+  const dark: Record<string, string> = {
+    "--figma-color-bg": "#2c2c2c",
+    "--figma-color-bg-secondary": "#383838",
+    "--figma-color-bg-hover": "#444444",
+    "--figma-color-text": "#ffffff",
+    "--figma-color-text-secondary": "#ffffffb3",
+    "--figma-color-text-tertiary": "#ffffff66",
+    "--figma-color-border": "#444444",
+    "--figma-color-border-selected": "#0c8ce9",
+    "--figma-color-text-danger": "#ff7a5c",
+    "--figma-color-text-warning": "#f7d15f",
+    "--figma-color-text-success": "#79d297",
+  };
+  for (const [name, value] of Object.entries(dark)) document.documentElement.style.setProperty(name, value);
+}
+
 // &status=<text> shows that status message after load, for checking how long messages wrap.
 const startStatus = params.get("status");
 if (startStatus) setTimeout(() => post({ type: "status", tone: "warning", message: startStatus }), 300);
