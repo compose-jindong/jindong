@@ -1,5 +1,5 @@
 import { CARD, displayWindowMs, layoutBars } from "../core/cardLayout";
-import { TONE_HEX, toTimeline, type PatternSpec } from "../core/model";
+import { NAMESPACE, TONE_HEX, toTimeline, type PatternSpec } from "../core/model";
 import { isCard, writePattern } from "./storage";
 
 // The haptic card on the canvas: a plain frame the plugin redraws from its pattern.
@@ -11,11 +11,16 @@ export type CardNode = FrameNode | ComponentNode;
 const REGULAR: FontName = { family: "Inter", style: "Regular" };
 const SEMI_BOLD: FontName = { family: "Inter", style: "Semi Bold" };
 const RIGHT_EDGE = CARD.width - 14;
+// Marks the layers the plugin draws inside a card.
+const PART_KEY = "part";
 const HEADER_TEXT_WIDTH = RIGHT_EDGE - 30;
 
 export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void> {
   await Promise.all([figma.loadFontAsync(REGULAR), figma.loadFontAsync(SEMI_BOLD)]);
-  for (const child of [...frame.children]) child.remove();
+  // Only the plugin's own layers are redrawn; anything a designer put inside the card stays.
+  for (const child of [...frame.children]) {
+    if (child.getSharedPluginData(NAMESPACE, PART_KEY) !== "") child.remove();
+  }
 
   frame.name = `Haptic / ${p.name}`;
   frame.layoutMode = "NONE";
@@ -90,6 +95,7 @@ function place(frame: CardNode, node: SceneNode, x: number, y: number): void {
   node.x = x;
   node.y = y;
   node.locked = true;
+  node.setSharedPluginData(NAMESPACE, PART_KEY, "1");
 }
 
 function placeRight(frame: CardNode, node: TextNode, y: number): void {

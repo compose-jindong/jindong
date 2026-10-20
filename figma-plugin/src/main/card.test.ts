@@ -112,6 +112,18 @@ describe("cards a designer has reshaped", () => {
     expect((await findCards()).map((n) => n.id)).toEqual(["7:3", "7:4"]);
   });
 
+  test("redrawing keeps layers a designer added inside the card", async () => {
+    const node = card("FRAME", "7:7");
+    await updateCard("7:7", presetNamed("Success"));
+    const drawn = node.children.length;
+    const note = fakeText();
+    note.characters = "Ask Jin about this one";
+    node.appendChild(note);
+    await updateCard("7:7", presetNamed("Heartbeat"));
+    expect(node.children).toContain(note);
+    expect(node.children.length).toBe(drawn + 2);
+  });
+
   test("updating something that is not a card still says the card is gone", async () => {
     nodes.set("7:6", fakeNode("RECTANGLE", "7:6"));
     await expect(updateCard("7:6", presetNamed("Success"))).rejects.toThrow("That card no longer exists.");
