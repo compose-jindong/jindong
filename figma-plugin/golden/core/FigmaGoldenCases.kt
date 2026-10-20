@@ -211,4 +211,24 @@ internal val figmaGoldenCases: List<FigmaGoldenCase> = listOf(
             durationMs = 200L,
         ),
     ),
+    FigmaGoldenCase(
+        name = "İptal",
+        generated = İptalHaptic,
+        expected = HapticPattern(
+            listOf(
+                ScheduledHapticEvent(startTimeMs = 0L, durationMs = 0L, intensity = HapticIntensity.Custom(0.8f), eventType = HapticEventType.TRANSIENT, sharpness = 0.5f),
+            ),
+            durationMs = 0L,
+        ),
+    ),
+    FigmaGoldenCase(
+        name = "ǰet",
+        generated = ǰetHaptic,
+        expected = HapticPattern(
+            listOf(
+                ScheduledHapticEvent(startTimeMs = 0L, durationMs = 30L, intensity = HapticIntensity.Custom(0.5f), eventType = HapticEventType.CONTINUOUS, sharpness = 0.5f),
+            ),
+            durationMs = 30L,
+        ),
+    ),
 )

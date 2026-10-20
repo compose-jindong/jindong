@@ -35,10 +35,18 @@ export function patternVariableName(cardName: string): string {
   const pascal = cardName
     .split(/[^\p{L}\p{Nd}]+/u)
     .filter((word) => word.length > 0)
-    .map((word) => word[0].toUpperCase() + word.slice(1))
+    .map((word) => withFirstCase(word, "upper"))
     .join("");
   if (pascal.length === 0) return "CustomHaptic";
   return /^\p{Nd}/u.test(pascal) ? `Haptic${pascal}` : `${pascal}Haptic`;
+}
+
+// Changes the first letter's case, unless that turns it into more than one character ("İ" → "i̇", "ǰ" → "J̌"):
+// the extra characters are combining marks, which Kotlin names can't contain.
+function withFirstCase(word: string, to: "upper" | "lower"): string {
+  const first = String.fromCodePoint(word.codePointAt(0) ?? 0);
+  const changed = to === "upper" ? first.toUpperCase() : first.toLowerCase();
+  return (changed.length === first.length ? changed : first) + word.slice(first.length);
 }
 
 /** True when [name] generates the same Kotlin value as one of [otherNames], so pasting both won't compile. */
@@ -93,7 +101,7 @@ export function hapticCodeParts(variableName: string, trigger: Trigger): { impor
     case "tap": {
       // Named after the haptic, so two tappable elements in one composable get separate counters.
       const base = variableName.replace(/Haptic$/, "");
-      const counter = `${base[0].toLowerCase()}${base.slice(1)}Taps`;
+      const counter = `${withFirstCase(base, "lower")}Taps`;
       return {
         imports: [...TAP_IMPORTS, ...CALL_IMPORTS],
         body: [

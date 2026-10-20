@@ -52,6 +52,8 @@ describe("patternVariableName", () => {
     ["성공 진동", "성공진동Haptic"],
     ["3 Taps!", "Haptic3Taps"],
     ["Level ²", "LevelHaptic"],
+    ["ǰet", "ǰetHaptic"],
+    ["İptal", "İptalHaptic"],
     ["🎉", "CustomHaptic"],
     ["", "CustomHaptic"],
   ])("%s → %s", (name, expected) => {
@@ -132,6 +134,8 @@ describe("hapticCode", () => {
     expect(counter(hapticCode("ErrorHaptic", "tap"))).toBe("errorTaps");
     expect(counter(hapticCode("Haptic3Taps", "tap"))).toBe("haptic3TapsTaps");
     expect(counter(hapticCode("성공진동Haptic", "tap"))).toBe("성공진동Taps");
+    // Lowercasing "İ" adds a combining dot, which Kotlin names can't contain.
+    expect(counter(hapticCode("İptalHaptic", "tap"))).toBe("İptalTaps");
   });
 
   test("enter plays on entry", () => {

@@ -23,6 +23,9 @@ export const GOLDEN_EDGE_CASES: PatternSpec[] = [
   edgeCase("Named Intensities", [buzz(0, 20, 0.25), buzz(10, 20, 0.5), buzz(10, 20, 0.75), buzz(10, 20, 1)], 0),
   edgeCase("성공 진동", [tap(0, 0.6)], 0),
   edgeCase("3 Taps!", [tap(0, 1), tap(100, 1), tap(100, 1)], 0),
+  // Changing these letters' case would add combining marks, which Kotlin names reject.
+  edgeCase("İptal", [tap(0, 0.8)], 0),
+  edgeCase("ǰet", [buzz(0, 30)], 0),
 ];
 
 /** Path under figma-plugin/golden → file content. */
