@@ -27,8 +27,14 @@ function post(message: MainToUi): void {
   figma.ui.postMessage(message);
 }
 
+// Reading a selection waits on card lookups, so an older read can finish after a newer one; only the
+// latest read reaches the window.
+let selectionReads = 0;
+
 async function pushSelection(): Promise<void> {
-  post({ type: "selection", state: await readSelection() });
+  const read = ++selectionReads;
+  const state = await readSelection();
+  if (read === selectionReads) post({ type: "selection", state });
 }
 
 async function handle(message: UiToMain): Promise<void> {

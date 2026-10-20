@@ -33,6 +33,39 @@ test("a failed card search still answers with a list, so the Link panel doesn't 
   ]);
 });
 
+test("a slow read of an earlier selection never overwrites the current one", async () => {
+  const handlers = new Map<string, () => void>();
+  const posted: { type: string; state?: { nodeId?: string } }[] = [];
+  const data = (link: string) => (namespace: string, key: string) => (key === "link" ? link : "");
+  // A is linked, so reading it waits on the card lookup; B is a plain layer and reads at once.
+  const a = { id: "1:1", type: "FRAME", name: "A", parent: null, getSharedPluginData: data('{"schema":1,"cardId":"9:9","trigger":"tap"}') };
+  const b = { id: "1:2", type: "FRAME", name: "B", parent: null, getSharedPluginData: data("") };
+  const page = { selection: [a] as unknown[] };
+  let releaseCard: (node: null) => void = () => {};
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: (event: string, handler: () => void) => handlers.set(event, handler),
+    ui: { postMessage: (message: { type: string }) => posted.push(message), onmessage: null },
+    currentPage: page,
+    getNodeByIdAsync: () => new Promise((resolve) => (releaseCard = resolve)),
+  });
+
+  await import("./main");
+  handlers.get("selectionchange")?.();
+  page.selection = [b];
+  handlers.get("selectionchange")?.();
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  releaseCard(null);
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  const selections = posted.filter((m) => m.type === "selection").map((m) => m.state?.nodeId);
+  expect(selections[selections.length - 1]).toBe("1:2");
+  expect(selections).not.toContain("1:1");
+});
+
 test("a failing selection read is reported to the window instead of escaping", async () => {
   const handlers = new Map<string, () => void>();
   const posted: unknown[] = [];
