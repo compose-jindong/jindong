@@ -7,7 +7,7 @@ import {
 } from "../core/annotation";
 import { SCHEMA_VERSION, type Trigger } from "../core/model";
 import { insideInstance } from "./selection";
-import { clearLink, readPattern, writeLink } from "./storage";
+import { clearLink, readLink, readPattern, writeLink } from "./storage";
 
 // A link points a UI layer at a card. The Dev Mode note is written once, when linking.
 
@@ -56,6 +56,12 @@ export function linkNoteStatus(result: NoteResult, layerType: string): { tone: "
 export async function unlinkLayer(nodeId: string): Promise<void> {
   const node = await sceneNode(nodeId);
   clearLink(node);
+  // An instance shows its main component's link once its own value is gone; that one isn't ours to remove.
+  if (readLink(node)) {
+    throw new Error(
+      "This link comes from the main component, so every instance has it. Remove it on the main component.",
+    );
+  }
   setJindongAnnotation(node, null);
 }
 

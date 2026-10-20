@@ -43,7 +43,7 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
         <>
           {warning === "main-component" && (
             <p className="callout">
-              This is a main component. Its instances won't get this link — link the instance on your screen instead.
+              This is a main component, so every instance of it gets this link. To give one button its own haptic, link that instance instead.
             </p>
           )}
 

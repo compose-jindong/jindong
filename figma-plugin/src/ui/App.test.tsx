@@ -233,12 +233,12 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Link haptic" })).toBeNull();
   });
 
-  test("a main component warns that instances won't follow", () => {
+  test("a main component says every instance gets the link", () => {
     const { emit } = setup();
     emit({ type: "selection", state: layer({ warning: "main-component" }) });
     expect(
       screen.getByText(
-        "This is a main component. Its instances won't get this link — link the instance on your screen instead.",
+        "This is a main component, so every instance of it gets this link. To give one button its own haptic, link that instance instead.",
       ),
     ).toBeTruthy();
     expect(screen.getByRole("button", { name: "Link haptic" })).toBeTruthy();

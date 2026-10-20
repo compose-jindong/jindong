@@ -1,8 +1,8 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { isJindongAnnotation, type AnnotationLike } from "../core/annotation";
 import { presetNamed } from "../core/presets";
-import { linkLayer, linkNoteStatus } from "./link";
-import { readLink, writePattern } from "./storage";
+import { linkLayer, linkNoteStatus, unlinkLayer } from "./link";
+import { readLink, writeLink, writePattern } from "./storage";
 
 // A layer whose annotations behave like Figma's when it refuses markdown links, or every note.
 function fakeLayer(id: string, reject: "nothing" | "links" | "everything" = "nothing") {
@@ -91,6 +91,29 @@ describe("linkLayer", () => {
     nodes.set("5:3", layer);
     expect((await linkLayer("5:3", "9:1", "tap")).annotation).toBe("rejected");
     expect(layer.annotations).toEqual([{ label: "Spacing note" }]);
+  });
+});
+
+describe("unlinkLayer", () => {
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  test("a link an instance inherits from its main component can't be removed on the instance", async () => {
+    const main = fakeLayer("3:1");
+    writeLink(main as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap" });
+    // Like Figma: the instance reads the main component's value unless it has its own.
+    const own = new Map<string, string>();
+    const instance = {
+      ...fakeLayer("3:2"),
+      getSharedPluginData: (namespace: string, key: string) =>
+        own.get(`${namespace}/${key}`) || main.getSharedPluginData(namespace, key),
+      setSharedPluginData: (namespace: string, key: string, value: string) => own.set(`${namespace}/${key}`, value),
+    };
+    vi.stubGlobal("figma", { getNodeByIdAsync: async (id: string) => (id === "3:2" ? instance : null) });
+    await expect(unlinkLayer("3:2")).rejects.toThrow(
+      "This link comes from the main component, so every instance has it. Remove it on the main component.",
+    );
   });
 });
 
