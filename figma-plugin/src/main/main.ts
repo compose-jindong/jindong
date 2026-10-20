@@ -18,8 +18,8 @@ if (figma.editorType === "dev") {
   }
 } else {
   figma.showUI(__html__, { width: 360, height: 640, themeColors: true });
-  figma.on("selectionchange", () => void pushSelection());
-  figma.on("currentpagechange", () => void pushSelection());
+  figma.on("selectionchange", () => void pushSelection().catch(postError));
+  figma.on("currentpagechange", () => void pushSelection().catch(postError));
   figma.ui.onmessage = (message: UiToMain) => void handle(message);
 }
 
@@ -73,8 +73,12 @@ async function handle(message: UiToMain): Promise<void> {
         return;
     }
   } catch (error) {
-    post({ type: "status", tone: "error", message: error instanceof Error ? error.message : String(error) });
+    postError(error);
   }
+}
+
+function postError(error: unknown): void {
+  post({ type: "status", tone: "error", message: error instanceof Error ? error.message : String(error) });
 }
 
 // Data changed, so the window re-reads the selection even when the selection itself didn't move.
