@@ -16,6 +16,14 @@ without Dev Mode can copy the same code from the plugin's Code tab.
 4. Select a layer, pick a card and when it plays (on tap, on screen enter, on state change), then press
    **Link haptic**. The layer gets a Dev Mode note that names the haptic and Jindong.
 
+A few things the plugin handles for you:
+
+- Every card gets its own Kotlin name. A new card whose name is taken becomes "Success 2", and renaming a card to
+  a taken name shows a warning, so code pasted from two cards never clashes.
+- Selecting a layer inside a card, or an instance of a card that was turned into a component, opens that card.
+- Groups, sections and a few other layer types can't hold Dev Mode notes. Linking one still works (the plugin and
+  Dev Mode code see it); the plugin says so, and a frame or instance shows the note.
+
 Version 1 keeps patterns simple: events play one after another with fixed strength and sharpness. Curves,
 overlapping events and feeling a pattern on a phone come later.
 
