@@ -1,4 +1,6 @@
 import type { LayerWarning, SelectionState } from "../shared/messages";
+import { clashesWith } from "../core/codegen";
+import { NAMESPACE } from "../core/model";
 import { findCard, readLink, readPattern } from "./storage";
 
 export async function readSelection(): Promise<SelectionState> {
@@ -8,7 +10,10 @@ export async function readSelection(): Promise<SelectionState> {
 
   const node = selection[0];
   const card = await findCard(node);
-  if (card) return { kind: "card", nodeId: card.id, pattern: readPattern(card) };
+  if (card) {
+    const pattern = readPattern(card);
+    return { kind: "card", nodeId: card.id, pattern, nameClash: pattern ? clashesOnPage(card, pattern.name) : false };
+  }
 
   const link = readLink(node);
   const linkedPattern = link ? readPattern(await figma.getNodeByIdAsync(link.cardId)) : null;
@@ -23,8 +28,17 @@ export function insideInstance(node: BaseNode): boolean {
   return false;
 }
 
-// A link on a main component doesn't reach its instances, so the Link panel says so.
+// A link on a main component reaches every instance, so the Link panel says so.
 function warningFor(node: SceneNode): LayerWarning {
   if (node.type === "COMPONENT" || node.type === "COMPONENT_SET") return "main-component";
   return insideInstance(node) ? "inside-instance" : null;
+}
+
+// Duplicated cards (⌘D, copy and paste) keep their name and land on the same page.
+function clashesOnPage(card: BaseNode, name: string): boolean {
+  const others = figma.currentPage
+    .findAllWithCriteria({ types: ["FRAME", "COMPONENT"], sharedPluginData: { namespace: NAMESPACE, keys: ["pattern"] } })
+    .filter((node) => node.id !== card.id)
+    .flatMap((node) => readPattern(node)?.name ?? []);
+  return clashesWith(name, others);
 }

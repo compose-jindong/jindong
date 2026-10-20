@@ -159,6 +159,17 @@ describe("App", () => {
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
   });
 
+  test("a card that shares its name with another says so", () => {
+    const { emit } = setup();
+    emit({
+      type: "selection",
+      state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success"), nameClash: true },
+    });
+    expect(
+      screen.getByText("Another card on this page is also called “Success”. Rename one so their code doesn't clash."),
+    ).toBeTruthy();
+  });
+
   test("Update card waits for a change", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });

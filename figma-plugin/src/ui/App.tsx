@@ -126,6 +126,11 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
               />
             }
           >
+            {selection.nameClash && (
+              <p className="callout name-clash">
+                Another card on this page is also called “{pattern.name}”. Rename one so their code doesn't clash.
+              </p>
+            )}
             <Editor
               key={nodeId}
               mode="update"

@@ -7,7 +7,13 @@ export type LayerWarning = "main-component" | "inside-instance" | null;
 export type SelectionState =
   | { kind: "none" }
   | { kind: "multiple" }
-  | { kind: "card"; nodeId: string; pattern: PatternSpec | null }
+  | {
+      kind: "card";
+      nodeId: string;
+      pattern: PatternSpec | null;
+      /** Another card on the page has a name that generates the same Kotlin value (often a ⌘D copy). */
+      nameClash?: boolean;
+    }
   | {
       kind: "layer";
       nodeId: string;

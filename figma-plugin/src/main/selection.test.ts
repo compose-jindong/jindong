@@ -36,7 +36,7 @@ function instanceOf(id: string, main: FakeNode, parent: FakeNode | null): FakeNo
 
 function select(...nodes: FakeNode[]) {
   vi.stubGlobal("figma", {
-    currentPage: { selection: nodes },
+    currentPage: { selection: nodes, findAllWithCriteria: () => [] },
     getNodeByIdAsync: async () => null,
   });
 }
@@ -53,7 +53,7 @@ describe("readSelection", () => {
     writePattern(card as unknown as SceneNode, presetNamed("Success"));
     const bar = fakeNode("7:2", "RECTANGLE", card);
     select(bar);
-    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:1", pattern: presetNamed("Success") });
+    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:1", pattern: presetNamed("Success"), nameClash: false });
   });
 
   test("an instance of a card that became a component opens that card, not the instance", async () => {
@@ -61,7 +61,17 @@ describe("readSelection", () => {
     writePattern(component as unknown as SceneNode, presetNamed("Heartbeat"));
     const instance = instanceOf("8:1", component, page);
     select(instance);
-    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:3", pattern: presetNamed("Heartbeat") });
+    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:3", pattern: presetNamed("Heartbeat"), nameClash: false });
+  });
+
+  test("a card duplicated with the same name is flagged, so the code clash is caught early", async () => {
+    const original = fakeNode("7:5", "FRAME", page);
+    writePattern(original as unknown as SceneNode, presetNamed("Success"));
+    const copy = fakeNode("7:6", "FRAME", page);
+    writePattern(copy as unknown as SceneNode, presetNamed("Success"));
+    select(copy);
+    (figma.currentPage as unknown as { findAllWithCriteria: () => FakeNode[] }).findAllWithCriteria = () => [original, copy];
+    expect(await readSelection()).toMatchObject({ kind: "card", nodeId: "7:6", nameClash: true });
   });
 
   test("an ordinary layer stays a layer", async () => {
