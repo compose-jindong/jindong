@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
 import { presetNamed } from "../core/presets";
-import { updateCard } from "./card";
+import { createCard, updateCard } from "./card";
 import { findCards, readPattern, writePattern } from "./storage";
 
 // Just enough of Figma's scene graph for drawing a card: nodes keep children, size, position and plugin data.
@@ -138,6 +138,22 @@ describe("cards a designer has reshaped", () => {
     }
     await updateCard("7:10", presetNamed("Success"));
     expect(legacy.children.length).toBe(drawn);
+  });
+
+  test("a new card is placed beside an earlier one instead of on top of it", async () => {
+    const page = fakeNode("PAGE", "0:1");
+    page.selection = [];
+    vi.stubGlobal("figma", {
+      ...(globalThis as unknown as { figma: object }).figma,
+      createFrame: () => fakeNode("FRAME"),
+      viewport: { center: { x: 500, y: 300 } },
+      currentPage: page,
+    });
+    const first = await createCard(presetNamed("Success"));
+    const second = await createCard(presetNamed("Error"));
+    const overlap = second.x < first.x + first.width && first.x < second.x + second.width && second.y < first.y + first.height && first.y < second.y + second.height;
+    expect(overlap).toBe(false);
+    expect(page.children).toEqual([first, second]);
   });
 
   test("a card from a library file says where to edit it", async () => {

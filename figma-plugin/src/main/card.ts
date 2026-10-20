@@ -13,6 +13,7 @@ const SEMI_BOLD: FontName = { family: "Inter", style: "Semi Bold" };
 const RIGHT_EDGE = CARD.width - 14;
 // Marks the layers the plugin draws inside a card.
 const PART_KEY = "part";
+const CARD_GAP = 16;
 const HEADER_TEXT_WIDTH = RIGHT_EDGE - 30;
 
 export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void> {
@@ -76,8 +77,13 @@ export async function createCard(p: PatternSpec): Promise<FrameNode> {
   }
   writePattern(frame, p);
   const center = figma.viewport.center;
-  frame.x = Math.round(center.x - CARD.width / 2);
-  frame.y = Math.round(center.y - CARD.height / 2);
+  const y = Math.round(center.y - CARD.height / 2);
+  // Step right past earlier cards, so a second card doesn't land exactly on the first.
+  const cards = figma.currentPage.children.filter((node) => node !== frame && isCard(node));
+  let x = Math.round(center.x - CARD.width / 2);
+  while (cards.some((card) => overlaps(card, x, y))) x += CARD.width + CARD_GAP;
+  frame.x = x;
+  frame.y = y;
   figma.currentPage.appendChild(frame);
   figma.currentPage.selection = [frame];
   return frame;
@@ -94,6 +100,10 @@ export async function updateCard(nodeId: string, p: PatternSpec): Promise<CardNo
   await renderCard(node, p);
   writePattern(node, p);
   return node;
+}
+
+function overlaps(node: SceneNode, x: number, y: number): boolean {
+  return node.x < x + CARD.width && x < node.x + node.width && node.y < y + CARD.height && y < node.y + node.height;
 }
 
 function place(frame: CardNode, node: SceneNode, x: number, y: number): void {
