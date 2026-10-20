@@ -1,4 +1,4 @@
-import type { HapticEvent, HapticLink, PatternSpec, Trigger } from "./model";
+import { LIMITS, type HapticEvent, type HapticLink, type PatternSpec, type Trigger } from "./model";
 import { DOCS_URL, JINDONG_VERSION } from "./version";
 
 // Kotlin for the Jindong 2.0 API. Generated code must compile and replay the card's timeline;
@@ -36,6 +36,22 @@ export function patternVariableName(cardName: string): string {
     .join("");
   if (pascal.length === 0) return "CustomHaptic";
   return /^\p{Nd}/u.test(pascal) ? `Haptic${pascal}` : `${pascal}Haptic`;
+}
+
+/** True when [name] generates the same Kotlin value as one of [otherNames], so pasting both won't compile. */
+export function clashesWith(name: string, otherNames: readonly string[]): boolean {
+  const variable = patternVariableName(name);
+  return otherNames.some((other) => patternVariableName(other) === variable);
+}
+
+/** [name], or "name 2", "name 3"… so that every card in a file generates its own Kotlin value. */
+export function uniqueCardName(name: string, takenNames: readonly string[]): string {
+  if (!clashesWith(name, takenNames)) return name;
+  for (let n = 2; ; n++) {
+    const suffix = ` ${n}`;
+    const candidate = `${name.slice(0, LIMITS.maxNameLength - suffix.length).trimEnd()}${suffix}`;
+    if (!clashesWith(candidate, takenNames)) return candidate;
+  }
 }
 
 export function patternCode(p: PatternSpec): string {

@@ -1,3 +1,4 @@
+import { clashesWith, uniqueCardName } from "../core/codegen";
 import { validatePattern, type PatternSpec } from "../core/model";
 import type { CardSummary, MainToUi, UiToMain } from "../shared/messages";
 import { createCard, updateCard } from "./card";
@@ -39,14 +40,27 @@ async function handle(message: UiToMain): Promise<void> {
       case "list-cards":
         post({ type: "cards", cards: await cardSummaries() });
         return;
-      case "create-card":
-        await createCard(valid(message.pattern));
-        await finish("success", "Card created.");
+      case "create-card": {
+        const pattern = valid(message.pattern);
+        const name = uniqueCardName(pattern.name, await cardNames());
+        await createCard({ ...pattern, name });
+        if (name === pattern.name) await finish("success", "Card created.");
+        else await finish("success", `Card created as “${name}”, because another card already uses that name.`);
         return;
-      case "update-card":
-        await updateCard(message.nodeId, valid(message.pattern));
-        await finish("success", "Card updated.");
+      }
+      case "update-card": {
+        const pattern = valid(message.pattern);
+        await updateCard(message.nodeId, pattern);
+        if (clashesWith(pattern.name, await cardNames(message.nodeId))) {
+          await finish(
+            "warning",
+            `Card updated, but another card is also called “${pattern.name}”. Rename one so their code doesn't clash.`,
+          );
+        } else {
+          await finish("success", "Card updated.");
+        }
         return;
+      }
       case "link": {
         const { annotation } = await linkLayer(message.nodeId, message.cardId, message.trigger);
         if (annotation) await finish("success", "Linked. Developers will see it in Dev Mode.");
@@ -73,6 +87,15 @@ function valid(pattern: PatternSpec): PatternSpec {
   const result = validatePattern(pattern);
   if (!result.ok) throw new Error(result.error);
   return result.pattern;
+}
+
+// Names of the file's readable cards, except [excludeId], for keeping generated Kotlin values distinct.
+async function cardNames(excludeId?: string): Promise<string[]> {
+  const cards = await findCards();
+  return cards.flatMap((card) => {
+    const pattern = card.id === excludeId ? null : readPattern(card);
+    return pattern ? [pattern.name] : [];
+  });
 }
 
 async function cardSummaries(): Promise<CardSummary[]> {

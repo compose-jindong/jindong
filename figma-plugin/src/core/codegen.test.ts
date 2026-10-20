@@ -2,11 +2,13 @@ import { describe, expect, test } from "vitest";
 import {
   BROKEN_LINK_NOTICE,
   NO_HAPTIC_NOTICE,
+  clashesWith,
   codeSections,
   hapticCode,
   patternCode,
   patternVariableName,
   setupCode,
+  uniqueCardName,
 } from "./codegen";
 import type { HapticEvent, HapticLink } from "./model";
 import { presetNamed } from "./presets";
@@ -53,6 +55,28 @@ describe("patternVariableName", () => {
     ["", "CustomHaptic"],
   ])("%s → %s", (name, expected) => {
     expect(patternVariableName(name)).toBe(expected);
+  });
+});
+
+describe("uniqueCardName", () => {
+  test("keeps a name no other card's code uses", () => {
+    expect(uniqueCardName("Success", ["Heartbeat"])).toBe("Success");
+  });
+
+  test("numbers a name whose Kotlin value is taken", () => {
+    expect(uniqueCardName("Success", ["Success"])).toBe("Success 2");
+    expect(uniqueCardName("Success", ["Success", "Success 2"])).toBe("Success 3");
+    expect(uniqueCardName("Pay-ok", ["pay ok"])).toBe("Pay-ok 2");
+  });
+
+  test("stays within the name limit", () => {
+    const long = "x".repeat(40);
+    expect(uniqueCardName(long, [long])).toBe(`${"x".repeat(38)} 2`);
+  });
+
+  test("clash detection compares Kotlin values, not text", () => {
+    expect(clashesWith("Pay-ok", ["pay ok"])).toBe(true);
+    expect(clashesWith("Pay OK", ["pay ok"])).toBe(false);
   });
 });
 
