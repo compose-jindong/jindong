@@ -108,6 +108,10 @@ const TARGETS: [string, string][] = [
   ["multiple", "Two layers"],
 ];
 
+// &status=<text> shows that status message after load, for checking how long messages wrap.
+const startStatus = params.get("status");
+if (startStatus) setTimeout(() => post({ type: "status", tone: "warning", message: startStatus }), 300);
+
 // &click=<button text> presses that button once after load, for screenshots ("Preview rhythm", "Code").
 const autoClick = params.get("click");
 if (autoClick) {
