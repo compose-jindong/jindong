@@ -17,9 +17,12 @@ const HEADER_TEXT_WIDTH = RIGHT_EDGE - 30;
 
 export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void> {
   await Promise.all([figma.loadFontAsync(REGULAR), figma.loadFontAsync(SEMI_BOLD)]);
-  // Only the plugin's own layers are redrawn; anything a designer put inside the card stays.
+  // Only the plugin's own layers are redrawn; anything a designer put inside the card stays. Cards from
+  // builds before the marker have unmarked but locked layers, which are the plugin's too.
+  const isPart = (child: SceneNode) => child.getSharedPluginData(NAMESPACE, PART_KEY) !== "";
+  const unmarked = !frame.children.some(isPart);
   for (const child of [...frame.children]) {
-    if (child.getSharedPluginData(NAMESPACE, PART_KEY) !== "") child.remove();
+    if (isPart(child) || (unmarked && child.locked)) child.remove();
   }
 
   frame.name = `Haptic / ${p.name}`;

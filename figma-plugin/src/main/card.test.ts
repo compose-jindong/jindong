@@ -124,6 +124,22 @@ describe("cards a designer has reshaped", () => {
     expect(node.children.length).toBe(drawn + 2);
   });
 
+  test("a card drawn by an earlier build is redrawn once, not on top of itself", async () => {
+    const fresh = card("FRAME", "7:9");
+    await updateCard("7:9", presetNamed("Success"));
+    const drawn = fresh.children.length;
+
+    // Earlier builds locked their layers but didn't mark them.
+    const legacy = card("FRAME", "7:10");
+    for (let i = 0; i < drawn; i++) {
+      const layer = fakeNode("RECTANGLE");
+      layer.locked = true;
+      legacy.appendChild(layer);
+    }
+    await updateCard("7:10", presetNamed("Success"));
+    expect(legacy.children.length).toBe(drawn);
+  });
+
   test("a card from a library file says where to edit it", async () => {
     const node = card("COMPONENT", "7:8");
     node.remote = true;
