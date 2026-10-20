@@ -18,6 +18,9 @@ let selectionReads = 0;
 let watchedIds = new Set<string>();
 let watchedPage: PageNode | null = null;
 
+// Requests run one at a time, so a second Create card sees the first card's name. handle() never rejects.
+let requests: Promise<void> = Promise.resolve();
+
 if (figma.editorType === "dev") {
   if (figma.mode === "codegen") {
     registerCodegen();
@@ -33,7 +36,9 @@ if (figma.editorType === "dev") {
     watchCurrentPage();
     void pushSelection().catch(postError);
   });
-  figma.ui.onmessage = (message: UiToMain) => void handle(message);
+  figma.ui.onmessage = (message: UiToMain) => {
+    requests = requests.then(() => handle(message));
+  };
 }
 
 function post(message: MainToUi): void {

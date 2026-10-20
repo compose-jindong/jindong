@@ -100,6 +100,45 @@ test("a change to the selected card (undo, a teammate) re-sends the selection; o
   expect(posted.filter((m) => m.type === "selection")).toHaveLength(2);
 });
 
+test("requests are handled one at a time, in order", async () => {
+  const cleared: string[] = [];
+  const pending = new Map<string, (node: unknown) => void>();
+  const ui: { postMessage: () => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: () => {},
+    onmessage: null,
+  };
+  const layer = (id: string) => ({
+    id,
+    type: "GROUP",
+    parent: null,
+    getSharedPluginData: () => "",
+    setSharedPluginData: () => cleared.push(id),
+  });
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: { selection: [], on: () => {}, off: () => {} },
+    getNodeByIdAsync: (id: string) => new Promise((resolve) => pending.set(id, resolve)),
+    commitUndo: () => {},
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "unlink", nodeId: "5:1" });
+  ui.onmessage?.({ type: "unlink", nodeId: "5:2" });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  // The second request must not start while the first is still waiting.
+  expect([...pending.keys()]).toEqual(["5:1"]);
+  pending.get("5:1")?.(layer("5:1"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  pending.get("5:2")?.(layer("5:2"));
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(cleared).toEqual(["5:1", "5:2"]);
+});
+
 test("each finished action is its own undo step", async () => {
   const posted: { type: string }[] = [];
   const commits: number[] = [];
