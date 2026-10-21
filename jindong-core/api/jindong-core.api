@@ -279,6 +279,7 @@ public final class io/github/compose/jindong/core/model/HapticPattern$Companion 
 }
 
 public final class io/github/compose/jindong/core/model/IosHapticParameters {
+	public fun <init> ()V
 	public synthetic fun <init> (FLkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Boolean;ILkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public synthetic fun <init> (FLkotlin/time/Duration;Lkotlin/time/Duration;Lkotlin/time/Duration;Ljava/lang/Boolean;Lkotlin/jvm/internal/DefaultConstructorMarker;)V
 	public final fun component1 ()F

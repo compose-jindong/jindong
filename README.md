@@ -61,7 +61,7 @@ See the [2.0 migration guide](documentation/content/docs/guide/migration-2.mdx) 
 | Platform | Minimum Version |
 |----------|-----------------|
 | Android  | API 26          |
-| iOS      | iOS 13          |
+| iOS      | iOS 15          |
 
 ### Android Setup
 
