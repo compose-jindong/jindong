@@ -132,13 +132,13 @@ function triggerFile(): string {
       "}",
     ].join("\n"),
   );
-  // Two tappable elements in one composable: their pasted snippets must not collide.
+  // Two default-named "Button" instances with different haptics in one composable: the snippets must not collide.
   functions.push(
     [
       "@Composable",
       "internal fun TwoTapTriggersGolden() {",
-      ...hapticCodeParts("TriggerGoldenHaptic", "tap").body.split("\n").map((line) => INDENT + line),
-      ...hapticCodeParts("SecondGoldenHaptic", "tap").body.split("\n").map((line) => INDENT + line),
+      ...hapticCodeParts("TriggerGoldenHaptic", "tap", "Button").body.split("\n").map((line) => INDENT + line),
+      ...hapticCodeParts("SecondGoldenHaptic", "tap", "Button").body.split("\n").map((line) => INDENT + line),
       "}",
     ].join("\n"),
   );

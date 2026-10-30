@@ -100,7 +100,7 @@ const TAP_IMPORTS = [
   "androidx.compose.runtime.setValue",
 ];
 
-/** [layerName] names the tap counter, so buttons sharing one haptic in one composable don't collide. */
+/** [layerName] helps name the tap counter, so tappable layers pasted into one composable don't collide. */
 export function hapticCodeParts(
   variableName: string,
   trigger: Trigger,
@@ -109,9 +109,11 @@ export function hapticCodeParts(
   const clip = `${INDENT}Clip(${variableName})`;
   switch (trigger) {
     case "tap": {
-      // Named after the layer when it has a usable name, otherwise after the haptic.
-      const fromLayer = layerName ? pascalWords(layerName) : "";
-      const base = fromLayer && !/^\p{Nd}/u.test(fromLayer) ? fromLayer : variableName.replace(/Haptic$/, "");
+      // Named after the layer and the haptic: instances keep their component's name ("Button"), so the layer
+      // alone can repeat, and several buttons can share one haptic.
+      const haptic = variableName.replace(/Haptic$/, "");
+      const layer = layerName ? pascalWords(layerName) : "";
+      const base = layer && !/^\p{Nd}/u.test(layer) ? layer + haptic : haptic;
       const counter = `${withFirstCase(base, "lower")}Taps`;
       return {
         imports: [...TAP_IMPORTS, ...CALL_IMPORTS],

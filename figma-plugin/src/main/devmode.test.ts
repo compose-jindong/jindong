@@ -65,7 +65,7 @@ describe("Dev Mode codegen", () => {
     (button as unknown as { name: string }).name = "Pay button";
     writeLink(button, { schema: 1, cardId: "9:1", trigger: "tap" });
     const [haptic] = await generate({ node: button, language: "jindong" });
-    expect(haptic.code).toContain("var payButtonTaps by remember");
+    expect(haptic.code).toContain("var payButtonSuccessTaps by remember");
   });
 
   test("a link to a deleted card says the link is broken", async () => {

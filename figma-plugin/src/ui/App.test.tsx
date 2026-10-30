@@ -376,7 +376,7 @@ describe("App", () => {
     });
     fireEvent.click(screen.getByRole("tab", { name: "Code" }));
     expect(screen.getByText(/Clip\(SuccessHaptic\)/)).toBeTruthy();
-    expect(screen.getByText(/var payButtonTaps by remember/)).toBeTruthy();
+    expect(screen.getByText(/var payButtonSuccessTaps by remember/)).toBeTruthy();
   });
 
   test("an unlinked layer has no Code tab", () => {

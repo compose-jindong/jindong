@@ -45,31 +45,31 @@ internal fun StateTriggerGolden(state: Any?) {
 @Composable
 internal fun TwoTapTriggersGolden() {
     // Call inside JindongProvider { ... }
-    var triggerGoldenTaps by remember { mutableIntStateOf(0) }
-    Jindong(triggerGoldenTaps, playOnInitialComposition = false) {
+    var buttonTriggerGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(buttonTriggerGoldenTaps, playOnInitialComposition = false) {
         Clip(TriggerGoldenHaptic)
     }
-    // In the element's onClick: triggerGoldenTaps++
+    // In the element's onClick: buttonTriggerGoldenTaps++
     // Call inside JindongProvider { ... }
-    var secondGoldenTaps by remember { mutableIntStateOf(0) }
-    Jindong(secondGoldenTaps, playOnInitialComposition = false) {
+    var buttonSecondGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(buttonSecondGoldenTaps, playOnInitialComposition = false) {
         Clip(SecondGoldenHaptic)
     }
-    // In the element's onClick: secondGoldenTaps++
+    // In the element's onClick: buttonSecondGoldenTaps++
 }
 
 @Composable
 internal fun SharedHapticTriggersGolden() {
     // Call inside JindongProvider { ... }
-    var payButtonTaps by remember { mutableIntStateOf(0) }
-    Jindong(payButtonTaps, playOnInitialComposition = false) {
+    var payButtonTriggerGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(payButtonTriggerGoldenTaps, playOnInitialComposition = false) {
         Clip(TriggerGoldenHaptic)
     }
-    // In the element's onClick: payButtonTaps++
+    // In the element's onClick: payButtonTriggerGoldenTaps++
     // Call inside JindongProvider { ... }
-    var confirmButtonTaps by remember { mutableIntStateOf(0) }
-    Jindong(confirmButtonTaps, playOnInitialComposition = false) {
+    var confirmButtonTriggerGoldenTaps by remember { mutableIntStateOf(0) }
+    Jindong(confirmButtonTriggerGoldenTaps, playOnInitialComposition = false) {
         Clip(TriggerGoldenHaptic)
     }
-    // In the element's onClick: confirmButtonTaps++
+    // In the element's onClick: confirmButtonTriggerGoldenTaps++
 }

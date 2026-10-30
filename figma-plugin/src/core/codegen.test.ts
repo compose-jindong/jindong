@@ -142,13 +142,16 @@ describe("hapticCode", () => {
 
   test("buttons sharing one haptic get counters named after each button", () => {
     const counter = (code: string) => code.match(/^var (\S+) by remember/m)?.[1];
-    expect(counter(hapticCode("SuccessHaptic", "tap", "Pay button"))).toBe("payButtonTaps");
-    expect(counter(hapticCode("SuccessHaptic", "tap", "Confirm button"))).toBe("confirmButtonTaps");
+    expect(counter(hapticCode("SuccessHaptic", "tap", "Pay button"))).toBe("payButtonSuccessTaps");
+    expect(counter(hapticCode("SuccessHaptic", "tap", "Confirm button"))).toBe("confirmButtonSuccessTaps");
+    // Instances keep their component's name ("Button"), so the haptic keeps two of them apart.
+    expect(counter(hapticCode("SuccessHaptic", "tap", "Button"))).toBe("buttonSuccessTaps");
+    expect(counter(hapticCode("ErrorHaptic", "tap", "Button"))).toBe("buttonErrorTaps");
     expect(counter(hapticCode("SuccessHaptic", "tap", "🎉"))).toBe("successTaps");
     expect(counter(hapticCode("SuccessHaptic", "tap", "3rd button"))).toBe("successTaps");
     expect(
       codeSections({ pattern: null, link: LINK, linkedPattern: presetNamed("Success"), layerName: "Pay button" })[0].code,
-    ).toContain("Jindong(payButtonTaps, playOnInitialComposition = false)");
+    ).toContain("Jindong(payButtonSuccessTaps, playOnInitialComposition = false)");
   });
 
   test("enter plays on entry", () => {

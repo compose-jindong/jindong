@@ -21,8 +21,9 @@ A few things the plugin handles for you:
 - Cards keep distinct Kotlin names. A new card whose name is taken becomes "Success 2", and renaming a card to a
   taken name shows a warning. A card duplicated in Figma (⌘D, copy and paste) keeps its name, so rename one of
   the copies.
-- Tap counters in the generated code are named after the linked layer ("payButtonTaps"), so several buttons can
-  share one haptic in the same composable.
+- Tap counters in the generated code are named after the linked layer and its haptic ("payButtonSuccessTaps"),
+  so several tappable layers can be pasted into one composable. Two layers with the same name and the same haptic
+  still share a name; rename one of the layers.
 - Selecting a layer inside a card, or an instance of a card that was turned into a component, opens that card.
 - Groups, sections and a few other layer types can't hold Dev Mode notes. Linking one still works for code
   generation; the plugin says so, and a frame or instance shows the note.
