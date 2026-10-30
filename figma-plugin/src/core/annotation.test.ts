@@ -46,6 +46,15 @@ describe("mergeJindongAnnotation", () => {
     ).toEqual([{ labelMarkdown: "**A**", categoryId: "c1" }, { properties: [{ type: "width" }] }]);
   });
 
+  test("a teammate's note that merely mentions Jindong haptic is left alone", () => {
+    const pm = { label: "PM: is the Jindong haptic too strong here? Check with Android before release." };
+    const pmMarkdown = { labelMarkdown: "Is the **Jindong haptic:** right here?" };
+    expect(isJindongAnnotation(pm)).toBe(false);
+    expect(isJindongAnnotation(pmMarkdown)).toBe(false);
+    expect(mergeJindongAnnotation([pm, pmMarkdown], next)).toEqual([pm, pmMarkdown, next]);
+    expect(mergeJindongAnnotation([pm, pmMarkdown], null)).toEqual([pm, pmMarkdown]);
+  });
+
   test("a plain-label note that mentions Jindong haptic counts as ours", () => {
     expect(isJindongAnnotation({ label: "Jindong haptic: Old · On tap" })).toBe(true);
     expect(isJindongAnnotation({ label: "Haptics TBD" })).toBe(false);

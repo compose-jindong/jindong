@@ -34,8 +34,10 @@ export function annotationLabel(cardName: string, trigger: Trigger): string {
   return `${MARKER}: ${cardName} · ${TRIGGER_LABEL[trigger]} — made with Jindong`;
 }
 
+// Only a note that starts like ours is ours; a teammate's note may mention Jindong haptics too.
 export function isJindongAnnotation(a: AnnotationLike): boolean {
-  return (a.labelMarkdown ?? a.label ?? "").includes(MARKER);
+  const text = (a.labelMarkdown ?? a.label ?? "").trimStart();
+  return text.startsWith(`**${MARKER}:**`) || text.startsWith(`${MARKER}:`);
 }
 
 /** Replaces our note with [next] (or removes it when null) and keeps everyone else's notes. */
