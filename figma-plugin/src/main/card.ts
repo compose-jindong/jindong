@@ -1,6 +1,6 @@
 import { CARD, displayWindowMs, layoutBars } from "../core/cardLayout";
 import { NAMESPACE, TONE_HEX, toTimeline, type PatternSpec } from "../core/model";
-import { isCard, writePattern } from "./storage";
+import { findCardsOnPage, isCard, writePattern } from "./storage";
 
 // The haptic card on the canvas: a plain frame the plugin redraws from its pattern.
 // Designers move it around; its locked layers are the plugin's to change. A designer may still turn
@@ -81,10 +81,13 @@ export async function createCard(p: PatternSpec): Promise<FrameNode> {
   writePattern(frame, p);
   const center = figma.viewport.center;
   const y = Math.round(center.y - CARD.height / 2);
-  // Step right past earlier cards, so a second card doesn't land exactly on the first.
-  const cards = figma.currentPage.children.filter((node) => node !== frame && isCard(node));
+  // Step right past earlier cards on this page, including ones inside sections, so a new card doesn't
+  // land on one.
+  const taken = findCardsOnPage(figma.currentPage).flatMap((card) =>
+    card.id !== frame.id && card.absoluteBoundingBox ? [card.absoluteBoundingBox] : [],
+  );
   let x = Math.round(center.x - CARD.width / 2);
-  while (cards.some((card) => overlaps(card, x, y))) x += CARD.width + CARD_GAP;
+  while (taken.some((box) => overlaps(box, x, y))) x += CARD.width + CARD_GAP;
   frame.x = x;
   frame.y = y;
   figma.currentPage.appendChild(frame);
@@ -105,8 +108,8 @@ export async function updateCard(nodeId: string, p: PatternSpec): Promise<CardNo
   return node;
 }
 
-function overlaps(node: SceneNode, x: number, y: number): boolean {
-  return node.x < x + CARD.width && x < node.x + node.width && node.y < y + CARD.height && y < node.y + node.height;
+function overlaps(box: Rect, x: number, y: number): boolean {
+  return box.x < x + CARD.width && x < box.x + box.width && box.y < y + CARD.height && y < box.y + box.height;
 }
 
 function place(frame: CardNode, node: SceneNode, x: number, y: number): void {

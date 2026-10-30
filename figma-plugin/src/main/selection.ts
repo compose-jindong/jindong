@@ -1,7 +1,6 @@
 import type { LayerWarning, SelectionState } from "../shared/messages";
 import { clashesWith } from "../core/codegen";
-import { NAMESPACE } from "../core/model";
-import { findCard, rawLink, readLink, readPattern } from "./storage";
+import { findCard, findCardsOnPage, rawLink, readLink, readPattern } from "./storage";
 
 export async function readSelection(): Promise<SelectionState> {
   const selection = figma.currentPage.selection;
@@ -65,8 +64,7 @@ function warningFor(node: SceneNode): LayerWarning {
 
 // Duplicated cards (⌘D, copy and paste) keep their name and land on the same page.
 function clashesOnPage(card: BaseNode, name: string): boolean {
-  const others = figma.currentPage
-    .findAllWithCriteria({ types: ["FRAME", "COMPONENT"], sharedPluginData: { namespace: NAMESPACE, keys: ["pattern"] } })
+  const others = findCardsOnPage(figma.currentPage)
     .filter((node) => node.id !== card.id)
     .flatMap((node) => readPattern(node)?.name ?? []);
   return clashesWith(name, others);

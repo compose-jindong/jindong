@@ -35,8 +35,38 @@ function fakeNode(type: string, id = `${type}:${Math.random()}`): FakeNode {
     },
     getSharedPluginData: (namespace: string, key: string) => data.get(`${namespace}/${key}`) ?? "",
     setSharedPluginData: (namespace: string, key: string, value: string) => data.set(`${namespace}/${key}`, value),
+    // Page coordinates: its own position plus its parents', up to the page.
+    get absoluteBoundingBox() {
+      let x = node.x ?? 0;
+      let y = node.y ?? 0;
+      for (let p = node.parent; p && p.type !== "PAGE" && p.type !== "DOCUMENT"; p = p.parent) {
+        x += p.x ?? 0;
+        y += p.y ?? 0;
+      }
+      return { x, y, width: node.width, height: node.height };
+    },
   };
   return node;
+}
+
+// Mirrors Figma's documented matching at any depth: one of `types`, and shared plugin data under the keys.
+function findAllWithCriteria(under: FakeNode) {
+  return ({ types, sharedPluginData }: { types: string[]; sharedPluginData: { namespace: string; keys: string[] } }) => {
+    const found: FakeNode[] = [];
+    const visit = (node: FakeNode) => {
+      for (const child of node.children) {
+        const tagged = sharedPluginData.keys.some((key) => child.getSharedPluginData(sharedPluginData.namespace, key) !== "");
+        if (types.includes(child.type) && tagged) found.push(child);
+        visit(child);
+      }
+    };
+    visit(under);
+    return found;
+  };
+}
+
+function overlapping(a: FakeNode, b: { x: number; y: number; width: number; height: number }): boolean {
+  return a.x < b.x + b.width && b.x < a.x + a.width && a.y < b.y + b.height && b.y < a.y + a.height;
 }
 
 function fakeText(): FakeNode {
@@ -151,20 +181,43 @@ describe("cards a designer has reshaped", () => {
     expect(legacy.children.length).toBe(drawn);
   });
 
-  test("a new card is placed beside an earlier one instead of on top of it", async () => {
+  function stubPage(): FakeNode {
     const page = fakeNode("PAGE", "0:1");
     page.selection = [];
+    page.findAllWithCriteria = findAllWithCriteria(page);
     vi.stubGlobal("figma", {
       ...(globalThis as unknown as { figma: object }).figma,
       createFrame: () => fakeNode("FRAME"),
       viewport: { center: { x: 500, y: 300 } },
       currentPage: page,
     });
+    return page;
+  }
+
+  test("a new card is placed beside an earlier one instead of on top of it", async () => {
+    const page = stubPage();
     const first = await createCard(presetNamed("Success"));
     const second = await createCard(presetNamed("Error"));
-    const overlap = second.x < first.x + first.width && first.x < second.x + second.width && second.y < first.y + first.height && first.y < second.y + second.height;
-    expect(overlap).toBe(false);
+    expect(overlapping(second, first)).toBe(false);
     expect(page.children).toEqual([first, second]);
+  });
+
+  test("a new card steps past cards inside sections too", async () => {
+    const page = stubPage();
+    const section = fakeNode("SECTION");
+    section.x = 300;
+    section.y = 100;
+    section.resize(1000, 600);
+    page.appendChild(section);
+    const inside = fakeNode("FRAME");
+    writePattern(inside as unknown as SceneNode, presetNamed("Success"));
+    inside.resize(280, 178);
+    // At (360, 211) on the page: right where a card centred on the viewport would go.
+    inside.x = 60;
+    inside.y = 111;
+    section.appendChild(inside);
+    const created = await createCard(presetNamed("Error"));
+    expect(overlapping(created, inside.absoluteBoundingBox)).toBe(false);
   });
 
   test("a card from a library file says where to edit it", async () => {

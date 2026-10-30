@@ -53,11 +53,21 @@ export function clearLink(node: BaseNode): void {
   node.setSharedPluginData(NAMESPACE, LINK_KEY, "");
 }
 
+const CARD_TYPES: ("FRAME" | "COMPONENT")[] = ["FRAME", "COMPONENT"];
+
 /** Every card in the file, across pages, including cards a designer turned into components. */
 export async function findCards(): Promise<(FrameNode | ComponentNode)[]> {
   await figma.loadAllPagesAsync();
   return figma.root.findAllWithCriteria({
-    types: ["FRAME", "COMPONENT"],
+    types: CARD_TYPES,
+    sharedPluginData: { namespace: NAMESPACE, keys: [PATTERN_KEY] },
+  });
+}
+
+/** Every card on [page], including cards inside sections and frames. */
+export function findCardsOnPage(page: PageNode): (FrameNode | ComponentNode)[] {
+  return page.findAllWithCriteria({
+    types: CARD_TYPES,
     sharedPluginData: { namespace: NAMESPACE, keys: [PATTERN_KEY] },
   });
 }
