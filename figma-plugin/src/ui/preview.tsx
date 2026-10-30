@@ -9,7 +9,8 @@ import "./styles.css";
 
 // A pretend Figma for trying the plugin window in a browser (`yarn preview:ui`). It keeps cards and
 // links in memory and answers the same messages the main thread does.
-// ?state=none|card|layer|linked|multiple picks the first selection; &chrome=0 hides the toolbar.
+// ?state=none|card|layer|linked|multiple picks the first selection; &chrome=0 hides the toolbar;
+// &page=<name> names the page the cards sit on, for checking long page names in the card list.
 
 const params = new URLSearchParams(location.search);
 const START: Record<string, string> = {
@@ -72,7 +73,7 @@ function handle(message: UiToMain) {
     case "list-cards":
       post({
         type: "cards",
-        cards: [...cards].map(([id, p]) => ({ id, name: p.name, tone: p.tone, pageName: "Haptics" })),
+        cards: [...cards].map(([id, p]) => ({ id, name: p.name, tone: p.tone, pageName: params.get("page") ?? "Haptics" })),
       });
       return;
     case "create-card": {
@@ -162,6 +163,19 @@ function Preview() {
             {label}
           </button>
         ))}
+        <strong>Elsewhere in “Figma”</strong>
+        <button
+          type="button"
+          className="secondary"
+          onClick={() => {
+            // A teammate (or undo) changes the card while the plugin is open.
+            const card = cards.get("card:1")!;
+            cards.set("card:1", { ...card, name: card.name === "Order placed" ? "Success" : "Order placed" });
+            if (selected === "card:1") select("card:1");
+          }}
+        >
+          Rename Success card
+        </button>
       </div>
     </div>
   );
