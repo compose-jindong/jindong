@@ -3,6 +3,7 @@ import {
   BROKEN_LINK_NOTICE,
   NO_HAPTIC_NOTICE,
   UNREADABLE_CARD_NOTICE,
+  UNREADABLE_LINKED_CARD_NOTICE,
   clashesWith,
   codeSections,
   hapticCode,
@@ -220,6 +221,20 @@ describe("codeSections", () => {
     ]);
     expect(UNREADABLE_CARD_NOTICE).toBe(
       "This haptic card can't be read. It may come from a newer version of the Jindong Figma plugin.",
+    );
+  });
+
+  test("a link to a card this version can't read says so rather than calling the card deleted", () => {
+    expect(
+      codeSections({
+        pattern: null,
+        link: { schema: 1, cardId: "9:9", trigger: "tap", cardName: "Success" },
+        linkedPattern: null,
+        unreadableCard: true,
+      }),
+    ).toEqual([{ title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_LINKED_CARD_NOTICE }]);
+    expect(UNREADABLE_LINKED_CARD_NOTICE).toBe(
+      "The Jindong haptic card linked to this layer can't be read. It may come from a newer version of the Jindong Figma plugin.",
     );
   });
 

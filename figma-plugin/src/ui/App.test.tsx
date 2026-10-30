@@ -349,6 +349,16 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "unlink", nodeId: "5:1" });
   });
 
+  test("a link to a card from a newer plugin version says so", () => {
+    const { emit } = setup();
+    emit({
+      type: "selection",
+      state: layer({ link: { schema: 1, cardId: "9:9", trigger: "tap" }, linkedCardUnreadable: true }),
+    });
+    expect(screen.getByText("The linked card can't be read. It may come from a newer version of the plugin.")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Remove link" })).toBeTruthy();
+  });
+
   test("a link broken by moving its card offers the card with the same name", () => {
     const { sent, emit } = setup();
     emit({

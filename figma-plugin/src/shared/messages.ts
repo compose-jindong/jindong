@@ -23,6 +23,8 @@ export type SelectionState =
       warning: LayerWarning;
       /** The link comes from the main component of this instance, so only the main component can remove it. */
       linkInherited?: boolean;
+      /** The linked card exists, but its data is from a plugin version this one can't read. */
+      linkedCardUnreadable?: boolean;
     };
 
 export interface CardSummary {

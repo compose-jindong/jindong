@@ -102,6 +102,20 @@ describe("readSelection", () => {
     expect(await readSelection()).toMatchObject({ kind: "layer", nodeId: "6:7", linkInherited: false });
   });
 
+  test("a link to a card from a newer plugin version is told apart from a deleted card", async () => {
+    const newer = fakeNode("9:7", "FRAME", page);
+    (newer as unknown as SceneNode).setSharedPluginData("jindong", "pattern", JSON.stringify({ ...presetNamed("Success"), schema: 2 }));
+    const button = fakeNode("6:10", "FRAME", page);
+    writeLink(button as unknown as SceneNode, { schema: 1, cardId: "9:7", trigger: "tap" });
+    select(button);
+    (figma as unknown as { getNodeByIdAsync: (id: string) => Promise<FakeNode | null> }).getNodeByIdAsync = async (id) =>
+      id === "9:7" ? newer : null;
+    expect(await readSelection()).toMatchObject({ kind: "layer", linkedPattern: null, linkedCardUnreadable: true });
+
+    writeLink(button as unknown as SceneNode, { schema: 1, cardId: "9:404", trigger: "tap" });
+    expect(await readSelection()).toMatchObject({ kind: "layer", linkedPattern: null, linkedCardUnreadable: false });
+  });
+
   test("a layer inside a main component warns that every instance gets its link", async () => {
     const component = fakeNode("6:8", "COMPONENT", page);
     select(fakeNode("6:9", "RECTANGLE", component));

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
-import { BROKEN_LINK_NOTICE, NO_HAPTIC_NOTICE, UNREADABLE_CARD_NOTICE } from "../core/codegen";
+import { BROKEN_LINK_NOTICE, NO_HAPTIC_NOTICE, UNREADABLE_CARD_NOTICE, UNREADABLE_LINKED_CARD_NOTICE } from "../core/codegen";
 import { presetNamed } from "../core/presets";
 import { registerCodegen } from "./devmode";
 import { writeLink, writePattern } from "./storage";
@@ -73,6 +73,17 @@ describe("Dev Mode codegen", () => {
     writeLink(button, { schema: 1, cardId: "9:404", trigger: "tap" });
     expect(await generate({ node: button, language: "jindong" })).toEqual([
       { title: "Jindong", language: "PLAINTEXT", code: BROKEN_LINK_NOTICE },
+    ]);
+  });
+
+  test("a link to a card this plugin version can't read says so instead of calling it deleted", async () => {
+    const newer = fakeNode("9:6");
+    newer.setSharedPluginData("jindong", "pattern", JSON.stringify({ ...presetNamed("Success"), schema: 2 }));
+    nodes.set("9:6", newer);
+    const button = fakeNode("5:2");
+    writeLink(button, { schema: 1, cardId: "9:6", trigger: "tap", cardName: "Success" });
+    expect(await generate({ node: button, language: "jindong" })).toEqual([
+      { title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_LINKED_CARD_NOTICE },
     ]);
   });
 

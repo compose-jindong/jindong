@@ -22,6 +22,9 @@ Ask your designer to link it again with the Jindong Figma plugin.`;
 export const UNREADABLE_CARD_NOTICE =
   "This haptic card can't be read. It may come from a newer version of the Jindong Figma plugin.";
 
+export const UNREADABLE_LINKED_CARD_NOTICE =
+  "The Jindong haptic card linked to this layer can't be read. It may come from a newer version of the Jindong Figma plugin.";
+
 const INDENT = "    ";
 const NAMED_INTENSITY: Record<number, string> = { 0.25: "LIGHT", 0.75: "STRONG", 1: "HIGH" };
 
@@ -175,12 +178,15 @@ export function codeSections(input: {
   pattern: PatternSpec | null;
   link: HapticLink | null;
   linkedPattern: PatternSpec | null;
-  /** The layer is a card whose data this plugin version can't read. */
+  /** The card the code would come from, selected or linked, has data this plugin version can't read. */
   unreadableCard?: boolean;
   /** The linked layer's name, for naming its tap counter. */
   layerName?: string;
 }): CodeSection[] {
-  if (input.unreadableCard) return [{ title: "Jindong", language: "PLAINTEXT", code: UNREADABLE_CARD_NOTICE }];
+  if (input.unreadableCard) {
+    const code = input.link ? UNREADABLE_LINKED_CARD_NOTICE : UNREADABLE_CARD_NOTICE;
+    return [{ title: "Jindong", language: "PLAINTEXT", code }];
+  }
   const setup: CodeSection = { title: "Setup", language: "KOTLIN", code: setupCode() };
   if (input.pattern) {
     return [{ title: "Pattern", language: "KOTLIN", code: patternCode(input.pattern) }, setup];

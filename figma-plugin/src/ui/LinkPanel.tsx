@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { TRIGGER_LABEL } from "../core/annotation";
-import { TONE_HEX, type Trigger } from "../core/model";
+import { TONE_HEX, type HapticLink, type Trigger } from "../core/model";
 import type { CardSummary, SelectionState } from "../shared/messages";
 import { Segmented } from "./EventInspector";
 
@@ -19,7 +19,7 @@ interface LinkPanelProps {
 const TRIGGERS: Trigger[] = ["tap", "enter", "state"];
 
 export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy = false }: LinkPanelProps) {
-  const { link, linkedPattern, warning, linkInherited } = state;
+  const { link, linkedPattern, warning, linkInherited, linkedCardUnreadable } = state;
   const [cardId, setCardId] = useState<string | null>(link && linkedPattern ? link.cardId : null);
   const [trigger, setTrigger] = useState<Trigger>(link?.trigger ?? "tap");
 
@@ -30,12 +30,26 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
 
   // A cut and paste gives a card a new id; a card with the remembered name is probably the same one.
   const suggestion =
-    link && !linkedPattern && link.cardName ? cards?.find((card) => card.name === link.cardName) : undefined;
+    link && !linkedPattern && !linkedCardUnreadable && link.cardName
+      ? cards?.find((card) => card.name === link.cardName)
+      : undefined;
   useEffect(() => {
     if (suggestion) setCardId((current) => current ?? suggestion.id);
   }, [suggestion]);
 
   const chosen = cards?.find((card) => card.id === cardId);
+
+  function linkSummary(link: HapticLink): string {
+    if (linkedPattern) {
+      const through = linkInherited ? " through its main component." : "";
+      return `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}${through}`;
+    }
+    if (linkedCardUnreadable) return "The linked card can't be read. It may come from a newer version of the plugin.";
+    if (suggestion) {
+      return `The linked card was moved or deleted. “${suggestion.name}” on ${suggestion.pageName} looks like it. Press Link haptic to link it again.`;
+    }
+    return "The linked card was deleted. Link another card or remove the link.";
+  }
 
   return (
     <div className="link-panel">
@@ -76,13 +90,7 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
 
           {link && (
             <div className={linkedPattern ? "current-link" : "current-link current-link-broken"}>
-              <p>
-                {linkedPattern
-                  ? `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}${linkInherited ? " through its main component." : ""}`
-                  : suggestion
-                    ? `The linked card was moved or deleted. “${suggestion.name}” on ${suggestion.pageName} looks like it. Press Link haptic to link it again.`
-                    : "The linked card was deleted. Link another card or remove the link."}
-              </p>
+              <p>{linkSummary(link)}</p>
               {!linkInherited && (
                 <button type="button" className="secondary" onClick={onUnlink} disabled={busy}>
                   Remove link
