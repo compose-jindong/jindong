@@ -1,7 +1,7 @@
 import type { LayerWarning, SelectionState } from "../shared/messages";
 import { clashesWith } from "../core/codegen";
-import { NAMESPACE, type HapticLink } from "../core/model";
-import { findCard, readLink, readPattern } from "./storage";
+import { NAMESPACE } from "../core/model";
+import { findCard, rawLink, readLink, readPattern } from "./storage";
 
 export async function readSelection(): Promise<SelectionState> {
   const selection = figma.currentPage.selection;
@@ -24,16 +24,26 @@ export async function readSelection(): Promise<SelectionState> {
     link,
     linkedPattern,
     warning: warningFor(node),
-    linkInherited: link ? await inheritsLink(node, link) : false,
+    linkInherited: link ? await inheritsLink(node) : false,
   };
 }
 
-// Figma lets an instance read its main component's plugin data, so a link set on the component shows here too.
-async function inheritsLink(node: SceneNode, link: HapticLink): Promise<boolean> {
+// Figma lets an instance read its main component's plugin data. An inherited link is the component's data
+// exactly; an instance's own copy records the instance as the layer it was set on. Layers inside an instance
+// can't be linked here, so a link on one comes from the component.
+async function inheritsLink(node: SceneNode): Promise<boolean> {
+  if (insideInstance(node)) return true;
   if (node.type !== "INSTANCE") return false;
   const main = await node.getMainComponentAsync();
-  const mainLink = main ? readLink(main) : null;
-  return mainLink !== null && mainLink.cardId === link.cardId && mainLink.trigger === link.trigger;
+  return main !== null && rawLink(main) !== "" && rawLink(main) === rawLink(node);
+}
+
+// A link on a layer inside a main component reaches that layer in every instance.
+function insideMainComponent(node: BaseNode): boolean {
+  for (let parent = node.parent; parent; parent = parent.parent) {
+    if (parent.type === "COMPONENT") return true;
+  }
+  return false;
 }
 
 /** True for layers inside an instance; links belong on the instance itself. */
@@ -49,7 +59,8 @@ function warningFor(node: SceneNode): LayerWarning {
   if (node.type === "COMPONENT") return "main-component";
   // Instances inherit from their variant, never from the set that holds it.
   if (node.type === "COMPONENT_SET") return "component-set";
-  return insideInstance(node) ? "inside-instance" : null;
+  if (insideInstance(node)) return "inside-instance";
+  return insideMainComponent(node) ? "inside-main-component" : null;
 }
 
 // Duplicated cards (⌘D, copy and paste) keep their name and land on the same page.

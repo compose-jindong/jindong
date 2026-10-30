@@ -36,6 +36,11 @@ export async function findCard(node: BaseNode): Promise<BaseNode | null> {
   return null;
 }
 
+/** The stored link exactly as Figma returns it; an instance without its own value returns its component's. */
+export function rawLink(node: BaseNode): string {
+  return node.getSharedPluginData(NAMESPACE, LINK_KEY);
+}
+
 export function readLink(node: BaseNode): HapticLink | null {
   return parseLinkJson(node.getSharedPluginData(NAMESPACE, LINK_KEY));
 }

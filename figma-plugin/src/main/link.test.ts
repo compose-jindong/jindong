@@ -10,7 +10,7 @@ function fakeLayer(id: string, reject: "nothing" | "links" | "everything" = "not
   let annotations: AnnotationLike[] = [{ label: "Spacing note" }];
   return {
     id,
-    type: "INSTANCE",
+    type: "FRAME",
     parent: null,
     getSharedPluginData: (namespace: string, key: string) => data.get(`${namespace}/${key}`) ?? "",
     setSharedPluginData: (namespace: string, key: string, value: string) => data.set(`${namespace}/${key}`, value),
@@ -23,6 +23,19 @@ function fakeLayer(id: string, reject: "nothing" | "links" | "everything" = "not
       annotations = next;
     },
   };
+}
+
+// Like Figma, an instance reads its main component's shared plugin data unless it has its own value.
+function instanceOf(id: string, main: ReturnType<typeof fakeLayer>) {
+  const layer = fakeLayer(id);
+  const own = new Map<string, string>();
+  return Object.assign(layer, {
+    type: "INSTANCE",
+    getSharedPluginData: (namespace: string, key: string) =>
+      own.get(`${namespace}/${key}`) || main.getSharedPluginData(namespace, key),
+    setSharedPluginData: (namespace: string, key: string, value: string) => own.set(`${namespace}/${key}`, value),
+    getMainComponentAsync: async () => main,
+  });
 }
 
 // Groups and boolean operations have no annotations in Figma's API.
@@ -62,7 +75,13 @@ describe("linkLayer", () => {
     const layer = fakeLayer("5:1");
     nodes.set("5:1", layer);
     expect((await linkLayer("5:1", "9:1", "tap")).annotation).toBe("added");
-    expect(readLink(layer as unknown as SceneNode)).toEqual({ schema: 1, cardId: "9:1", trigger: "tap", cardName: "Success" });
+    expect(readLink(layer as unknown as SceneNode)).toEqual({
+      schema: 1,
+      cardId: "9:1",
+      trigger: "tap",
+      cardName: "Success",
+      layerId: "5:1",
+    });
     expect(layer.annotations[0]).toEqual({ label: "Spacing note" });
     expect(layer.annotations[1]).toMatchObject({ categoryId: "category:haptics" });
     expect(layer.annotations[1].labelMarkdown).toContain("[Jindong](");
@@ -79,11 +98,33 @@ describe("linkLayer", () => {
     expect(layer.annotations[0]).toEqual({ label: "Spacing note" });
   });
 
+  test("linking an instance to the haptic its main component gives it keeps it following the component", async () => {
+    const main = fakeLayer("3:1");
+    writeLink(main as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap", layerId: "3:1" });
+    const instance = instanceOf("3:3", main);
+    nodes.set("3:3", instance);
+    expect(await linkLayer("3:3", "9:1", "tap")).toMatchObject({ inherited: true });
+    expect(instance.getSharedPluginData("jindong", "link")).toBe(main.getSharedPluginData("jindong", "link"));
+  });
+
+  test("a link records the layer it was set on", async () => {
+    const layer = fakeLayer("5:4");
+    nodes.set("5:4", layer);
+    await linkLayer("5:4", "9:1", "tap");
+    expect(readLink(layer as unknown as SceneNode)).toMatchObject({ layerId: "5:4" });
+  });
+
   test("a group is linked and reported as unable to hold a note", async () => {
     const group = fakeGroup("5:2");
     nodes.set("5:2", group);
     expect((await linkLayer("5:2", "9:1", "tap")).annotation).toBe("unsupported");
-    expect(readLink(group as unknown as SceneNode)).toEqual({ schema: 1, cardId: "9:1", trigger: "tap", cardName: "Success" });
+    expect(readLink(group as unknown as SceneNode)).toEqual({
+      schema: 1,
+      cardId: "9:1",
+      trigger: "tap",
+      cardName: "Success",
+      layerId: "5:2",
+    });
   });
 
   test("a layer that refuses every note is reported as rejected", async () => {
@@ -97,6 +138,26 @@ describe("linkLayer", () => {
 describe("unlinkLayer", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  test("removing an instance's own link falls back to its main component's link and drops the instance's note", async () => {
+    const main = fakeLayer("3:1");
+    writeLink(main as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap", layerId: "3:1" });
+    const instance = instanceOf("3:3", main);
+    writeLink(instance as unknown as SceneNode, { schema: 1, cardId: "9:2", trigger: "enter", layerId: "3:3" });
+    instance.annotations = [{ label: "Spacing note" }, { labelMarkdown: "**Jindong haptic:** Success · On screen enter" }];
+    vi.stubGlobal("figma", { getNodeByIdAsync: async (id: string) => (id === "3:3" ? instance : null) });
+    expect(await unlinkLayer("3:3")).toEqual({ inheritsFromMain: true });
+    expect(readLink(instance as unknown as SceneNode)).toMatchObject({ cardId: "9:1", trigger: "tap" });
+    expect(instance.annotations).toEqual([{ label: "Spacing note" }]);
+  });
+
+  test("an ordinary layer's link is simply removed", async () => {
+    const layer = fakeLayer("3:4");
+    writeLink(layer as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap", layerId: "3:4" });
+    vi.stubGlobal("figma", { getNodeByIdAsync: async () => layer });
+    expect(await unlinkLayer("3:4")).toEqual({ inheritsFromMain: false });
+    expect(readLink(layer as unknown as SceneNode)).toBeNull();
   });
 
   test("a link an instance inherits from its main component can't be removed on the instance", async () => {

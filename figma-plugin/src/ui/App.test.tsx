@@ -313,6 +313,29 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Link haptic" })).toBeNull();
   });
 
+  test("a layer inside an instance shows the link it gets from its main component", () => {
+    const { emit } = setup();
+    emit({
+      type: "selection",
+      state: layer({
+        warning: "inside-instance",
+        link: { schema: 1, cardId: "9:1", trigger: "tap" },
+        linkedPattern: presetNamed("Success"),
+      }),
+    });
+    expect(screen.getByText("Linked to Success · On tap through its main component.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Link haptic" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Remove link" })).toBeNull();
+  });
+
+  test("a layer inside a main component says every instance gets its link", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: layer({ warning: "inside-main-component" }) });
+    expect(
+      screen.getByText("This layer is inside a main component, so every instance of the component gets this link."),
+    ).toBeTruthy();
+  });
+
   test("a main component says every instance gets the link", () => {
     const { emit } = setup();
     emit({ type: "selection", state: layer({ warning: "main-component" }) });

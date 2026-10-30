@@ -7,7 +7,7 @@ import {
 } from "../core/annotation";
 import { SCHEMA_VERSION, type Trigger } from "../core/model";
 import { insideInstance } from "./selection";
-import { clearLink, readLink, readPattern, writeLink } from "./storage";
+import { clearLink, rawLink, readLink, readPattern, writeLink } from "./storage";
 
 // A link points a UI layer at a card. The Dev Mode note is written once, when linking.
 
@@ -18,13 +18,24 @@ export async function linkLayer(
   nodeId: string,
   cardId: string,
   trigger: Trigger,
-): Promise<{ annotation: NoteResult; layerType: string }> {
+): Promise<{ annotation: NoteResult; layerType: string; inherited?: boolean }> {
   const node = await sceneNode(nodeId);
   const pattern = readPattern(await figma.getNodeByIdAsync(cardId));
   if (!pattern) throw new Error("That card no longer exists.");
   if (insideInstance(node)) throw new Error("Select the instance itself, not a layer inside it.");
 
-  writeLink(node, { schema: SCHEMA_VERSION, cardId, trigger, cardName: pattern.name });
+  // Asking an instance for exactly what its main component gives it: drop any copy so it keeps following.
+  if (node.type === "INSTANCE") {
+    const main = await node.getMainComponentAsync();
+    const mainLink = main ? readLink(main) : null;
+    if (mainLink && mainLink.cardId === cardId && mainLink.trigger === trigger) {
+      clearLink(node);
+      setJindongAnnotation(node, null);
+      return { annotation: "added", layerType: node.type, inherited: true };
+    }
+  }
+
+  writeLink(node, { schema: SCHEMA_VERSION, cardId, trigger, cardName: pattern.name, layerId: node.id });
   if (!("annotations" in node)) return { annotation: "unsupported", layerType: node.type };
 
   const categoryId = await hapticsCategoryId();
@@ -53,16 +64,20 @@ export function linkNoteStatus(result: NoteResult, layerType: string): { tone: "
   }
 }
 
-export async function unlinkLayer(nodeId: string): Promise<void> {
+/** Removes the layer's own link. An instance then shows its main component's link, if it has one. */
+export async function unlinkLayer(nodeId: string): Promise<{ inheritsFromMain: boolean }> {
   const node = await sceneNode(nodeId);
+  const before = rawLink(node);
   clearLink(node);
-  // An instance shows its main component's link once its own value is gone; that one isn't ours to remove.
-  if (readLink(node)) {
+  const after = rawLink(node);
+  // Nothing changed: the link was the main component's all along, and isn't this layer's to remove.
+  if (after !== "" && after === before) {
     throw new Error(
       "This link comes from the main component, so every instance has it. Remove it on the main component.",
     );
   }
   setJindongAnnotation(node, null);
+  return { inheritsFromMain: after !== "" };
 }
 
 async function sceneNode(nodeId: string): Promise<SceneNode> {

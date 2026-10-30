@@ -42,6 +42,8 @@ export interface HapticLink {
   trigger: Trigger;
   /** The card's name when linked, for finding it again after a cut and paste gives it a new id. */
   cardName?: string;
+  /** The layer the link was set on. An instance showing a link with another layer's id inherited it. */
+  layerId?: string;
 }
 
 export interface TimelineEvent {
@@ -121,6 +123,7 @@ export function parseLinkJson(json: string): HapticLink | null {
     if (isRecord(v) && v.schema === SCHEMA_VERSION && typeof v.cardId === "string" && v.cardId && isTrigger(v.trigger)) {
       const link: HapticLink = { schema: SCHEMA_VERSION, cardId: v.cardId, trigger: v.trigger };
       if (typeof v.cardName === "string") link.cardName = v.cardName;
+      if (typeof v.layerId === "string") link.layerId = v.layerId;
       return link;
     }
   } catch {

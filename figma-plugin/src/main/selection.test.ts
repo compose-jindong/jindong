@@ -93,6 +93,21 @@ describe("readSelection", () => {
     expect(await readSelection()).toMatchObject({ kind: "layer", nodeId: "6:5", linkInherited: false });
   });
 
+  test("an instance's own copy of its main component's link is its own, not inherited", async () => {
+    const main = fakeNode("6:6", "COMPONENT", page);
+    writeLink(main as unknown as SceneNode, { schema: 1, cardId: "9:9", trigger: "tap", layerId: "6:6" });
+    const copy = instanceOf("6:7", main, page);
+    writeLink(copy as unknown as SceneNode, { schema: 1, cardId: "9:9", trigger: "tap", layerId: "6:7" });
+    select(copy);
+    expect(await readSelection()).toMatchObject({ kind: "layer", nodeId: "6:7", linkInherited: false });
+  });
+
+  test("a layer inside a main component warns that every instance gets its link", async () => {
+    const component = fakeNode("6:8", "COMPONENT", page);
+    select(fakeNode("6:9", "RECTANGLE", component));
+    expect(await readSelection()).toMatchObject({ kind: "layer", warning: "inside-main-component" });
+  });
+
   test("an ordinary layer stays a layer", async () => {
     const frame = fakeNode("5:1", "FRAME", page);
     const button = fakeNode("5:2", "INSTANCE", frame);

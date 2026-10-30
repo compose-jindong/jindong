@@ -45,9 +45,23 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
       </header>
 
       {warning === "inside-instance" ? (
-        <p className="callout">This layer is inside an instance. Select the instance itself to link a haptic.</p>
+        link && linkedPattern ? (
+          <>
+            <div className="current-link">
+              <p>{`Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]} through its main component.`}</p>
+            </div>
+            <p className="callout">This layer is inside an instance. Change its link on the main component.</p>
+          </>
+        ) : (
+          <p className="callout">This layer is inside an instance. Select the instance itself to link a haptic.</p>
+        )
       ) : (
         <>
+          {warning === "inside-main-component" && (
+            <p className="callout">
+              This layer is inside a main component, so every instance of the component gets this link.
+            </p>
+          )}
           {warning === "component-set" && (
             <p className="callout">
               This is a component set. Instances get links from their variant, not the set — link a variant or an

@@ -106,14 +106,21 @@ async function handle(message: UiToMain): Promise<void> {
         return;
       }
       case "link": {
-        const { annotation, layerType } = await linkLayer(message.nodeId, message.cardId, message.trigger);
+        const { annotation, layerType, inherited } = await linkLayer(message.nodeId, message.cardId, message.trigger);
+        if (inherited) {
+          await finish("success", "Linked through its main component, so this instance keeps following the component.");
+          return;
+        }
         const status = linkNoteStatus(annotation, layerType);
         await finish(status.tone, status.message);
         return;
       }
       case "unlink":
-        await unlinkLayer(message.nodeId);
-        await finish("success", "Link removed.");
+        if ((await unlinkLayer(message.nodeId)).inheritsFromMain) {
+          await finish("success", "Link removed. This instance now follows its main component's haptic.");
+        } else {
+          await finish("success", "Link removed.");
+        }
         return;
     }
   } catch (error) {
