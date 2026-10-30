@@ -15,6 +15,12 @@ type Tab = "main" | "code";
 const STATUS_MS = { success: 4000, warning: 10_000, error: 10_000 } as const;
 const STILL_WORKING_MS = 10_000;
 const BUSY_TIMEOUT_MS = 60_000;
+const STILL_WORKING: Status = { type: "status", tone: "warning", message: "Still working… Large files can take a moment." };
+const NO_ANSWER: Status = {
+  type: "status",
+  tone: "warning",
+  message: "Figma didn't answer. Check the canvas before trying again.",
+};
 const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to include them in the code.";
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
@@ -75,11 +81,13 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
     return unsubscribe;
   }, [bridge]);
 
+  // "Still working" stays up for as long as the request does; the reply replaces it.
+  const holdStatus = busy && status === STILL_WORKING;
   useEffect(() => {
-    if (!status) return;
+    if (!status || holdStatus) return;
     const timer = setTimeout(() => setStatus(null), STATUS_MS[status.tone]);
     return () => clearTimeout(timer);
-  }, [status]);
+  }, [status, holdStatus]);
 
   const requestCards = useCallback(() => bridge.send({ type: "list-cards" }), [bridge]);
 
@@ -101,13 +109,11 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   // only give up waiting if the main thread never answers.
   useEffect(() => {
     if (!busy) return;
-    const stillWorking = setTimeout(
-      () => setStatus({ type: "status", tone: "warning", message: "Still working… Large files can take a moment." }),
-      STILL_WORKING_MS,
-    );
+    const stillWorking = setTimeout(() => setStatus(STILL_WORKING), STILL_WORKING_MS);
     const giveUp = setTimeout(() => {
       busyRef.current = false;
       setBusy(false);
+      setStatus(NO_ANSWER);
     }, BUSY_TIMEOUT_MS);
     return () => {
       clearTimeout(stillWorking);

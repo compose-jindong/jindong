@@ -92,6 +92,24 @@ describe("App", () => {
       expect(sent.filter((m) => m.type === "create-card")).toHaveLength(1);
       act(() => vi.advanceTimersByTime(60_000));
       expect(screen.getByRole("button", { name: "Create card" })).toHaveProperty("disabled", false);
+      expect(screen.getByRole("status").textContent).toBe("Figma didn't answer. Check the canvas before trying again.");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("the still-working message stays until the reply replaces it", () => {
+    vi.useFakeTimers();
+    try {
+      const { emit } = setup();
+      emit({ type: "selection", state: { kind: "none" } });
+      fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+      fireEvent.click(screen.getByRole("button", { name: "Create card" }));
+      // One step at a time, so each timer's effects run before the next one is due.
+      for (let second = 0; second < 25; second++) act(() => vi.advanceTimersByTime(1000));
+      expect(screen.getByRole("status").textContent).toBe("Still working… Large files can take a moment.");
+      emit({ type: "status", tone: "success", message: "Card created." });
+      expect(screen.getByRole("status").textContent).toBe("Card created.");
     } finally {
       vi.useRealTimers();
     }
