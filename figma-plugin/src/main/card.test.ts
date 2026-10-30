@@ -124,6 +124,17 @@ describe("cards a designer has reshaped", () => {
     expect(node.children.length).toBe(drawn + 2);
   });
 
+  test("a designer's layers stay above the redrawn card, in their order", async () => {
+    const node = card("FRAME", "7:11");
+    await updateCard("7:11", presetNamed("Success"));
+    const sticker = fakeNode("RECTANGLE");
+    const note = fakeText();
+    node.appendChild(sticker);
+    node.appendChild(note);
+    await updateCard("7:11", presetNamed("Heartbeat"));
+    expect(node.children.slice(-2)).toEqual([sticker, note]);
+  });
+
   test("a card drawn by an earlier build is redrawn once, not on top of itself", async () => {
     const fresh = card("FRAME", "7:9");
     await updateCard("7:9", presetNamed("Success"));

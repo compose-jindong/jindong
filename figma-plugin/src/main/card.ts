@@ -25,6 +25,7 @@ export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void>
   for (const child of [...frame.children]) {
     if (isPart(child) || (unmarked && child.locked)) child.remove();
   }
+  const kept = [...frame.children];
 
   frame.name = `Haptic / ${p.name}`;
   frame.layoutMode = "NONE";
@@ -63,6 +64,8 @@ export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void>
   placeRight(frame, text(`${windowMs} ms`, REGULAR, 10, "#A1A1AA"), 132);
   place(frame, text("jindong", SEMI_BOLD, 11, "#52525B"), 14, 152);
   placeRight(frame, text(`${timeline.durationMs} ms`, REGULAR, 11, "#A1A1AA"), 152);
+  // The redrawn layers went on top; a designer's own layers go back above them, in their order.
+  for (const child of kept) frame.appendChild(child);
 
   frame.setRelaunchData({ edit: "Edit this haptic in Jindong" });
 }
