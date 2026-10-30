@@ -148,7 +148,9 @@ function CardList({
         >
           <span className="card-dot" style={{ background: TONE_HEX[card.tone] }} />
           <span className="card-option-name">{card.name}</span>
-          <span className="card-option-page">{card.pageName}</span>
+          <span className="card-option-page" title={card.pageName}>
+            {card.pageName}
+          </span>
         </button>
       ))}
     </div>

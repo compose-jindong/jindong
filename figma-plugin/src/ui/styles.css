@@ -618,7 +618,8 @@ input[type="range"] {
 
 .card-option {
   display: grid;
-  grid-template-columns: 8px minmax(0, 1fr) auto;
+  /* A long page name gives way to the card name. */
+  grid-template-columns: 8px minmax(0, 1fr) fit-content(40%);
   align-items: center;
   gap: 10px;
   padding: 8px 12px;
@@ -658,8 +659,11 @@ input[type="range"] {
 }
 
 .card-option-page {
+  overflow: hidden;
   color: var(--text-tertiary);
   font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
 }
 
 .link-panel .segmented {
