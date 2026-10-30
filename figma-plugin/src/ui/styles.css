@@ -237,19 +237,23 @@ button:disabled {
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .playing .bar {
-    opacity: 0.3;
-    animation: flash var(--flash) ease-out var(--delay) forwards;
-  }
+/* Every bar dims evenly during playback, selected or not, so only the lit one stands out. */
+.timeline-svg.playing .bar {
+  opacity: 0.3;
 }
 
-@keyframes flash {
-  from {
-    opacity: 1;
+.timeline-svg.playing .bar.lit {
+  opacity: 1;
+}
+
+/* An event lights up at once and fades as it ends. */
+@media (prefers-reduced-motion: no-preference) {
+  .timeline-svg.playing .bar {
+    transition: opacity 200ms ease-out;
   }
-  to {
-    opacity: 0.3;
+
+  .timeline-svg.playing .bar.lit {
+    transition: none;
   }
 }
 

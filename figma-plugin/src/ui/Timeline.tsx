@@ -18,6 +18,7 @@ const FLASH_MS = 160;
 export function Timeline({ pattern, width, height, selectedIndex, onSelect, detailed = false }: TimelineProps) {
   const [playCount, setPlayCount] = useState(0);
   const [playing, setPlaying] = useState(false);
+  const [lit, setLit] = useState<ReadonlySet<number>>(new Set());
   const timeline = toTimeline(pattern);
   const windowMs = displayWindowMs(timeline.durationMs);
   const inset = detailed ? 8 : 4;
@@ -25,14 +26,31 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
   const bars = layoutBars(timeline, box, windowMs);
   const tone = TONE_HEX[pattern.tone];
   const sweep = (timeline.durationMs / windowMs) * box.width;
-  // Playback ends on a timer rather than on the playhead's animation, which never runs under Reduce Motion.
-  const playMs = Math.max(timeline.durationMs, ...timeline.events.map((e) => e.startMs + Math.max(e.durationMs, FLASH_MS)));
+  const litMs = (e: { startMs: number; durationMs: number }) => e.startMs + Math.max(e.durationMs, FLASH_MS);
+  const playMs = Math.max(timeline.durationMs, ...timeline.events.map(litMs));
 
+  // Playback runs on timers rather than on animation, which never runs under Reduce Motion: each event is lit
+  // while it plays, and playback ends on time. It plays the rhythm as it was when Preview rhythm was pressed.
   useEffect(() => {
     if (!playing) return;
-    const timer = setTimeout(() => setPlaying(false), playMs);
-    return () => clearTimeout(timer);
-  }, [playing, playCount, playMs]);
+    const timers = timeline.events.flatMap((event, index) => [
+      setTimeout(() => setLit((current) => new Set(current).add(index)), event.startMs),
+      setTimeout(
+        () =>
+          setLit((current) => {
+            const next = new Set(current);
+            next.delete(index);
+            return next;
+          }),
+        litMs(event),
+      ),
+    ]);
+    timers.push(setTimeout(() => setPlaying(false), playMs));
+    return () => {
+      timers.forEach(clearTimeout);
+      setLit(new Set());
+    };
+  }, [playing, playCount]);
 
   return (
     <div className={detailed ? "timeline timeline-detailed" : "timeline"}>
@@ -45,16 +63,12 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
         aria-label={detailed ? `${pattern.name} rhythm, ${timeline.durationMs} ms` : undefined}
       >
         {bars.map((bar) => {
-          const event = timeline.events[bar.index];
           const selected = bar.index === selectedIndex;
-          const style = {
-            "--delay": `${event.startMs}ms`,
-            "--flash": `${Math.max(event.durationMs, FLASH_MS)}ms`,
-          } as CSSProperties;
           const hitX = bar.kind === "continuous" ? bar.x : bar.x - HIT_WIDTH / 2;
           const hitWidth = bar.kind === "continuous" ? Math.max(bar.width, HIT_WIDTH) : HIT_WIDTH;
+          const className = ["bar", selected && "selected", lit.has(bar.index) && "lit"].filter(Boolean).join(" ");
           return (
-            <g key={bar.index} className={selected ? "bar selected" : "bar"} style={style}>
+            <g key={bar.index} className={className}>
               {bar.kind === "continuous" ? (
                 <rect x={bar.x} y={bar.y} width={bar.width} height={bar.height} rx={1.5} fill={tone} />
               ) : (

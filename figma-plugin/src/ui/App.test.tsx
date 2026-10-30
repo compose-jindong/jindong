@@ -466,6 +466,30 @@ describe("App", () => {
     expect(screen.queryByRole("tab", { name: "Code" })).toBeNull();
   });
 
+  test("Preview rhythm lights each event while it plays, with timers rather than animation (Reduce Motion)", () => {
+    vi.useFakeTimers();
+    try {
+      const { emit } = setup();
+      // Success: buzzes at 0, 150 and 300 ms, each lit for at least 160 ms.
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.click(screen.getByRole("button", { name: /Preview rhythm/ }));
+      const lit = () =>
+        [...screen.getByRole("img", { name: /Success rhythm/ }).querySelectorAll("g.bar")].map((bar) =>
+          bar.classList.contains("lit"),
+        );
+      act(() => vi.advanceTimersByTime(10));
+      expect(lit()).toEqual([true, false, false]);
+      act(() => vi.advanceTimersByTime(190));
+      expect(lit()).toEqual([false, true, false]);
+      act(() => vi.advanceTimersByTime(120));
+      expect(lit()).toEqual([false, false, true]);
+      act(() => vi.advanceTimersByTime(200));
+      expect(lit()).toEqual([false, false, false]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("Preview rhythm ends on time even when no animation runs (Reduce Motion)", () => {
     vi.useFakeTimers();
     try {
