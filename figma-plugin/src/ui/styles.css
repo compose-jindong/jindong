@@ -481,6 +481,16 @@ input[type="range"] {
   background: var(--bg);
 }
 
+.changed-elsewhere {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+}
+
+.changed-elsewhere p {
+  margin: 0;
+}
+
 .form-error {
   margin: 0;
   color: var(--danger);

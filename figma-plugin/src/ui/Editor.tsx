@@ -4,13 +4,21 @@ import { LIMITS, TONE_HEX, normalizePattern, validatePattern, type PatternSpec, 
 import { EventInspector, RangeField } from "./EventInspector";
 import { Timeline } from "./Timeline";
 
+/** Edits not yet on the card, with the saved pattern they started from. */
+export interface UnsavedEdits {
+  base: PatternSpec;
+  pattern: PatternSpec;
+}
+
 interface EditorProps {
   mode: "create" | "update";
   initial: PatternSpec;
   onSubmit: (pattern: PatternSpec) => void;
   onBack?: () => void;
-  /** Reports whether the draft differs from [initial], the pattern last saved to the card. */
-  onDirtyChange?: (dirty: boolean) => void;
+  /** Edits left on this card earlier, picked up again. */
+  resume?: UnsavedEdits;
+  /** Reports the edits that differ from [initial], the pattern last saved to the card, or null when there are none. */
+  onUnsavedChange?: (edits: UnsavedEdits | null) => void;
   /** An earlier request is still being handled. */
   busy?: boolean;
   /** Receives every edit, so a new haptic's tweaks can outlive this editor. */
@@ -19,25 +27,41 @@ interface EditorProps {
 
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
-export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = false, onDraftChange }: EditorProps) {
-  const [draft, setDraft] = useState(initial);
+export function Editor({
+  mode,
+  initial,
+  onSubmit,
+  onBack,
+  resume,
+  onUnsavedChange,
+  busy = false,
+  onDraftChange,
+}: EditorProps) {
+  const [edits, setEdits] = useState<UnsavedEdits>(() => resume ?? { base: initial, pattern: initial });
+  const draft = edits.pattern;
+  const setDraft = (pattern: PatternSpec) => setEdits((current) => ({ ...current, pattern }));
   const [selected, setSelected] = useState(0);
   const index = Math.min(selected, draft.events.length - 1);
   const validation = validatePattern(draft);
   const dirty = !samePattern(draft, initial);
+  const changedElsewhere = dirty && !samePattern(edits.base, initial);
 
   // The saved card can change underneath (undo, a teammate's edit). Without unsaved edits, show the new values;
-  // with them, keep the edits so Update card is a deliberate overwrite.
+  // with them, keep the edits and say so, so Update card is a deliberate overwrite.
   const saved = useRef(initial);
   useEffect(() => {
     if (saved.current === initial) return;
-    setDraft((current) => (samePattern(current, saved.current) ? initial : current));
     saved.current = initial;
+    setEdits((current) =>
+      samePattern(current.pattern, current.base) || samePattern(current.pattern, initial)
+        ? { base: initial, pattern: initial }
+        : current,
+    );
   }, [initial]);
 
   useEffect(() => {
-    onDirtyChange?.(dirty);
-  }, [dirty, onDirtyChange]);
+    onUnsavedChange?.(dirty ? edits : null);
+  }, [dirty, edits, onUnsavedChange]);
 
   useEffect(() => {
     onDraftChange?.(draft);
@@ -121,6 +145,14 @@ export function Editor({ mode, initial, onSubmit, onBack, onDirtyChange, busy = 
       </div>
 
       <div className="editor-footer">
+        {changedElsewhere && (
+          <div className="callout changed-elsewhere">
+            <p>This card changed in Figma while you were editing. Update card replaces that change with yours.</p>
+            <button type="button" className="secondary" onClick={() => setEdits({ base: initial, pattern: initial })}>
+              Discard my edits
+            </button>
+          </div>
+        )}
         {!validation.ok && <p className="form-error">{validation.error}</p>}
         <button
           type="button"

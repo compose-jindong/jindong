@@ -188,6 +188,46 @@ describe("App", () => {
     ).toBeTruthy();
   });
 
+  test("unsaved edits to a card survive clicking away and back", () => {
+    const { emit } = setup();
+    const card = { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } as const;
+    emit({ type: "selection", state: card });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Payment done" } });
+    emit({ type: "selection", state: { kind: "none" } });
+    emit({ type: "selection", state: card });
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Payment done");
+    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", false);
+  });
+
+  test("a saved card starts clean the next time it's opened", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Payment done" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
+    const saved = { ...presetNamed("Success"), name: "Payment done" };
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: saved } });
+    emit({ type: "status", tone: "success", message: "Card updated." });
+    emit({ type: "selection", state: { kind: "none" } });
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...saved, name: "Renamed later" } } });
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Renamed later");
+  });
+
+  test("a change made elsewhere while you edit is announced, and your edits can be dropped", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+    emit({
+      type: "selection",
+      state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Teammate" } },
+    });
+    expect(
+      screen.getByText("This card changed in Figma while you were editing. Update card replaces that change with yours."),
+    ).toBeTruthy();
+    fireEvent.click(screen.getByRole("button", { name: "Discard my edits" }));
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Teammate");
+    expect(screen.queryByRole("button", { name: "Discard my edits" })).toBeNull();
+  });
+
   test("Update card waits for a change", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });

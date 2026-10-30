@@ -4,7 +4,7 @@ import type { PatternSpec } from "../core/model";
 import type { CardSummary, MainToUi, SelectionState, UiToMain } from "../shared/messages";
 import { figmaBridge, type Bridge } from "./bridge";
 import { CodePanel } from "./CodePanel";
-import { Editor } from "./Editor";
+import { Editor, type UnsavedEdits } from "./Editor";
 import { Gallery } from "./Gallery";
 import { LinkPanel } from "./LinkPanel";
 
@@ -31,6 +31,19 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const selectedNodeId = useRef<string | null>(null);
+  // Unsaved edits per card, so clicking another layer and coming back doesn't lose them. Edits that reach the
+  // card (Update card) or get discarded leave nothing behind.
+  const cardEdits = useRef(new Map<string, UnsavedEdits>());
+  const editedCardId = selection?.kind === "card" ? selection.nodeId : null;
+  const rememberEdits = useCallback(
+    (edits: UnsavedEdits | null) => {
+      if (editedCardId === null) return;
+      if (edits) cardEdits.current.set(editedCardId, edits);
+      else cardEdits.current.delete(editedCardId);
+      setUnsaved(edits !== null);
+    },
+    [editedCardId],
+  );
 
   useEffect(() => {
     const unsubscribe = bridge.subscribe((message) => {
@@ -144,8 +157,9 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
               key={nodeId}
               mode="update"
               initial={pattern}
+              resume={cardEdits.current.get(nodeId)}
               onSubmit={(next) => act({ type: "update-card", nodeId, pattern: next })}
-              onDirtyChange={setUnsaved}
+              onUnsavedChange={rememberEdits}
               busy={busy}
             />
           </Tabbed>
