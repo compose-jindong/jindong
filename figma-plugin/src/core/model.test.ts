@@ -83,6 +83,10 @@ describe("normalizePattern", () => {
     expect(validatePattern(n).ok).toBe(true);
   });
 
+  test("shortening a name never cuts an emoji in half", () => {
+    expect(normalizePattern({ ...SUCCESS, name: "x".repeat(39) + "🎉" }).name).toBe("x".repeat(39));
+  });
+
   test("drops a stray length from taps", () => {
     const n = normalizePattern(pattern([{ ...tap(0), durationMs: 30 } as never], 0));
     expect(n.events[0]).toEqual(tap(0));

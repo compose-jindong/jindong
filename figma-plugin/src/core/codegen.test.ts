@@ -78,6 +78,11 @@ describe("uniqueCardName", () => {
     expect(uniqueCardName(long, [long])).toBe(`${"x".repeat(38)} 2`);
   });
 
+  test("making room for the number never cuts an emoji in half", () => {
+    const party = `${"x".repeat(37)}🎉`;
+    expect(uniqueCardName(party, [party])).toBe(`${"x".repeat(37)} 2`);
+  });
+
   test("clash detection compares Kotlin values, not text", () => {
     expect(clashesWith("Pay-ok", ["pay ok"])).toBe(true);
     expect(clashesWith("Pay OK", ["pay ok"])).toBe(false);

@@ -94,11 +94,19 @@ export function validatePattern(value: unknown): { ok: true; pattern: PatternSpe
   };
 }
 
+/** The start of [text], at most [maxUnits] UTF-16 units long, without cutting an emoji or other character in two. */
+export function clipText(text: string, maxUnits: number): string {
+  if (text.length <= maxUnits) return text;
+  const last = text.charCodeAt(maxUnits - 1);
+  const splitsPair = last >= 0xd800 && last <= 0xdbff;
+  return text.slice(0, splitsPair ? maxUnits - 1 : maxUnits);
+}
+
 /** Clamps editor input into data that passes [validatePattern], apart from the event count and name. */
 export function normalizePattern(p: PatternSpec): PatternSpec {
   return {
     schema: SCHEMA_VERSION,
-    name: p.name.trim().slice(0, LIMITS.maxNameLength).trim(),
+    name: clipText(p.name.trim(), LIMITS.maxNameLength).trim(),
     description: p.description,
     tone: p.tone,
     events: p.events.slice(0, LIMITS.maxEvents).map(normalizeEvent),

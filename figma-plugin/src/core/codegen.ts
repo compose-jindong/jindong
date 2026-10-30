@@ -1,4 +1,4 @@
-import { LIMITS, type HapticEvent, type HapticLink, type PatternSpec, type Trigger } from "./model";
+import { LIMITS, clipText, type HapticEvent, type HapticLink, type PatternSpec, type Trigger } from "./model";
 import { DOCS_URL, JINDONG_VERSION } from "./version";
 
 // Kotlin for the Jindong 2.0 API. Generated code must compile and replay the card's timeline;
@@ -68,7 +68,7 @@ export function uniqueCardName(name: string, takenNames: readonly string[]): str
   if (!clashesWith(name, takenNames)) return name;
   for (let n = 2; ; n++) {
     const suffix = ` ${n}`;
-    const candidate = `${name.slice(0, LIMITS.maxNameLength - suffix.length).trimEnd()}${suffix}`;
+    const candidate = `${clipText(name, LIMITS.maxNameLength - suffix.length).trimEnd()}${suffix}`;
     if (!clashesWith(candidate, takenNames)) return candidate;
   }
 }
