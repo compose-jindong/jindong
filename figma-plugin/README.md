@@ -25,6 +25,10 @@ A few things the plugin handles for you:
   so several tappable layers can be pasted into one composable. Two layers with the same name and the same haptic
   still share a name; rename one of the layers.
 - Selecting a layer inside a card, or an instance of a card that was turned into a component, opens that card.
+- Unsaved edits to a card wait while you select other layers. If the card changes meanwhile (undo, a teammate),
+  the plugin says so; **Update card** then replaces that change, and **Discard my edits** takes it instead.
+- Layers you add inside a card stay on top of it when the plugin redraws it.
+- A new card lands beside the cards already on the page, including cards inside sections.
 - Groups, sections and a few other layer types can't hold Dev Mode notes. Linking one still works for code
   generation; the plugin says so, and a frame or instance shows the note.
 - A link on a main component reaches every instance, and only the main component can remove it.
@@ -46,7 +50,8 @@ Uses yarn 1 like `documentation/`. Run these in `figma-plugin/`:
 | `yarn golden` | Rewrites `golden/` from the code generator |
 | `yarn preview:ui` | Opens the plugin window in a browser with a pretend Figma, for quick UI work |
 
-The preview accepts `?state=none|card|layer|linked|multiple` to start from a given selection.
+The preview accepts `?state=none|card|layer|linked|multiple` to start from a given selection and `&page=<name>` to
+name the page the cards are on. Its side panel can also rename the Success card the way a teammate would.
 
 ## Try it in Figma
 
@@ -80,6 +85,8 @@ Run these in the Figma desktop app with a fresh build:
 
 1. Create a card from a preset with nothing selected.
 2. Select the card, change an event and its name, press **Update card**, and check that the card redraws.
+   Change it again without saving, click the canvas and press ⌘Z to undo the update, and check that the plugin
+   says the card changed.
 3. Link a button instance to the card and check its Dev Mode note.
 4. Link the same layer again, then remove the link. The layer's other notes must stay, and there must never be
    two Jindong notes.
