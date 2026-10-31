@@ -154,6 +154,19 @@ describe("cards a designer has reshaped", () => {
     expect(node.children.length).toBe(drawn + 2);
   });
 
+  test("a designer's layer sent behind the card's drawing stays behind it", async () => {
+    const node = card("FRAME", "7:12");
+    await updateCard("7:12", presetNamed("Success"));
+    const backdrop = fakeNode("RECTANGLE");
+    node.appendChild(backdrop);
+    node.children.unshift(node.children.pop());
+    const note = fakeText();
+    node.appendChild(note);
+    await updateCard("7:12", presetNamed("Heartbeat"));
+    expect(node.children[0]).toBe(backdrop);
+    expect(node.children.at(-1)).toBe(note);
+  });
+
   test("a designer's layers stay above the redrawn card, in their order", async () => {
     const node = card("FRAME", "7:11");
     await updateCard("7:11", presetNamed("Success"));
@@ -200,6 +213,19 @@ describe("cards a designer has reshaped", () => {
     const second = await createCard(presetNamed("Error"));
     expect(overlapping(second, first)).toBe(false);
     expect(page.children).toEqual([first, second]);
+  });
+
+  test("a new card steps past an instance of a card component", async () => {
+    const page = stubPage();
+    // An instance reads its main component's plugin data, so it looks like a card.
+    const instance = fakeNode("INSTANCE");
+    writePattern(instance as unknown as SceneNode, presetNamed("Success"));
+    instance.resize(280, 178);
+    instance.x = 360;
+    instance.y = 211;
+    page.appendChild(instance);
+    const created = await createCard(presetNamed("Error"));
+    expect(overlapping(created, instance.absoluteBoundingBox)).toBe(false);
   });
 
   test("a new card steps past cards inside sections too", async () => {

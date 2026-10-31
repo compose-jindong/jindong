@@ -22,10 +22,15 @@ export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void>
   // builds before the marker have unmarked but locked layers, which are the plugin's too.
   const isPart = (child: SceneNode) => child.getSharedPluginData(NAMESPACE, PART_KEY) !== "";
   const unmarked = !frame.children.some(isPart);
-  for (const child of [...frame.children]) {
-    if (isPart(child) || (unmarked && child.locked)) child.remove();
+  const ours = (child: SceneNode) => isPart(child) || (unmarked && child.locked);
+  // A designer's layers above the drawing go back on top after it; ones sent behind it, such as a custom
+  // background, stay behind.
+  const children = [...frame.children];
+  const lowestPart = children.findIndex(ours);
+  const onTop = children.filter((child, index) => !ours(child) && index > lowestPart);
+  for (const child of children) {
+    if (ours(child)) child.remove();
   }
-  const kept = [...frame.children];
 
   frame.name = `Haptic / ${p.name}`;
   frame.layoutMode = "NONE";
@@ -64,8 +69,7 @@ export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void>
   placeRight(frame, text(`${windowMs} ms`, REGULAR, 10, "#A1A1AA"), 132);
   place(frame, text("jindong", SEMI_BOLD, 11, "#52525B"), 14, 152);
   placeRight(frame, text(`${timeline.durationMs} ms`, REGULAR, 11, "#A1A1AA"), 152);
-  // The redrawn layers went on top; a designer's own layers go back above them, in their order.
-  for (const child of kept) frame.appendChild(child);
+  for (const child of onTop) frame.appendChild(child);
 
   frame.setRelaunchData({ edit: "Edit this haptic in Jindong" });
 }
@@ -81,9 +85,11 @@ export async function createCard(p: PatternSpec): Promise<FrameNode> {
   writePattern(frame, p);
   const center = figma.viewport.center;
   const y = Math.round(center.y - CARD.height / 2);
-  // Step right past earlier cards on this page, including ones inside sections, so a new card doesn't
-  // land on one.
-  const taken = findCardsOnPage(figma.currentPage).flatMap((card) =>
+  // Step right past earlier cards on this page, including ones inside sections and instances of cards that
+  // became components (an instance reads its component's plugin data), so a new card doesn't land on one.
+  const page = figma.currentPage;
+  const instances = page.children.filter((node) => node.type === "INSTANCE" && isCard(node));
+  const taken = [...findCardsOnPage(page), ...instances].flatMap((card) =>
     card.id !== frame.id && card.absoluteBoundingBox ? [card.absoluteBoundingBox] : [],
   );
   let x = Math.round(center.x - CARD.width / 2);
