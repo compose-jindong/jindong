@@ -8,6 +8,8 @@ import { Timeline } from "./Timeline";
 export interface UnsavedEdits {
   base: PatternSpec;
   pattern: PatternSpec;
+  /** What Update card last sent, so the card coming back with it isn't taken for someone else's change. */
+  saving?: PatternSpec;
 }
 
 interface EditorProps {
@@ -37,7 +39,7 @@ export function Editor({
   busy = false,
   onDraftChange,
 }: EditorProps) {
-  const [edits, setEdits] = useState<UnsavedEdits>(() => resume ?? { base: initial, pattern: initial });
+  const [edits, setEdits] = useState<UnsavedEdits>(() => reconcile(resume ?? { base: initial, pattern: initial }, initial));
   const draft = edits.pattern;
   const setDraft = (pattern: PatternSpec) => setEdits((current) => ({ ...current, pattern }));
   const [selected, setSelected] = useState(0);
@@ -46,17 +48,11 @@ export function Editor({
   const dirty = !samePattern(draft, initial);
   const changedElsewhere = dirty && !samePattern(edits.base, initial);
 
-  // The saved card can change underneath (undo, a teammate's edit). Without unsaved edits, show the new values;
-  // with them, keep the edits and say so, so Update card is a deliberate overwrite.
   const saved = useRef(initial);
   useEffect(() => {
     if (saved.current === initial) return;
     saved.current = initial;
-    setEdits((current) =>
-      samePattern(current.pattern, current.base) || samePattern(current.pattern, initial)
-        ? { base: initial, pattern: initial }
-        : current,
-    );
+    setEdits((current) => reconcile(current, initial));
   }, [initial]);
 
   useEffect(() => {
@@ -159,7 +155,10 @@ export function Editor({
           className="primary"
           disabled={!validation.ok || busy || (mode === "update" && !dirty)}
           onClick={() => {
-            if (validation.ok) onSubmit(normalizePattern(validation.pattern));
+            if (!validation.ok) return;
+            const pattern = normalizePattern(validation.pattern);
+            setEdits((current) => ({ ...current, saving: pattern }));
+            onSubmit(pattern);
           }}
         >
           {mode === "create" ? "Create card" : "Update card"}
@@ -167,6 +166,15 @@ export function Editor({
       </div>
     </div>
   );
+}
+
+// The saved card can change underneath (undo, a teammate's edit, this editor's own save). Without unsaved edits,
+// show the new values; with them, keep the edits, and unless the change is this editor's own save, say so, so
+// Update card is a deliberate overwrite.
+function reconcile(edits: UnsavedEdits, saved: PatternSpec): UnsavedEdits {
+  if (samePattern(edits.pattern, edits.base) || samePattern(edits.pattern, saved)) return { base: saved, pattern: saved };
+  if (edits.saving && samePattern(edits.saving, saved)) return { base: saved, pattern: edits.pattern };
+  return edits;
 }
 
 function samePattern(a: PatternSpec, b: PatternSpec): boolean {

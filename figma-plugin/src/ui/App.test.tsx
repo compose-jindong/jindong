@@ -246,6 +246,30 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Discard my edits" })).toBeNull();
   });
 
+  test("typing on while Update card runs doesn't look like someone else changed the card", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine 2" } });
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Mine" } } });
+    emit({ type: "status", tone: "success", message: "Card updated." });
+    expect(screen.queryByText(/This card changed in Figma/)).toBeNull();
+    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine 2");
+  });
+
+  test("a save that lands while another layer is selected doesn't look like someone else's change", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
+    emit({ type: "selection", state: layer() });
+    emit({ type: "status", tone: "success", message: "Card updated." });
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Mine" } } });
+    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine again" } });
+    expect(screen.queryByText(/This card changed in Figma/)).toBeNull();
+  });
+
   test("Update card waits for a change", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
