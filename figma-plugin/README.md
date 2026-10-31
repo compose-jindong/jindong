@@ -34,7 +34,9 @@ A few things the plugin handles for you:
 - A new card lands beside the cards already on the page, including cards inside sections.
 - Groups, sections and a few other layer types can't hold Dev Mode notes. Linking one still works for code
   generation; the plugin says so, and a frame or instance shows the note.
-- A link on a main component reaches every instance, and only the main component can remove it.
+- A link on a main component reaches every instance, and only the main component can remove it. A link made on a
+  component in a team library names a card in the library's file, so files that use the library point to it for
+  the code instead of guessing.
 - Each plugin action is its own undo step.
 - Dev Mode is read-only for plugins, so there Jindong shows the selected card or linked layer, its preview and its
   code, and says to switch to Design Mode to change it.
