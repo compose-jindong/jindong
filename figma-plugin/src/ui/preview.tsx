@@ -10,7 +10,8 @@ import "./styles.css";
 // A pretend Figma for trying the plugin window in a browser (`yarn preview:ui`). It keeps cards and
 // links in memory and answers the same messages the main thread does.
 // ?state=none|card|layer|linked|multiple picks the first selection; &chrome=0 hides the toolbar;
-// &page=<name> names the page the cards sit on, for checking long page names in the card list.
+// &page=<name> names the page the cards sit on, for checking long page names in the card list;
+// &dev=1 opens the window the way Dev Mode does, read-only.
 
 const params = new URLSearchParams(location.search);
 const START: Record<string, string> = {
@@ -68,6 +69,7 @@ function select(id: string) {
 function handle(message: UiToMain) {
   switch (message.type) {
     case "ready":
+      post({ type: "editor", readOnly: params.get("dev") === "1" });
       select(selected);
       return;
     case "list-cards":
