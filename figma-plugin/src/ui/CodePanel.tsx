@@ -13,10 +13,6 @@ export function CodePanel({ sections, notice }: { sections: CodeSection[]; notic
   return (
     <div className="code-panel">
       {notice && <p className="callout">{notice}</p>}
-      <p className="code-intro">
-        Send this to your developer. With Dev Mode, they can also select the layer and pick Jindong (Compose) in
-        the code panel.
-      </p>
       {sections.map((section) => (
         <CodeBlock key={section.title} section={section} />
       ))}

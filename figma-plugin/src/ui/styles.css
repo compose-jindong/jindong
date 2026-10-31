@@ -683,12 +683,6 @@ input[type="range"] {
   padding-bottom: 16px;
 }
 
-.code-intro {
-  margin: 0;
-  color: var(--text-secondary);
-  line-height: 1.5;
-}
-
 .code-block {
   display: grid;
   gap: 6px;
