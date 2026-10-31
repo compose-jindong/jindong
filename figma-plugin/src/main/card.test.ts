@@ -225,6 +225,12 @@ describe("cards a designer has reshaped", () => {
     expect(page.children).toEqual([first, second]);
   });
 
+  test("creating a card leaves the selection alone, so the plugin goes back to the presets", async () => {
+    const page = stubPage();
+    await createCard(presetNamed("Success"));
+    expect(page.selection).toEqual([]);
+  });
+
   test("a new card steps past an instance of a card component", async () => {
     const page = stubPage();
     // An instance reads its main component's plugin data, so it looks like a card.

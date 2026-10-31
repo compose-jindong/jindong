@@ -13,7 +13,8 @@ without Dev Mode can copy the same code from the plugin's Code tab.
 2. Adjust it: each event is a Tap (a short impact) or a Buzz (a vibration with a length), with a pause before it,
    a strength and a sharpness. Press **Preview rhythm** to watch and hear it: a computer can't vibrate, so taps
    play as short knocks and buzzes as a hum, louder when stronger and higher when sharper.
-3. Press **Create card**. The card on the canvas is drawn by the plugin; select it later to edit it again.
+3. Press **Create card**. The card appears on the canvas, drawn by the plugin, and the plugin goes back to the
+   presets. Select the card later to edit it again.
 4. Select a layer, pick a card and when it plays (on tap, on screen enter, on state change), then press
    **Link haptic**. The layer gets a Dev Mode note that names the haptic and Jindong.
 

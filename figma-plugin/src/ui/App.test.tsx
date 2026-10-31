@@ -107,6 +107,17 @@ describe("App", () => {
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
   });
 
+  test("creating a card goes back to the presets, since the new card isn't selected", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "none" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Create card" }));
+    emit({ type: "selection", state: { kind: "none" } });
+    emit({ type: "status", tone: "success", message: "Card created." });
+    expect(screen.getByRole("heading", { name: "Jindong" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Create card" })).toBeNull();
+  });
+
   test("once the card is created, clearing the selection shows the presets again", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "none" } });

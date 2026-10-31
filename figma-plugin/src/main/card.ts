@@ -95,8 +95,9 @@ export async function createCard(p: PatternSpec): Promise<FrameNode> {
   while (taken.some((box) => overlaps(box, x, y))) x += CARD.width + CARD_GAP;
   frame.x = x;
   frame.y = y;
+  // The card isn't selected, so the window goes back to the presets: creating is done, and keeping the editor open
+  // on the new card felt like nothing happened.
   figma.currentPage.appendChild(frame);
-  figma.currentPage.selection = [frame];
   return frame;
 }
 
