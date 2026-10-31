@@ -1,6 +1,7 @@
-import { useEffect, useState, type CSSProperties } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { displayWindowMs, layoutBars } from "../core/cardLayout";
 import { TONE_HEX, toTimeline, type PatternSpec } from "../core/model";
+import { playSound } from "./sound";
 
 interface TimelineProps {
   pattern: PatternSpec;
@@ -8,7 +9,7 @@ interface TimelineProps {
   height: number;
   selectedIndex?: number;
   onSelect?: (index: number) => void;
-  /** Adds the axis labels and a button that replays the rhythm in real time. */
+  /** Adds the axis labels and a button that replays the rhythm in real time, with sound. */
   detailed?: boolean;
 }
 
@@ -19,6 +20,7 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
   const [playCount, setPlayCount] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [lit, setLit] = useState<ReadonlySet<number>>(new Set());
+  const stopSound = useRef<(() => void) | null>(null);
   const timeline = toTimeline(pattern);
   const windowMs = displayWindowMs(timeline.durationMs);
   const inset = detailed ? 8 : 4;
@@ -51,6 +53,8 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
       setLit(new Set());
     };
   }, [playing, playCount]);
+
+  useEffect(() => () => stopSound.current?.(), []);
 
   return (
     <div className={detailed ? "timeline timeline-detailed" : "timeline"}>
@@ -108,6 +112,8 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
             type="button"
             className="play-button"
             onClick={() => {
+              stopSound.current?.();
+              stopSound.current = playSound(timeline);
               setPlayCount((count) => count + 1);
               setPlaying(true);
             }}

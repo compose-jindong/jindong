@@ -5,6 +5,7 @@ import { presetNamed } from "../core/presets";
 import type { MainToUi, SelectionState, UiToMain } from "../shared/messages";
 import { App } from "./App";
 import type { Bridge } from "./bridge";
+import { FakeAudioContext } from "./testing";
 
 afterEach(cleanup);
 
@@ -521,6 +522,18 @@ describe("App", () => {
       expect(lit()).toEqual([false, false, false]);
     } finally {
       vi.useRealTimers();
+    }
+  });
+
+  test("Preview rhythm plays the haptic as sound, since a computer can't vibrate", () => {
+    vi.stubGlobal("AudioContext", FakeAudioContext);
+    try {
+      const { emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.click(screen.getByRole("button", { name: /Preview rhythm/ }));
+      expect(FakeAudioContext.created.at(-1)?.oscillators).toHaveLength(3);
+    } finally {
+      vi.unstubAllGlobals();
     }
   });
 
