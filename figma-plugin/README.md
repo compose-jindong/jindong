@@ -11,7 +11,8 @@ without Dev Mode can copy the same code from the plugin's Code tab.
 
 1. Open the plugin with nothing selected and pick a preset (the same presets as the sample app).
 2. Adjust it: each event is a Tap (a short impact) or a Buzz (a vibration with a length), with a pause before it,
-   a strength and a sharpness. Press **Preview rhythm** to watch the timing play out.
+   a strength and a sharpness. Press **Preview rhythm** to watch and hear it: a computer can't vibrate, so taps
+   play as short knocks and buzzes as a hum, louder when stronger and higher when sharper.
 3. Press **Create card**. The card on the canvas is drawn by the plugin; select it later to edit it again.
 4. Select a layer, pick a card and when it plays (on tap, on screen enter, on state change), then press
    **Link haptic**. The layer gets a Dev Mode note that names the haptic and Jindong.
@@ -33,6 +34,8 @@ A few things the plugin handles for you:
   generation; the plugin says so, and a frame or instance shows the note.
 - A link on a main component reaches every instance, and only the main component can remove it.
 - Each plugin action is its own undo step.
+- Dev Mode is read-only for plugins, so there Jindong shows the selected card or linked layer, its preview and its
+  code, and says to switch to Design Mode to change it.
 
 Version 1 keeps patterns simple: events play one after another with fixed strength and sharpness. Curves,
 overlapping events and feeling a pattern on a phone come later.
@@ -50,8 +53,9 @@ Uses yarn 1 like `documentation/`. Run these in `figma-plugin/`:
 | `yarn golden` | Rewrites `golden/` from the code generator |
 | `yarn preview:ui` | Opens the plugin window in a browser with a pretend Figma, for quick UI work |
 
-The preview accepts `?state=none|card|layer|linked|multiple` to start from a given selection and `&page=<name>` to
-name the page the cards are on. Its side panel can also rename the Success card the way a teammate would.
+The preview accepts `?state=none|card|layer|linked|multiple` to start from a given selection, `&page=<name>` to
+name the page the cards are on and `&dev=1` to open the window read-only, as Dev Mode does. Its side panel can also
+rename the Success card the way a teammate would.
 
 ## Try it in Figma
 
@@ -59,7 +63,8 @@ name the page the cards are on. Its side panel can also rename the Success card 
 2. In the Figma desktop app, choose **Plugins → Development → Import plugin from manifest…** and pick
    `figma-plugin/manifest.json`.
 3. In Design Mode, run **Jindong** from the plugins menu.
-4. In Dev Mode, select a card or a linked layer and pick **Jindong (Compose)** as the code panel language.
+4. In Dev Mode, select a card or a linked layer and pick **Jindong (Compose)** as the code panel language, or run
+   **Jindong** from the Plugins tab to see the haptic with its preview and code.
 
 ## Generated code is checked by Gradle
 
@@ -94,7 +99,9 @@ Run these in the Figma desktop app with a fresh build:
    the language.
 6. Delete the card and check that Dev Mode says the link is broken.
 7. Copy each section from the plugin's Code tab and paste it somewhere.
-8. Run the plugin from Dev Mode's plugin list and check that it explains where to use it.
+8. In Dev Mode, run Jindong from the Plugins tab (or press **Edit haptic** on a card) and check that it shows the
+   selected haptic and its code without editing.
+9. Press **Preview rhythm** and check that you hear it.
 
 If Figma refuses the Dev Mode note (the plugin says "Linked, but Figma did not accept the Dev Mode note."),
 the link still works but developers without the plugin won't see it. Decide on a fallback before publishing.
