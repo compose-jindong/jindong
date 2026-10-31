@@ -5,7 +5,7 @@
   "main": "dist/main.js",
   "ui": "dist/index.html",
   "editorType": ["figma", "dev"],
-  "capabilities": ["codegen"],
+  "capabilities": ["codegen", "inspect"],
   "codegenLanguages": [{ "label": "Jindong (Compose)", "value": "jindong" }],
   "documentAccess": "dynamic-page",
   "networkAccess": { "allowedDomains": ["none"] },
