@@ -9,10 +9,9 @@ const SECTION_HINT: Record<CodeSection["title"], string> = {
   Jindong: "",
 };
 
-export function CodePanel({ sections, notice }: { sections: CodeSection[]; notice?: string }) {
+export function CodePanel({ sections }: { sections: CodeSection[] }) {
   return (
     <div className="code-panel">
-      {notice && <p className="callout">{notice}</p>}
       {sections.map((section) => (
         <CodeBlock key={section.title} section={section} />
       ))}

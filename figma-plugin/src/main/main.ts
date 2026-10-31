@@ -95,15 +95,15 @@ async function handle(message: UiToMain): Promise<void> {
         return;
       }
       case "update-card": {
+        // Edits reach the card whenever the designer pauses, so a routine update says nothing. A rename that
+        // clashes with a card on any page still does; checking only on renames keeps other edits quick.
         const pattern = valid(message.pattern);
+        const before = readPattern(await figma.getNodeByIdAsync(message.nodeId));
         await updateCard(message.nodeId, pattern);
-        if (clashesWith(pattern.name, await cardNames(message.nodeId))) {
-          await finish(
-            "warning",
-            `Card updated, but another card is also called “${pattern.name}”. Rename one so their code doesn't clash.`,
-          );
+        if (before?.name !== pattern.name && clashesWith(pattern.name, await cardNames(message.nodeId))) {
+          await finish("warning", `Another card is also called “${pattern.name}”. Rename one so their code doesn't clash.`);
         } else {
-          await finish("success", "Card updated.");
+          await finish();
         }
         return;
       }
@@ -135,9 +135,9 @@ function postError(error: unknown): void {
 }
 
 // Data changed, so the window re-reads the selection even when the selection itself didn't move.
-async function finish(tone: "success" | "warning", message: string): Promise<void> {
+async function finish(tone?: "success" | "warning", message?: string): Promise<void> {
   await pushSelection();
-  post({ type: "status", tone, message });
+  if (tone && message) post({ type: "status", tone, message });
   // Without this, one Cmd+Z would undo every plugin action since the window opened.
   figma.commitUndo();
 }

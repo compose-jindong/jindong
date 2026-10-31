@@ -4,49 +4,39 @@ import { LIMITS, TONE_HEX, normalizePattern, validatePattern, type PatternSpec, 
 import { EventInspector, RangeField } from "./EventInspector";
 import { Timeline } from "./Timeline";
 
-/** Edits not yet on the card, with the saved pattern they started from. */
-export interface UnsavedEdits {
+// Edits to a card reach it once the designer pauses this long, and at once if they select something else first.
+const APPLY_DELAY_MS = 300;
+
+/** The editor's pattern, with the saved one it started from and the last one sent to the card. */
+interface Edits {
   base: PatternSpec;
   pattern: PatternSpec;
-  /** What Update card last sent, so the card coming back with it isn't taken for someone else's change. */
-  saving?: PatternSpec;
+  /** So the card coming back with this pattern isn't taken for someone else's change. */
+  sent?: PatternSpec;
 }
 
 interface EditorProps {
   mode: "create" | "update";
+  /** The card's saved pattern when updating, or the preset a new haptic starts from. */
   initial: PatternSpec;
-  onSubmit: (pattern: PatternSpec) => void;
+  /** Create card. */
+  onSubmit?: (pattern: PatternSpec) => void;
+  /** Receives each edit to a card as it settles, like Figma's own panels, so there's nothing to save. */
+  onApply?: (pattern: PatternSpec) => void;
   onBack?: () => void;
-  /** Edits left on this card earlier, picked up again. */
-  resume?: UnsavedEdits;
-  /** Reports the edits that differ from [initial], the pattern last saved to the card, or null when there are none. */
-  onUnsavedChange?: (edits: UnsavedEdits | null) => void;
   /** An earlier request is still being handled. */
   busy?: boolean;
-  /** Receives every edit, so a new haptic's tweaks can outlive this editor. */
-  onDraftChange?: (pattern: PatternSpec) => void;
 }
 
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
-export function Editor({
-  mode,
-  initial,
-  onSubmit,
-  onBack,
-  resume,
-  onUnsavedChange,
-  busy = false,
-  onDraftChange,
-}: EditorProps) {
-  const [edits, setEdits] = useState<UnsavedEdits>(() => reconcile(resume ?? { base: initial, pattern: initial }, initial));
+export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false }: EditorProps) {
+  const [edits, setEdits] = useState<Edits>({ base: initial, pattern: initial });
   const draft = edits.pattern;
   const setDraft = (pattern: PatternSpec) => setEdits((current) => ({ ...current, pattern }));
   const [selected, setSelected] = useState(0);
   const index = Math.min(selected, draft.events.length - 1);
   const validation = validatePattern(draft);
-  const dirty = !samePattern(draft, initial);
-  const changedElsewhere = dirty && !samePattern(edits.base, initial);
 
   const saved = useRef(initial);
   useEffect(() => {
@@ -55,16 +45,28 @@ export function Editor({
     setEdits((current) => reconcile(current, initial));
   }, [initial]);
 
+  const apply = useRef(onApply);
+  apply.current = onApply;
+  const pending = useRef<PatternSpec | null>(null);
   useEffect(() => {
-    onUnsavedChange?.(dirty ? edits : null);
-  }, [dirty, edits, onUnsavedChange]);
+    const changed = mode === "update" && validation.ok && !samePattern(draft, initial);
+    pending.current = changed ? normalizePattern(validation.pattern) : null;
+    if (!pending.current) return;
+    const timer = setTimeout(sendPending, APPLY_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [draft, initial]);
+  useEffect(() => () => sendPending(), []);
 
-  useEffect(() => {
-    onDraftChange?.(draft);
-  }, [draft, onDraftChange]);
+  function sendPending() {
+    const next = pending.current;
+    if (!next) return;
+    pending.current = null;
+    setEdits((current) => ({ ...current, sent: next }));
+    apply.current?.(next);
+  }
 
   return (
-    <div className="editor">
+    <div className={mode === "update" ? "editor editor-live" : "editor"}>
       {onBack && (
         <button type="button" className="back-button" onClick={onBack}>
           <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
@@ -107,6 +109,7 @@ export function Editor({
           />
         </label>
       </div>
+      {mode === "update" && !validation.ok && <p className="form-error">{validation.error}</p>}
 
       <Timeline pattern={draft} width={320} height={96} selectedIndex={index} onSelect={setSelected} detailed />
 
@@ -140,40 +143,30 @@ export function Editor({
         />
       </div>
 
-      <div className="editor-footer">
-        {changedElsewhere && (
-          <div className="callout changed-elsewhere">
-            <p>This card changed in Figma while you were editing. Update card replaces that change with yours.</p>
-            <button type="button" className="secondary" onClick={() => setEdits({ base: initial, pattern: initial })}>
-              Discard my edits
-            </button>
-          </div>
-        )}
-        {!validation.ok && <p className="form-error">{validation.error}</p>}
-        <button
-          type="button"
-          className="primary"
-          disabled={!validation.ok || busy || (mode === "update" && !dirty)}
-          onClick={() => {
-            if (!validation.ok) return;
-            const pattern = normalizePattern(validation.pattern);
-            setEdits((current) => ({ ...current, saving: pattern }));
-            onSubmit(pattern);
-          }}
-        >
-          {mode === "create" ? "Create card" : "Update card"}
-        </button>
-      </div>
+      {mode === "create" && (
+        <div className="editor-footer">
+          {!validation.ok && <p className="form-error">{validation.error}</p>}
+          <button
+            type="button"
+            className="primary"
+            disabled={!validation.ok || busy}
+            onClick={() => {
+              if (validation.ok) onSubmit?.(normalizePattern(validation.pattern));
+            }}
+          >
+            Create card
+          </button>
+        </div>
+      )}
     </div>
   );
 }
 
-// The saved card can change underneath (undo, a teammate's edit, this editor's own save). Without unsaved edits,
-// show the new values; with them, keep the edits, and unless the change is this editor's own save, say so, so
-// Update card is a deliberate overwrite.
-function reconcile(edits: UnsavedEdits, saved: PatternSpec): UnsavedEdits {
+// The saved card can change underneath: this editor's own edit coming back, undo, or a teammate's edit. Without
+// edits still on their way, show the new values; with them, keep the edits, which reach the card next.
+function reconcile(edits: Edits, saved: PatternSpec): Edits {
   if (samePattern(edits.pattern, edits.base) || samePattern(edits.pattern, saved)) return { base: saved, pattern: saved };
-  if (edits.saving && samePattern(edits.saving, saved)) return { base: saved, pattern: edits.pattern };
+  if (edits.sent && samePattern(edits.sent, saved)) return { base: saved, pattern: edits.pattern };
   return edits;
 }
 

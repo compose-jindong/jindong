@@ -1,7 +1,9 @@
 import { afterEach, expect, test, vi } from "vitest";
+import { presetNamed } from "../core/presets";
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.doUnmock("./card");
   vi.resetModules();
 });
 
@@ -234,4 +236,35 @@ test("in Dev Mode the window opens read-only: it shows the selection and refuses
     tone: "error",
     message: "Dev Mode is read-only. Switch to Design Mode to change haptics.",
   });
+});
+
+test("a card update, which comes with every pause in editing, is applied quietly as its own undo step", async () => {
+  vi.doMock("./card", () => ({ createCard: vi.fn(), updateCard: vi.fn(async () => ({})) }));
+  const posted: { type: string }[] = [];
+  let commits = 0;
+  const ui: { postMessage: (message: { type: string }) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  const card = { id: "7:1", type: "FRAME", parent: null, getSharedPluginData: () => JSON.stringify(presetNamed("Success")) };
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: { selection: [], on: () => {}, off: () => {} },
+    getNodeByIdAsync: async () => card,
+    loadAllPagesAsync: async () => {},
+    root: { findAllWithCriteria: () => [card] },
+    commitUndo: () => commits++,
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "update-card", nodeId: "7:1", pattern: { ...presetNamed("Success"), trailingMs: 200 } });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  expect(posted.map((m) => m.type)).toEqual(["selection"]);
+  expect(commits).toBe(1);
 });

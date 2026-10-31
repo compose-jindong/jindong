@@ -97,14 +97,17 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "create-card", pattern: presetNamed("Success") });
   });
 
-  test("tweaks to a new haptic survive selecting a layer and coming back", () => {
+  test("a new haptic is dropped when you select something else, so the presets come back", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "none" } });
     fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
-    emit({ type: "selection", state: layer() });
     emit({ type: "selection", state: { kind: "none" } });
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
+    emit({ type: "selection", state: layer() });
+    emit({ type: "selection", state: { kind: "none" } });
+    expect(screen.getByRole("heading", { name: "Jindong" })).toBeTruthy();
+    expect(screen.queryByLabelText("Name")).toBeNull();
   });
 
   test("creating a card goes back to the presets, since the new card isn't selected", () => {
@@ -189,16 +192,111 @@ describe("App", () => {
     expect(sent.filter((m) => m.type === "link")).toHaveLength(1);
   });
 
-  test("editing a selected card sends update-card", () => {
+  test("an edit to a card reaches the canvas once you pause, with no Update button", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      expect(screen.queryByRole("button", { name: "Update card" })).toBeNull();
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+      expect(sent.filter((m) => m.type === "update-card")).toHaveLength(0);
+      act(() => vi.advanceTimersByTime(300));
+      expect(sent.filter((m) => m.type === "update-card")).toEqual([
+        { type: "update-card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } },
+      ]);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("quick edits in a row reach the card once", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      for (const name of ["P", "Pa", "Paid"]) {
+        fireEvent.change(screen.getByLabelText("Name"), { target: { value: name } });
+        act(() => vi.advanceTimersByTime(100));
+      }
+      act(() => vi.advanceTimersByTime(300));
+      const updates = sent.filter((m) => m.type === "update-card");
+      expect(updates).toHaveLength(1);
+      expect(updates[0].type === "update-card" && updates[0].pattern.name).toBe("Paid");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("selecting something else applies a pending edit at once", () => {
     const { sent, emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
     fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
-    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
-    expect(sent).toContainEqual({
-      type: "update-card",
-      nodeId: "1:2",
-      pattern: { ...presetNamed("Success"), name: "Paid" },
-    });
+    emit({ type: "selection", state: layer() });
+    expect(sent.filter((m) => m.type === "update-card")).toEqual([
+      { type: "update-card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } },
+    ]);
+  });
+
+  test("typing on while an edit lands keeps the newer text", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+      act(() => vi.advanceTimersByTime(300));
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine 2" } });
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Mine" } } });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine 2");
+      act(() => vi.advanceTimersByTime(300));
+      const last = sent.filter((m) => m.type === "update-card").at(-1);
+      expect(last?.type === "update-card" && last.pattern.name).toBe("Mine 2");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("an edit undone on the canvas shows the undone values and isn't sent again", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+      act(() => vi.advanceTimersByTime(300));
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } } });
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Success");
+      act(() => vi.advanceTimersByTime(1000));
+      expect(sent.filter((m) => m.type === "update-card")).toHaveLength(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("an invalid edit isn't applied, and the editor says why", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "  " } });
+      act(() => vi.advanceTimersByTime(1000));
+      expect(sent.filter((m) => m.type === "update-card")).toHaveLength(0);
+      expect(screen.getByText("Give the haptic a name.")).toBeTruthy();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("an unchanged card sends nothing, even when the main thread re-sends it", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      act(() => vi.advanceTimersByTime(1000));
+      expect(sent.filter((m) => m.type === "update-card")).toHaveLength(0);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("events can be stepped through without clicking the timeline", () => {
@@ -215,16 +313,21 @@ describe("App", () => {
   });
 
   test("a number box can be emptied and retyped", () => {
-    const { sent, emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    const length = screen.getByLabelText("Length (ms)") as HTMLInputElement;
-    fireEvent.change(length, { target: { value: "" } });
-    expect(length.value).toBe("");
-    fireEvent.change(length, { target: { value: "250" } });
-    expect(length.value).toBe("250");
-    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
-    const update = sent.find((m) => m.type === "update-card");
-    expect(update?.type === "update-card" && update.pattern.events[0]).toMatchObject({ durationMs: 250 });
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      const length = screen.getByLabelText("Length (ms)") as HTMLInputElement;
+      fireEvent.change(length, { target: { value: "" } });
+      expect(length.value).toBe("");
+      fireEvent.change(length, { target: { value: "250" } });
+      expect(length.value).toBe("250");
+      act(() => vi.advanceTimersByTime(300));
+      const update = sent.find((m) => m.type === "update-card");
+      expect(update?.type === "update-card" && update.pattern.events[0]).toMatchObject({ durationMs: 250 });
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("leaving an emptied number box puts the value back", () => {
@@ -236,7 +339,7 @@ describe("App", () => {
     expect(length.value).toBe("50");
   });
 
-  test("a card changed elsewhere (undo, a teammate) shows the new values when nothing is unsaved", () => {
+  test("a card changed elsewhere (undo, a teammate) shows the new values", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
     emit({
@@ -244,18 +347,25 @@ describe("App", () => {
       state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } },
     });
     expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Paid");
-    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", true);
   });
 
-  test("unsaved edits are kept when the card changes elsewhere", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
-    emit({
-      type: "selection",
-      state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } },
-    });
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
+  test("an edit still on its way isn't undone by a change from elsewhere", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
+      emit({
+        type: "selection",
+        state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), description: "Teammate" } },
+      });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine");
+      act(() => vi.advanceTimersByTime(300));
+      const last = sent.filter((m) => m.type === "update-card").at(-1);
+      expect(last?.type === "update-card" && last.pattern.name).toBe("Mine");
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   test("a card that shares its name with another says so", () => {
@@ -267,86 +377,6 @@ describe("App", () => {
     expect(
       screen.getByText("Another card on this page is also called “Success”. Rename one so their code doesn't clash."),
     ).toBeTruthy();
-  });
-
-  test("unsaved edits to a card survive clicking away and back", () => {
-    const { emit } = setup();
-    const card = { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } as const;
-    emit({ type: "selection", state: card });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Payment done" } });
-    emit({ type: "selection", state: { kind: "none" } });
-    emit({ type: "selection", state: card });
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Payment done");
-    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", false);
-  });
-
-  test("a saved card starts clean the next time it's opened", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Payment done" } });
-    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
-    const saved = { ...presetNamed("Success"), name: "Payment done" };
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: saved } });
-    emit({ type: "status", tone: "success", message: "Card updated." });
-    emit({ type: "selection", state: { kind: "none" } });
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...saved, name: "Renamed later" } } });
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Renamed later");
-  });
-
-  test("a change made elsewhere while you edit is announced, and your edits can be dropped", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
-    emit({
-      type: "selection",
-      state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Teammate" } },
-    });
-    expect(
-      screen.getByText("This card changed in Figma while you were editing. Update card replaces that change with yours."),
-    ).toBeTruthy();
-    fireEvent.click(screen.getByRole("button", { name: "Discard my edits" }));
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Teammate");
-    expect(screen.queryByRole("button", { name: "Discard my edits" })).toBeNull();
-  });
-
-  test("typing on while Update card runs doesn't look like someone else changed the card", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
-    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine 2" } });
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Mine" } } });
-    emit({ type: "status", tone: "success", message: "Card updated." });
-    expect(screen.queryByText(/This card changed in Figma/)).toBeNull();
-    expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Mine 2");
-  });
-
-  test("a save that lands while another layer is selected doesn't look like someone else's change", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine" } });
-    fireEvent.click(screen.getByRole("button", { name: "Update card" }));
-    emit({ type: "selection", state: layer() });
-    emit({ type: "status", tone: "success", message: "Card updated." });
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Mine" } } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Mine again" } });
-    expect(screen.queryByText(/This card changed in Figma/)).toBeNull();
-  });
-
-  test("Update card waits for a change", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", true);
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
-    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", false);
-  });
-
-  test("an invalid draft disables the button and says why", () => {
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "  " } });
-    expect(screen.getByRole("button", { name: "Update card" })).toHaveProperty("disabled", true);
-    expect(screen.getByText("Give the haptic a name.")).toBeTruthy();
   });
 
   test("an unreadable card shows the newer-version message", () => {
@@ -518,18 +548,6 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Code" }));
     expect(screen.getByText(/val SuccessHaptic: HapticPattern/)).toBeTruthy();
     expect(screen.getByText(/jindong-compose:2\.0\.0/)).toBeTruthy();
-  });
-
-  test("the Code tab says when the card has unsaved changes", () => {
-    const unsaved = "This card has unsaved changes. Press Update card to include them in the code.";
-    const { emit } = setup();
-    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
-    fireEvent.click(screen.getByRole("tab", { name: "Code" }));
-    expect(screen.queryByText(unsaved)).toBeNull();
-    fireEvent.click(screen.getByRole("tab", { name: "Edit" }));
-    fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
-    fireEvent.click(screen.getByRole("tab", { name: "Code" }));
-    expect(screen.getByText(unsaved)).toBeTruthy();
   });
 
   test("a failed copy says so instead of looking copied", async () => {

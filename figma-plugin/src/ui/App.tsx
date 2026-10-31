@@ -4,7 +4,7 @@ import type { PatternSpec } from "../core/model";
 import type { CardSummary, MainToUi, SelectionState, UiToMain } from "../shared/messages";
 import { figmaBridge, type Bridge } from "./bridge";
 import { CodePanel } from "./CodePanel";
-import { Editor, type UnsavedEdits } from "./Editor";
+import { Editor } from "./Editor";
 import { Gallery } from "./Gallery";
 import { Inspector } from "./Inspector";
 import { LinkPanel } from "./LinkPanel";
@@ -23,36 +23,20 @@ const NO_ANSWER: Status = {
   tone: "warning",
   message: "Figma didn't answer. Check the canvas before trying again.",
 };
-const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to include them in the code.";
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
   const [readOnly, setReadOnly] = useState(false);
-  // A new haptic being shaped before it becomes a card. It outlives selection changes, so clicking a
-  // layer and coming back doesn't throw the tweaks away; a created card ends it.
+  // A new haptic being shaped before it becomes a card. Creating it or selecting something else ends it.
   const [draft, setDraft] = useState<{ id: number; pattern: PatternSpec } | null>(null);
   const draftIds = useRef(0);
   const creating = useRef(false);
   const [cards, setCards] = useState<CardSummary[] | null>(null);
   const [tab, setTab] = useState<Tab>("main");
   const [status, setStatus] = useState<Status | null>(null);
-  const [unsaved, setUnsaved] = useState(false);
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
   const selectedNodeId = useRef<string | null>(null);
-  // Unsaved edits per card, so clicking another layer and coming back doesn't lose them. Edits that reach the
-  // card (Update card) or get discarded leave nothing behind.
-  const cardEdits = useRef(new Map<string, UnsavedEdits>());
-  const editedCardId = selection?.kind === "card" ? selection.nodeId : null;
-  const rememberEdits = useCallback(
-    (edits: UnsavedEdits | null) => {
-      if (editedCardId === null) return;
-      if (edits) cardEdits.current.set(editedCardId, edits);
-      else cardEdits.current.delete(editedCardId);
-      setUnsaved(edits !== null);
-    },
-    [editedCardId],
-  );
 
   useEffect(() => {
     const unsubscribe = bridge.subscribe((message) => {
@@ -62,9 +46,9 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         const nodeId = nodeIdOf(message.state);
         if (nodeId !== selectedNodeId.current) {
           setTab("main");
-          setUnsaved(false);
           setCards(null);
         }
+        if (message.state.kind !== "none") setDraft(null);
         selectedNodeId.current = nodeId;
         setSelection(message.state);
       } else if (message.type === "cards") {
@@ -105,11 +89,6 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
     bridge.send(message);
   }
 
-  const keepDraft = useCallback(
-    (pattern: PatternSpec) => setDraft((current) => (current && current.pattern !== pattern ? { ...current, pattern } : current)),
-    [],
-  );
-
   // Large files can make a request slow: say so rather than re-enabling the button for a second click, and
   // only give up waiting if the main thread never answers.
   useEffect(() => {
@@ -139,7 +118,6 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
             initial={draft.pattern}
             onBack={() => setDraft(null)}
             onSubmit={(pattern) => act({ type: "create-card", pattern })}
-            onDraftChange={keepDraft}
             busy={busy}
           />
         ) : (
@@ -153,12 +131,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
             mainLabel="Edit"
             tab={tab}
             onTab={setTab}
-            code={
-              <CodePanel
-                sections={codeSections({ pattern, link: null, linkedPattern: null })}
-                notice={unsaved ? UNSAVED_NOTICE : undefined}
-              />
-            }
+            code={<CodePanel sections={codeSections({ pattern, link: null, linkedPattern: null })} />}
           >
             {selection.nameClash && (
               <p className="callout name-clash">
@@ -169,10 +142,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
               key={nodeId}
               mode="update"
               initial={pattern}
-              resume={cardEdits.current.get(nodeId)}
-              onSubmit={(next) => act({ type: "update-card", nodeId, pattern: next })}
-              onUnsavedChange={rememberEdits}
-              busy={busy}
+              onApply={(next) => bridge.send({ type: "update-card", nodeId, pattern: next })}
             />
           </Tabbed>
         );
@@ -217,7 +187,8 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   );
 }
 
-// The main view stays mounted while Code is showing, so an unsaved edit survives a look at the code.
+// The main view stays mounted while Code is showing, so an edit still on its way to the card survives a look at
+// the code.
 function Tabbed({
   mainLabel,
   tab,

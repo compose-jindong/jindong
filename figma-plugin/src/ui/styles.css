@@ -475,6 +475,11 @@ input[type="range"] {
   padding: 0 13px;
 }
 
+/* Card edits apply as they're made, so there's no footer; leave room at the end instead. */
+.editor-live {
+  padding-bottom: 16px;
+}
+
 .editor-footer {
   position: sticky;
   bottom: 0;
@@ -484,16 +489,6 @@ input[type="range"] {
   padding: 12px 16px 16px;
   border-top: 1px solid var(--border);
   background: var(--bg);
-}
-
-.changed-elsewhere {
-  display: grid;
-  justify-items: start;
-  gap: 8px;
-}
-
-.changed-elsewhere p {
-  margin: 0;
 }
 
 .form-error {
