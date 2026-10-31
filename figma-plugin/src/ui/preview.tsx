@@ -81,24 +81,23 @@ function handle(message: UiToMain) {
     case "create-card": {
       const id = `card:${nextCard++}`;
       cards.set(id, message.pattern);
-      select(id);
-      post({ type: "status", tone: "success", message: "Card created." });
+      select(selected);
+      post({ type: "status", tone: "success", message: "Card created.", reply: true });
       return;
     }
     case "update-card":
       cards.set(message.nodeId, message.pattern);
-      select(message.nodeId);
-      post({ type: "status", tone: "success", message: "Card updated." });
+      if (selected === message.nodeId) select(message.nodeId);
       return;
     case "link":
       links.set(message.nodeId, { schema: 1, cardId: message.cardId, trigger: message.trigger });
       select(message.nodeId);
-      post({ type: "status", tone: "success", message: "Linked. Developers will see it in Dev Mode." });
+      post({ type: "status", tone: "success", message: "Linked. Developers will see it in Dev Mode.", reply: true });
       return;
     case "unlink":
       links.delete(message.nodeId);
       select(message.nodeId);
-      post({ type: "status", tone: "success", message: "Link removed." });
+      post({ type: "status", tone: "success", message: "Link removed.", reply: true });
       return;
   }
 }
