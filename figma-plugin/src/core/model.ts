@@ -94,12 +94,27 @@ export function validatePattern(value: unknown): { ok: true; pattern: PatternSpe
   };
 }
 
-/** The start of [text], at most [maxUnits] UTF-16 units long, without cutting an emoji or other character in two. */
+// Characters that belong to the one before them: combining marks, variation selectors, the keycap, skin tones and
+// emoji tags; and the zero-width joiner, which ties two emoji together.
+const ATTACHED = /^[\p{M}\u200D\uFE0E\uFE0F\u20E3\u{1F3FB}-\u{1F3FF}\u{E0020}-\u{E007F}]$/u;
+const JOINER = "\u200D";
+const REGIONAL_INDICATOR = /^[\u{1F1E6}-\u{1F1FF}]$/u;
+
+/**
+ * The start of [text], at most [maxUnits] UTF-16 units long. An emoji or accented letter that would be cut apart is
+ * left out whole. This avoids Intl.Segmenter, which Figma's main thread may not have.
+ */
 export function clipText(text: string, maxUnits: number): string {
   if (text.length <= maxUnits) return text;
-  const last = text.charCodeAt(maxUnits - 1);
-  const splitsPair = last >= 0xd800 && last <= 0xdbff;
-  return text.slice(0, splitsPair ? maxUnits - 1 : maxUnits);
+  const chars = Array.from(text);
+  let end = 0;
+  for (let units = 0; end < chars.length && units + chars[end].length <= maxUnits; end++) units += chars[end].length;
+  while (end > 0 && (ATTACHED.test(chars[end] ?? "") || chars[end - 1] === JOINER)) end--;
+  // A flag is a pair of regional indicators.
+  let indicators = 0;
+  while (indicators < end && REGIONAL_INDICATOR.test(chars[end - 1 - indicators])) indicators++;
+  if (indicators % 2 === 1 && REGIONAL_INDICATOR.test(chars[end] ?? "")) end--;
+  return chars.slice(0, end).join("");
 }
 
 /** Clamps editor input into data that passes [validatePattern], apart from the event count and name. */

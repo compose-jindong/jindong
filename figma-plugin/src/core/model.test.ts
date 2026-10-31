@@ -1,5 +1,6 @@
 import { describe, expect, test } from "vitest";
 import {
+  clipText,
   normalizePattern,
   parseLinkJson,
   parsePatternJson,
@@ -90,6 +91,23 @@ describe("normalizePattern", () => {
   test("drops a stray length from taps", () => {
     const n = normalizePattern(pattern([{ ...tap(0), durationMs: 30 } as never], 0));
     expect(n.events[0]).toEqual(tap(0));
+  });
+});
+
+describe("clipText", () => {
+  test("keeps emoji made of several characters whole, or leaves them out", () => {
+    expect(clipText("ab🇰🇷", 4)).toBe("ab");
+    expect(clipText("ab🇰🇷🇯🇵", 8)).toBe("ab🇰🇷");
+    expect(clipText("ab👨‍👩‍👧", 5)).toBe("ab");
+    expect(clipText("ab👨‍👩‍👧", 7)).toBe("ab");
+    expect(clipText("ab👍🏽", 4)).toBe("ab");
+    expect(clipText("ab1️⃣", 3)).toBe("ab");
+    expect(clipText("abe\u0301", 3)).toBe("ab");
+  });
+
+  test("leaves text within the limit alone", () => {
+    expect(clipText("ab👨‍👩‍👧", 10)).toBe("ab👨‍👩‍👧");
+    expect(clipText("Payment done", 7)).toBe("Payment");
   });
 });
 
