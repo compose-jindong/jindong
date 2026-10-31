@@ -7,7 +7,8 @@ import { linkLayer, linkNoteStatus, unlinkLayer } from "./link";
 import { readSelection } from "./selection";
 import { findCards, pageOf, readPattern } from "./storage";
 
-// Design Mode: the editor window. Dev Mode: code generation only.
+// Design Mode: the editor window. Dev Mode: code generation, and the same window read-only, since plugins can't
+// change the file there.
 
 // Reading a selection waits on card lookups, so an older read can finish after a newer one; only the
 // latest read reaches the window.
@@ -21,13 +22,10 @@ let watchedPage: PageNode | null = null;
 // Requests run one at a time, so a second Create card sees the first card's name. handle() never rejects.
 let requests: Promise<void> = Promise.resolve();
 
-if (figma.editorType === "dev") {
-  if (figma.mode === "codegen") {
-    registerCodegen();
-  } else {
-    figma.notify('Jindong edits haptics in Figma Design. In Dev Mode, pick "Jindong (Compose)" in the code panel.');
-    figma.closePlugin();
-  }
+const readOnly = figma.editorType === "dev";
+
+if (readOnly && figma.mode === "codegen") {
+  registerCodegen();
 } else {
   figma.showUI(__html__, { width: 360, height: 640, themeColors: true });
   watchCurrentPage();
@@ -71,8 +69,12 @@ function nodeIdsOf(state: SelectionState): string[] {
 
 async function handle(message: UiToMain): Promise<void> {
   try {
+    if (readOnly && message.type !== "ready" && message.type !== "list-cards") {
+      throw new Error("Dev Mode is read-only. Switch to Design Mode to change haptics.");
+    }
     switch (message.type) {
       case "ready":
+        post({ type: "editor", readOnly });
         await pushSelection();
         return;
       case "list-cards":

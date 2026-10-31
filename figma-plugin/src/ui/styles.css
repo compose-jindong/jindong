@@ -93,6 +93,7 @@ button:disabled {
   max-width: 34ch;
   color: var(--text-secondary);
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 /* Gallery */
@@ -181,7 +182,7 @@ button:disabled {
   cursor: pointer;
 }
 
-.timeline-detailed .bar:not(.selected) {
+.timeline-selectable .bar:not(.selected) {
   opacity: 0.55;
 }
 
@@ -673,6 +674,19 @@ input[type="range"] {
 .link-panel .segmented button {
   flex: 1;
   padding: 4px 6px;
+}
+
+/* Dev Mode */
+
+.inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inspector-summary {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
 }
 
 /* Code */

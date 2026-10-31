@@ -32,6 +32,57 @@ function setup() {
   return { sent, emit };
 }
 
+describe("in Dev Mode, which can't change the file", () => {
+  const READ_ONLY = "Dev Mode is read-only. Switch to Design Mode to change haptics.";
+
+  function devSetup() {
+    const result = setup();
+    result.emit({ type: "editor", readOnly: true });
+    return result;
+  }
+
+  test("a card shows its haptic, a preview and its code, without editing", () => {
+    const { emit } = devSetup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    expect(screen.getByRole("heading", { name: "Success" })).toBeTruthy();
+    expect(screen.getByText(READ_ONLY)).toBeTruthy();
+    expect(screen.getByRole("img", { name: /Success rhythm/ })).toBeTruthy();
+    expect(screen.getByRole("button", { name: /Preview rhythm/ })).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Pattern", "Setup"]);
+    expect(screen.queryByLabelText("Name")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Update card" })).toBeNull();
+  });
+
+  test("a linked layer shows what plays and the code for it, without relinking", () => {
+    const { emit } = devSetup();
+    emit({
+      type: "selection",
+      state: layer({ link: { schema: 1, cardId: "9:1", trigger: "tap" }, linkedPattern: presetNamed("Success") }),
+    });
+    expect(screen.getByRole("heading", { name: "Pay button" })).toBeTruthy();
+    expect(screen.getByText("Plays Success · On tap")).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Haptic", "Pattern", "Setup"]);
+    expect(screen.queryByRole("button", { name: "Link haptic" })).toBeNull();
+    expect(screen.queryByRole("button", { name: "Remove link" })).toBeNull();
+  });
+
+  test("a broken link explains itself the way the code panel does", () => {
+    const { emit } = devSetup();
+    emit({ type: "selection", state: layer({ link: { schema: 1, cardId: "9:9", trigger: "tap", cardName: "Success" } }) });
+    expect(screen.getByText(/linked to the Jindong haptic card “Success”, which was moved or deleted/)).toBeTruthy();
+  });
+
+  test("other selections say what to select", () => {
+    const { emit } = devSetup();
+    emit({ type: "selection", state: { kind: "none" } });
+    expect(screen.getByText("Select a haptic card, or a layer linked to one, to see its haptic and code.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: /^Success/ })).toBeNull();
+    emit({ type: "selection", state: layer() });
+    expect(screen.getByText("No haptic is linked to this layer.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Link haptic" })).toBeNull();
+  });
+});
+
 describe("App", () => {
   test("announces it is ready", () => {
     const { sent } = setup();

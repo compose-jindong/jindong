@@ -57,7 +57,7 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
   useEffect(() => () => stopSound.current?.(), []);
 
   return (
-    <div className={detailed ? "timeline timeline-detailed" : "timeline"}>
+    <div className={["timeline", detailed && "timeline-detailed", onSelect && "timeline-selectable"].filter(Boolean).join(" ")}>
       <svg
         key={playCount}
         viewBox={`0 0 ${width} ${height}`}

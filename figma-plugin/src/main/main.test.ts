@@ -196,3 +196,42 @@ test("a failing selection read is reported to the window instead of escaping", a
     { type: "status", tone: "error", message: "The page isn't loaded yet." },
   ]);
 });
+
+test("in Dev Mode the window opens read-only: it shows the selection and refuses edits", async () => {
+  const posted: unknown[] = [];
+  const ui: { postMessage: (message: unknown) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  let shown = false;
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "dev",
+    mode: "inspect",
+    showUI: () => {
+      shown = true;
+    },
+    on: () => {},
+    notify: () => {},
+    closePlugin: () => {},
+    ui,
+    currentPage: { selection: [], on: () => {}, off: () => {} },
+  });
+
+  await import("./main");
+  expect(shown).toBe(true);
+  ui.onmessage?.({ type: "ready" });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(posted).toEqual([
+    { type: "editor", readOnly: true },
+    { type: "selection", state: { kind: "none" } },
+  ]);
+
+  ui.onmessage?.({ type: "unlink", nodeId: "5:1" });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(posted.at(-1)).toEqual({
+    type: "status",
+    tone: "error",
+    message: "Dev Mode is read-only. Switch to Design Mode to change haptics.",
+  });
+});

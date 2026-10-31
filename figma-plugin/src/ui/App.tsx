@@ -6,7 +6,9 @@ import { figmaBridge, type Bridge } from "./bridge";
 import { CodePanel } from "./CodePanel";
 import { Editor, type UnsavedEdits } from "./Editor";
 import { Gallery } from "./Gallery";
+import { Inspector } from "./Inspector";
 import { LinkPanel } from "./LinkPanel";
+import { Notice } from "./Notice";
 
 type Status = Extract<MainToUi, { type: "status" }>;
 type Tab = "main" | "code";
@@ -25,6 +27,7 @@ const UNSAVED_NOTICE = "This card has unsaved changes. Press Update card to incl
 
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
+  const [readOnly, setReadOnly] = useState(false);
   // A new haptic being shaped before it becomes a card. It outlives selection changes, so clicking a
   // layer and coming back doesn't throw the tweaks away; a created card ends it.
   const [draft, setDraft] = useState<{ id: number; pattern: PatternSpec } | null>(null);
@@ -66,6 +69,8 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         setSelection(message.state);
       } else if (message.type === "cards") {
         setCards(message.cards);
+      } else if (message.type === "editor") {
+        setReadOnly(message.readOnly);
       } else {
         setStatus(message);
         if (creating.current) {
@@ -122,6 +127,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   }, [busy]);
 
   function screen() {
+    if (readOnly) return selection && <Inspector selection={selection} />;
     switch (selection?.kind) {
       case undefined:
         return null;
@@ -239,10 +245,6 @@ function Tabbed({
       {tab === "code" && code}
     </>
   );
-}
-
-function Notice({ children }: { children: string }) {
-  return <p className="notice">{children}</p>;
 }
 
 function nodeIdOf(state: SelectionState | null): string | null {

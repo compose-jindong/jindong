@@ -43,6 +43,8 @@ export type UiToMain =
   | { type: "unlink"; nodeId: string };
 
 export type MainToUi =
+  /** Dev Mode can't change the file, so the window only shows the selection there. */
+  | { type: "editor"; readOnly: boolean }
   | { type: "selection"; state: SelectionState }
   | { type: "cards"; cards: CardSummary[] }
   | { type: "status"; tone: "success" | "warning" | "error"; message: string };
