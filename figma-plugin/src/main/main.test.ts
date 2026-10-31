@@ -44,7 +44,8 @@ test("a slow read of an earlier selection never overwrites the current one", asy
   const a = { id: "1:1", type: "FRAME", name: "A", parent: null, getSharedPluginData: data('{"schema":1,"cardId":"9:9","trigger":"tap"}') };
   const b = { id: "1:2", type: "FRAME", name: "B", parent: null, getSharedPluginData: data("") };
   const page = { selection: [a] as unknown[], on: () => {}, off: () => {} };
-  let releaseCard: (node: null) => void = () => {};
+  // Every lookup waits until the test releases it, so A's card lookup can finish after B was shown.
+  const lookups: ((node: null) => void)[] = [];
   vi.stubGlobal("__html__", "<html></html>");
   vi.stubGlobal("figma", {
     editorType: "figma",
@@ -53,7 +54,7 @@ test("a slow read of an earlier selection never overwrites the current one", asy
     on: (event: string, handler: () => void) => handlers.set(event, handler),
     ui: { postMessage: (message: { type: string }) => posted.push(message), onmessage: null },
     currentPage: page,
-    getNodeByIdAsync: () => new Promise((resolve) => (releaseCard = resolve)),
+    getNodeByIdAsync: () => new Promise((resolve) => lookups.push(resolve)),
   });
 
   await import("./main");
@@ -61,7 +62,8 @@ test("a slow read of an earlier selection never overwrites the current one", asy
   page.selection = [b];
   handlers.get("selectionchange")?.();
   await new Promise((resolve) => setTimeout(resolve, 0));
-  releaseCard(null);
+  expect(posted.filter((m) => m.type === "selection").map((m) => m.state?.nodeId)).toEqual(["1:2"]);
+  lookups.forEach((release) => release(null));
   await new Promise((resolve) => setTimeout(resolve, 0));
 
   const selections = posted.filter((m) => m.type === "selection").map((m) => m.state?.nodeId);
@@ -268,4 +270,57 @@ test("a card update, which comes with every pause in editing, is applied quietly
 
   expect(posted.map((m) => m.type)).toEqual(["selection"]);
   expect(commits).toBe(1);
+});
+
+test("a change to the linked card on another page re-sends the selection", async () => {
+  const posted: { type: string }[] = [];
+  const ui: { postMessage: (message: { type: string }) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  const hapticsHandlers = new Map<string, (event: unknown) => void>();
+  const haptics = {
+    id: "0:2",
+    type: "PAGE",
+    name: "Haptics",
+    parent: null,
+    loadAsync: async () => {},
+    on: (event: string, handler: (event: unknown) => void) => hapticsHandlers.set(event, handler),
+    off: () => {},
+  };
+  const card = {
+    id: "7:1",
+    type: "FRAME",
+    name: "Haptic / Success",
+    parent: haptics,
+    getSharedPluginData: (_: string, key: string) => (key === "pattern" ? JSON.stringify(presetNamed("Success")) : ""),
+  };
+  const screens = { id: "0:1", type: "PAGE", name: "Screens", parent: null, selection: [] as unknown[], on: () => {}, off: () => {} };
+  const button = {
+    id: "5:1",
+    type: "FRAME",
+    name: "Pay button",
+    parent: screens,
+    getSharedPluginData: (_: string, key: string) => (key === "link" ? '{"schema":1,"cardId":"7:1","trigger":"tap"}' : ""),
+  };
+  screens.selection = [button];
+  const nodes: Record<string, unknown> = { "7:1": card, "5:1": button };
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: screens,
+    getNodeByIdAsync: async (id: string) => nodes[id] ?? null,
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "ready" });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(posted.filter((m) => m.type === "selection")).toHaveLength(1);
+  hapticsHandlers.get("nodechange")?.({ nodeChanges: [{ type: "PROPERTY_CHANGE", id: "7:1", properties: ["pluginData"] }] });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+  expect(posted.filter((m) => m.type === "selection")).toHaveLength(2);
 });

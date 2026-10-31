@@ -15,9 +15,10 @@ import { findCards, pageOf, readPattern } from "./storage";
 let selectionReads = 0;
 
 // Undo or a teammate's edit can change the shown card without changing the selection, so changes to the
-// selected layer or its card re-send the selection.
+// selected layer or its card re-send the selection. The card often sits on another page (a linked card, or an
+// instance's main component), so every page holding one of them is watched, not just the current one.
 let watchedIds = new Set<string>();
-let watchedPage: PageNode | null = null;
+let watchedPages = new Map<string, PageNode>();
 
 // Requests run one at a time, so a second Create card sees the first card's name. handle() never rejects.
 let requests: Promise<void> = Promise.resolve();
@@ -28,12 +29,10 @@ if (readOnly && figma.mode === "codegen") {
   registerCodegen();
 } else {
   figma.showUI(__html__, { width: 360, height: 640, themeColors: true });
-  watchCurrentPage();
+  watchedPages.set(figma.currentPage.id, figma.currentPage);
+  figma.currentPage.on("nodechange", onNodeChange);
   figma.on("selectionchange", () => void pushSelection().catch(postError));
-  figma.on("currentpagechange", () => {
-    watchCurrentPage();
-    void pushSelection().catch(postError);
-  });
+  figma.on("currentpagechange", () => void pushSelection().catch(postError));
   figma.ui.onmessage = (message: UiToMain) => {
     requests = requests.then(() => handle(message));
   };
@@ -49,12 +48,24 @@ async function pushSelection(): Promise<void> {
   if (read !== selectionReads) return;
   watchedIds = new Set(nodeIdsOf(state));
   post({ type: "selection", state });
+  await watchPagesOf(watchedIds, read);
 }
 
-function watchCurrentPage(): void {
-  watchedPage?.off("nodechange", onNodeChange);
-  watchedPage = figma.currentPage;
-  watchedPage.on("nodechange", onNodeChange);
+async function watchPagesOf(ids: Set<string>, read: number): Promise<void> {
+  const pages = new Map<string, PageNode>([[figma.currentPage.id, figma.currentPage]]);
+  for (const id of ids) {
+    const node = await figma.getNodeByIdAsync(id);
+    const page = node ? pageOf(node) : null;
+    if (page && !pages.has(page.id)) {
+      await page.loadAsync();
+      pages.set(page.id, page);
+    }
+  }
+  // A newer read watches its own pages.
+  if (read !== selectionReads) return;
+  for (const [id, page] of watchedPages) if (!pages.has(id)) page.off("nodechange", onNodeChange);
+  for (const [id, page] of pages) if (!watchedPages.has(id)) page.on("nodechange", onNodeChange);
+  watchedPages = pages;
 }
 
 function onNodeChange(event: NodeChangeEvent): void {
