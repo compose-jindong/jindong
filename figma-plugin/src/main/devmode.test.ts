@@ -87,6 +87,20 @@ describe("Dev Mode codegen", () => {
     ]);
   });
 
+  test("an instance of a library component with a link points to the library instead of guessing", async () => {
+    card("9:1");
+    const libraryButton = fakeNode("6:1") as unknown as Record<string, unknown>;
+    libraryButton.type = "COMPONENT";
+    libraryButton.remote = true;
+    writeLink(libraryButton as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap", cardName: "Tap" });
+    const instance = fakeNode("6:2") as unknown as Record<string, unknown>;
+    instance.type = "INSTANCE";
+    instance.getMainComponentAsync = async () => libraryButton;
+    instance.getSharedPluginData = (libraryButton as unknown as SceneNode).getSharedPluginData;
+    const [notice] = await generate({ node: instance as unknown as SceneNode, language: "jindong" });
+    expect(notice.code).toContain("was linked in its team library");
+  });
+
   test("a layer inside a card shows the card's code", async () => {
     const parent = card("9:1");
     const bar = fakeNode("9:2");

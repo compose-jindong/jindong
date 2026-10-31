@@ -25,6 +25,8 @@ export type SelectionState =
       linkInherited?: boolean;
       /** The linked card exists, but its data is from a plugin version this one can't read. */
       linkedCardUnreadable?: boolean;
+      /** The link comes from a component in a team library, whose card this file can't read. */
+      linkFromLibrary?: boolean;
     };
 
 export interface CardSummary {

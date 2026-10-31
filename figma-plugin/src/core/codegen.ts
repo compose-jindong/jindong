@@ -182,6 +182,8 @@ export function codeSections(input: {
   unreadableCard?: boolean;
   /** The linked layer's name, for naming its tap counter. */
   layerName?: string;
+  /** The link comes from a component in a team library, whose card is in the library's file. */
+  linkFromLibrary?: boolean;
 }): CodeSection[] {
   if (input.unreadableCard) {
     const code = input.link ? UNREADABLE_LINKED_CARD_NOTICE : UNREADABLE_CARD_NOTICE;
@@ -198,6 +200,11 @@ export function codeSections(input: {
       { title: "Pattern", language: "KOTLIN", code: patternCode(input.linkedPattern) },
       setup,
     ];
+  }
+  if (input.link && input.linkFromLibrary) {
+    const name = input.link.cardName ? ` “${input.link.cardName}”` : "";
+    const code = `This component's Jindong haptic${name} was linked in its team library.\nOpen the library file in Dev Mode and select the component there to get its code.`;
+    return [{ title: "Jindong", language: "PLAINTEXT", code }];
   }
   if (input.link) {
     const name = input.link.cardName;

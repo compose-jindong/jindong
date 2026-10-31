@@ -1,6 +1,6 @@
 import type { LayerWarning, SelectionState } from "../shared/messages";
 import { clashesWith } from "../core/codegen";
-import { findCard, findCardsOnPage, isCard, rawLink, readLink, readPattern } from "./storage";
+import { findCard, findCardsOnPage, isCard, linkFromLibrary, rawLink, readLink, readPattern } from "./storage";
 
 export async function readSelection(): Promise<SelectionState> {
   const selection = figma.currentPage.selection;
@@ -15,7 +15,8 @@ export async function readSelection(): Promise<SelectionState> {
   }
 
   const link = readLink(node);
-  const linkedCard = link ? await figma.getNodeByIdAsync(link.cardId) : null;
+  const fromLibrary = link ? await linkFromLibrary(node) : false;
+  const linkedCard = link && !fromLibrary ? await figma.getNodeByIdAsync(link.cardId) : null;
   const linkedPattern = readPattern(linkedCard);
   return {
     kind: "layer",
@@ -26,6 +27,7 @@ export async function readSelection(): Promise<SelectionState> {
     warning: warningFor(node),
     linkInherited: link ? await inheritsLink(node) : false,
     linkedCardUnreadable: linkedCard !== null && isCard(linkedCard) && linkedPattern === null,
+    linkFromLibrary: fromLibrary,
   };
 }
 

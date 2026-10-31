@@ -116,6 +116,32 @@ describe("readSelection", () => {
     expect(await readSelection()).toMatchObject({ kind: "layer", linkedPattern: null, linkedCardUnreadable: false });
   });
 
+  test("a link that comes from a library component isn't looked up in this file, where its card id means nothing", async () => {
+    const libraryButton = fakeNode("6:20", "COMPONENT");
+    libraryButton.remote = true;
+    writeLink(libraryButton as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap", cardName: "Tap" });
+    // This file happens to have its own node with that id.
+    const unrelated = fakeNode("9:1", "FRAME", page);
+    writePattern(unrelated as unknown as SceneNode, presetNamed("Error"));
+    select(instanceOf("6:21", libraryButton, page));
+    (figma as unknown as { getNodeByIdAsync: (id: string) => Promise<FakeNode | null> }).getNodeByIdAsync = async (id) =>
+      id === "9:1" ? unrelated : null;
+    expect(await readSelection()).toMatchObject({ kind: "layer", linkFromLibrary: true, linkedPattern: null });
+  });
+
+  test("an instance's own link stays local even when its component comes from a library", async () => {
+    const libraryButton = fakeNode("6:22", "COMPONENT");
+    libraryButton.remote = true;
+    const own = instanceOf("6:23", libraryButton, page);
+    writeLink(own as unknown as SceneNode, { schema: 1, cardId: "9:2", trigger: "tap" });
+    const card = fakeNode("9:2", "FRAME", page);
+    writePattern(card as unknown as SceneNode, presetNamed("Success"));
+    select(own);
+    (figma as unknown as { getNodeByIdAsync: (id: string) => Promise<FakeNode | null> }).getNodeByIdAsync = async (id) =>
+      id === "9:2" ? card : null;
+    expect(await readSelection()).toMatchObject({ kind: "layer", linkFromLibrary: false, linkedPattern: presetNamed("Success") });
+  });
+
   test("a layer inside a main component warns that every instance gets its link", async () => {
     const component = fakeNode("6:8", "COMPONENT", page);
     select(fakeNode("6:9", "RECTANGLE", component));

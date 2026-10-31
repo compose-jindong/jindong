@@ -243,6 +243,23 @@ describe("codeSections", () => {
     );
   });
 
+  test("a link from a library component points to the library for its code", () => {
+    expect(
+      codeSections({
+        pattern: null,
+        link: { schema: 1, cardId: "9:9", trigger: "tap", cardName: "Tap" },
+        linkedPattern: null,
+        linkFromLibrary: true,
+      }),
+    ).toEqual([
+      {
+        title: "Jindong",
+        language: "PLAINTEXT",
+        code: "This component's Jindong haptic “Tap” was linked in its team library.\nOpen the library file in Dev Mode and select the component there to get its code.",
+      },
+    ]);
+  });
+
   test("any other layer gets a short hint", () => {
     expect(codeSections({ pattern: null, link: null, linkedPattern: null })).toEqual([
       { title: "Jindong", language: "PLAINTEXT", code: NO_HAPTIC_NOTICE },

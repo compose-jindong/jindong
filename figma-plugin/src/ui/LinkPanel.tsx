@@ -19,7 +19,7 @@ interface LinkPanelProps {
 const TRIGGERS: Trigger[] = ["tap", "enter", "state"];
 
 export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy = false }: LinkPanelProps) {
-  const { link, linkedPattern, warning, linkInherited, linkedCardUnreadable } = state;
+  const { link, linkedPattern, warning, linkInherited, linkedCardUnreadable, linkFromLibrary } = state;
   const [cardId, setCardId] = useState<string | null>(link && linkedPattern ? link.cardId : null);
   const [trigger, setTrigger] = useState<Trigger>(link?.trigger ?? "tap");
 
@@ -30,7 +30,7 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
 
   // A cut and paste gives a card a new id; a card with the remembered name is probably the same one.
   const suggestion =
-    link && !linkedPattern && !linkedCardUnreadable && link.cardName
+    link && !linkedPattern && !linkedCardUnreadable && !linkFromLibrary && link.cardName
       ? cards?.find((card) => card.name === link.cardName)
       : undefined;
   useEffect(() => {
@@ -40,6 +40,9 @@ export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy
   const chosen = cards?.find((card) => card.id === cardId);
 
   function linkSummary(link: HapticLink): string {
+    if (linkFromLibrary) {
+      return `Linked to ${link.cardName ?? "a haptic"} · ${TRIGGER_LABEL[link.trigger]} in the library this component comes from.`;
+    }
     if (linkedPattern) {
       const through = linkInherited ? " through its main component." : "";
       return `Linked to ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}${through}`;

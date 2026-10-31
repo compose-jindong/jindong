@@ -21,7 +21,7 @@ export function Inspector({ selection }: { selection: SelectionState }) {
       return <View label="Haptic" title={pattern.name} summary={pattern.description} pattern={pattern} sections={sections} />;
     }
     case "layer": {
-      const { link, linkedPattern, linkedCardUnreadable, nodeName } = selection;
+      const { link, linkedPattern, linkedCardUnreadable, linkFromLibrary, nodeName } = selection;
       if (!link) return <Notice>No haptic is linked to this layer.</Notice>;
       const sections = codeSections({
         pattern: null,
@@ -29,6 +29,7 @@ export function Inspector({ selection }: { selection: SelectionState }) {
         linkedPattern,
         unreadableCard: linkedCardUnreadable,
         layerName: nodeName,
+        linkFromLibrary,
       });
       // Without a readable card the code panel's own explanation is the whole answer.
       if (!linkedPattern) return <Notice>{sections[0].code}</Notice>;

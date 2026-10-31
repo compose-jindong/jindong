@@ -481,6 +481,20 @@ describe("App", () => {
     expect(sent).toContainEqual({ type: "unlink", nodeId: "5:1" });
   });
 
+  test("a link from a library component says where it was made", () => {
+    const { emit } = setup();
+    emit({
+      type: "selection",
+      state: layer({
+        link: { schema: 1, cardId: "9:9", trigger: "tap", cardName: "Tap" },
+        linkInherited: true,
+        linkFromLibrary: true,
+      }),
+    });
+    expect(screen.getByText("Linked to Tap · On tap in the library this component comes from.")).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Remove link" })).toBeNull();
+  });
+
   test("a link to a card from a newer plugin version says so", () => {
     const { emit } = setup();
     emit({

@@ -36,6 +36,21 @@ export async function findCard(node: BaseNode): Promise<BaseNode | null> {
   return null;
 }
 
+/**
+ * Whether [node]'s link comes from a component in a team library. Such a link names a card in the library's file,
+ * which this file can't read; a node here with the same id would be an unrelated one.
+ */
+export async function linkFromLibrary(node: BaseNode): Promise<boolean> {
+  for (let current: BaseNode | null = node; current && current.type !== "PAGE"; current = current.parent) {
+    if (current.type !== "INSTANCE") continue;
+    const main = await current.getMainComponentAsync();
+    if (!main?.remote) return false;
+    // An instance's own link overrides the one it would inherit.
+    return current !== node || rawLink(main) === rawLink(node);
+  }
+  return false;
+}
+
 /** The stored link exactly as Figma returns it; an instance without its own value returns its component's. */
 export function rawLink(node: BaseNode): string {
   return node.getSharedPluginData(NAMESPACE, LINK_KEY);
