@@ -47,4 +47,10 @@ export type MainToUi =
   | { type: "editor"; readOnly: boolean }
   | { type: "selection"; state: SelectionState }
   | { type: "cards"; cards: CardSummary[] }
-  | { type: "status"; tone: "success" | "warning" | "error"; message: string };
+  | {
+      type: "status";
+      tone: "success" | "warning" | "error";
+      message: string;
+      /** Answers the window's last action (create, link, unlink), which is now over. */
+      reply?: boolean;
+    };

@@ -235,6 +235,7 @@ test("in Dev Mode the window opens read-only: it shows the selection and refuses
     type: "status",
     tone: "error",
     message: "Dev Mode is read-only. Switch to Design Mode to change haptics.",
+    reply: true,
   });
 });
 

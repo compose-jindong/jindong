@@ -57,11 +57,13 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         setReadOnly(message.readOnly);
       } else {
         setStatus(message);
+        // Every action ends with a status marked as its reply, success or error, so the buttons come back here.
+        // Other statuses, such as a failed background read, leave the action running.
+        if (!message.reply) return;
         if (creating.current) {
           creating.current = false;
           if (message.tone !== "error") setDraft(null);
         }
-        // Every action ends with a status, success or error, so the buttons come back here.
         busyRef.current = false;
         setBusy(false);
       }

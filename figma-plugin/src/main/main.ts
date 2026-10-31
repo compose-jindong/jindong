@@ -68,6 +68,10 @@ function nodeIdsOf(state: SelectionState): string[] {
 }
 
 async function handle(message: UiToMain): Promise<void> {
+  // A status that answers one of the window's actions says so, and that tells the window the action is over;
+  // statuses from background reads and from card edits as they're made don't.
+  const reply = message.type === "create-card" || message.type === "link" || message.type === "unlink";
+  const finish = (tone?: "success" | "warning", text?: string) => completeAction(reply, tone, text);
   try {
     if (readOnly && message.type !== "ready" && message.type !== "list-cards") {
       throw new Error("Dev Mode is read-only. Switch to Design Mode to change haptics.");
@@ -126,18 +130,22 @@ async function handle(message: UiToMain): Promise<void> {
         return;
     }
   } catch (error) {
-    postError(error);
+    postError(error, reply);
   }
 }
 
-function postError(error: unknown): void {
-  post({ type: "status", tone: "error", message: error instanceof Error ? error.message : String(error) });
+function postError(error: unknown, reply = false): void {
+  post(status("error", error instanceof Error ? error.message : String(error), reply));
+}
+
+function status(tone: "success" | "warning" | "error", message: string, reply: boolean): MainToUi {
+  return reply ? { type: "status", tone, message, reply } : { type: "status", tone, message };
 }
 
 // Data changed, so the window re-reads the selection even when the selection itself didn't move.
-async function finish(tone?: "success" | "warning", message?: string): Promise<void> {
+async function completeAction(reply: boolean, tone?: "success" | "warning", message?: string): Promise<void> {
   await pushSelection();
-  if (tone && message) post({ type: "status", tone, message });
+  if (tone && message) post(status(tone, message, reply));
   // Without this, one Cmd+Z would undo every plugin action since the window opened.
   figma.commitUndo();
 }

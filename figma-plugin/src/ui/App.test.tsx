@@ -116,7 +116,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
     fireEvent.click(screen.getByRole("button", { name: "Create card" }));
     emit({ type: "selection", state: { kind: "none" } });
-    emit({ type: "status", tone: "success", message: "Card created." });
+    emit({ type: "status", tone: "success", message: "Card created.", reply: true });
     expect(screen.getByRole("heading", { name: "Jindong" })).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Create card" })).toBeNull();
   });
@@ -127,7 +127,7 @@ describe("App", () => {
     fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
     fireEvent.click(screen.getByRole("button", { name: "Create card" }));
     emit({ type: "selection", state: { kind: "card", nodeId: "8:1", pattern: presetNamed("Success") } });
-    emit({ type: "status", tone: "success", message: "Card created." });
+    emit({ type: "status", tone: "success", message: "Card created.", reply: true });
     emit({ type: "selection", state: { kind: "none" } });
     expect(screen.getByRole("heading", { name: "Jindong" })).toBeTruthy();
   });
@@ -141,8 +141,23 @@ describe("App", () => {
     fireEvent.click(create);
     expect(sent.filter((m) => m.type === "create-card")).toHaveLength(1);
     expect(create).toHaveProperty("disabled", true);
-    emit({ type: "status", tone: "error", message: "Font missing." });
+    emit({ type: "status", tone: "error", message: "Font missing.", reply: true });
     expect(screen.getByRole("button", { name: "Create card" })).toHaveProperty("disabled", false);
+  });
+
+  test("a status nobody asked for doesn't end the action in flight", () => {
+    const { sent, emit } = setup();
+    emit({ type: "selection", state: { kind: "none" } });
+    fireEvent.click(screen.getByRole("button", { name: /^Success/ }));
+    fireEvent.click(screen.getByRole("button", { name: "Create card" }));
+    emit({ type: "status", tone: "error", message: "The page isn't loaded yet." });
+    const create = screen.getByRole("button", { name: "Create card" });
+    expect(create).toHaveProperty("disabled", true);
+    fireEvent.click(create);
+    expect(sent.filter((m) => m.type === "create-card")).toHaveLength(1);
+    emit({ type: "selection", state: { kind: "none" } });
+    emit({ type: "status", tone: "success", message: "Card created.", reply: true });
+    expect(screen.getByRole("heading", { name: "Jindong" })).toBeTruthy();
   });
 
   test("a slow request says it's still working instead of re-enabling the button", () => {
@@ -174,7 +189,7 @@ describe("App", () => {
       // One step at a time, so each timer's effects run before the next one is due.
       for (let second = 0; second < 25; second++) act(() => vi.advanceTimersByTime(1000));
       expect(screen.getByRole("status").textContent).toBe("Still working… Large files can take a moment.");
-      emit({ type: "status", tone: "success", message: "Card created." });
+      emit({ type: "status", tone: "success", message: "Card created.", reply: true });
       expect(screen.getByRole("status").textContent).toBe("Card created.");
     } finally {
       vi.useRealTimers();
