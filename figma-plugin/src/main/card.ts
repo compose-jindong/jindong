@@ -32,7 +32,8 @@ export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void>
     if (ours(child)) child.remove();
   }
 
-  frame.name = `Haptic / ${p.name}`;
+  // A variant's name holds its property values ("Type=Success"), so renaming it would break its component set.
+  if (frame.parent?.type !== "COMPONENT_SET") frame.name = `Haptic / ${p.name}`;
   frame.layoutMode = "NONE";
   frame.resize(CARD.width, CARD.height);
   frame.fills = [solid("#FFFFFF")];

@@ -128,6 +128,16 @@ describe("cards a designer has reshaped", () => {
     expect(readPattern(node as unknown as SceneNode)?.name).toBe("Paid");
   });
 
+  test("a card that's a variant in a component set keeps its variant name", async () => {
+    const set = fakeNode("COMPONENT_SET", "7:20");
+    root.appendChild(set);
+    const variant = card("COMPONENT", "7:21");
+    set.appendChild(variant);
+    variant.name = "Type=Success";
+    await updateCard("7:21", presetNamed("Heartbeat"));
+    expect(variant.name).toBe("Type=Success");
+  });
+
   test("a card given auto layout is redrawn with absolute positions", async () => {
     const node = card("FRAME", "7:2");
     node.layoutMode = "VERTICAL";
