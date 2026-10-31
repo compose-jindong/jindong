@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, test, vi } from "vitest";
+import { toTimeline } from "../core/model";
 import { presetNamed } from "../core/presets";
 import { createCard, updateCard } from "./card";
 import { findCards, readPattern, writePattern } from "./storage";
@@ -152,6 +153,15 @@ describe("cards a designer has reshaped", () => {
     await updateCard("7:7", presetNamed("Heartbeat"));
     expect(node.children).toContain(note);
     expect(node.children.length).toBe(drawn + 2);
+  });
+
+  test("the card shows the haptic's length once, as its total", async () => {
+    const node = card("FRAME", "7:13");
+    const rampUp = presetNamed("Ramp Up");
+    await updateCard("7:13", rampUp);
+    const texts = node.children.filter((child: FakeNode) => child.type === "TEXT").map((child: FakeNode) => child.characters);
+    const lengths = texts.filter((text: string) => /\d ms/.test(text) || text === "0");
+    expect(lengths).toEqual([`${toTimeline(rampUp).durationMs} ms total`]);
   });
 
   test("a designer's layer sent behind the card's drawing stays behind it", async () => {

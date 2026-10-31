@@ -65,10 +65,9 @@ export async function renderCard(frame: CardNode, p: PatternSpec): Promise<void>
     }
   }
 
-  place(frame, text("0", REGULAR, 10, "#A1A1AA"), box.x, 132);
-  placeRight(frame, text(`${windowMs} ms`, REGULAR, 10, "#A1A1AA"), 132);
   place(frame, text("jindong", SEMI_BOLD, 11, "#52525B"), 14, 152);
-  placeRight(frame, text(`${timeline.durationMs} ms`, REGULAR, 11, "#A1A1AA"), 152);
+  // One length on the card: the haptic's own, including the silence after it. The chart's scale stays unlabelled.
+  placeRight(frame, text(`${timeline.durationMs} ms total`, REGULAR, 11, "#A1A1AA"), 152);
   for (const child of onTop) frame.appendChild(child);
 
   frame.setRelaunchData({ edit: "Edit this haptic in Jindong" });

@@ -17,7 +17,7 @@ export const CARD = {
   width: 280,
   height: 178,
   radius: 12,
-  timeline: { x: 14, y: 56, width: 252, height: 72 },
+  timeline: { x: 14, y: 56, width: 252, height: 84 },
   headroom: 8,
   minBarWidth: 2,
   minBarHeight: 1,

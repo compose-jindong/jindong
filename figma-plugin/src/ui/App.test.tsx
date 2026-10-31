@@ -525,6 +525,13 @@ describe("App", () => {
     }
   });
 
+  test("the timeline shows the haptic's total length rather than the chart's scale", () => {
+    const { emit } = setup();
+    emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+    expect(screen.getByText("460 ms total")).toBeTruthy();
+    expect(screen.queryByText("506 ms")).toBeNull();
+  });
+
   test("Preview rhythm plays the haptic as sound, since a computer can't vibrate", () => {
     vi.stubGlobal("AudioContext", FakeAudioContext);
     try {

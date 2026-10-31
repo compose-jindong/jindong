@@ -9,7 +9,7 @@ interface TimelineProps {
   height: number;
   selectedIndex?: number;
   onSelect?: (index: number) => void;
-  /** Adds the axis labels and a button that replays the rhythm in real time, with sound. */
+  /** Adds the haptic's total length and a button that replays the rhythm in real time, with sound. */
   detailed?: boolean;
 }
 
@@ -107,7 +107,6 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
       </svg>
       {detailed && (
         <div className="timeline-meta">
-          <span>0</span>
           <button
             type="button"
             className="play-button"
@@ -123,7 +122,7 @@ export function Timeline({ pattern, width, height, selectedIndex, onSelect, deta
             </svg>
             Preview rhythm
           </button>
-          <span>{windowMs} ms</span>
+          <span>{timeline.durationMs} ms total</span>
         </div>
       )}
     </div>
