@@ -165,7 +165,9 @@ export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false 
 // The saved card can change underneath: this editor's own edit coming back, undo, or a teammate's edit. Without
 // edits still on their way, show the new values; with them, keep the edits, which reach the card next.
 function reconcile(edits: Edits, saved: PatternSpec): Edits {
-  if (samePattern(edits.pattern, edits.base) || samePattern(edits.pattern, saved)) return { base: saved, pattern: saved };
+  // Keep what was typed: normalizing trims the name, so the card can come back without a space just typed.
+  if (samePattern(edits.pattern, saved)) return { base: saved, pattern: edits.pattern };
+  if (samePattern(edits.pattern, edits.base)) return { base: saved, pattern: saved };
   if (edits.sent && samePattern(edits.sent, saved)) return { base: saved, pattern: edits.pattern };
   return edits;
 }

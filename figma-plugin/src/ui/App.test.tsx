@@ -270,6 +270,21 @@ describe("App", () => {
     }
   });
 
+  test("a space typed as an edit lands stays in the name", () => {
+    vi.useFakeTimers();
+    try {
+      const { emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Big" } });
+      act(() => vi.advanceTimersByTime(300));
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Big " } });
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Big" } } });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Big ");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("an edit undone on the canvas shows the undone values and isn't sent again", () => {
     vi.useFakeTimers();
     try {
