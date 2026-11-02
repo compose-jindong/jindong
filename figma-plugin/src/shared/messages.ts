@@ -50,6 +50,8 @@ export type MainToUi =
   /** Dev Mode can't change the file, so the window only shows the selection there. */
   | { type: "editor"; readOnly: boolean }
   | { type: "selection"; state: SelectionState }
+  /** An edit sent with update-card didn't reach the card, so the window shows the card as it is. */
+  | { type: "card-update-failed"; nodeId: string }
   | { type: "cards"; cards: CardSummary[] }
   | {
       type: "status";

@@ -324,3 +324,37 @@ test("a change to the linked card on another page re-sends the selection", async
   await new Promise((resolve) => setTimeout(resolve, 0));
   expect(posted.filter((m) => m.type === "selection")).toHaveLength(2);
 });
+
+test("a card update that fails names the card, so the window can show the card as it is", async () => {
+  vi.doMock("./card", () => ({
+    createCard: vi.fn(),
+    updateCard: vi.fn(async () => {
+      throw new Error("Couldn't load a font.");
+    }),
+  }));
+  const posted: unknown[] = [];
+  const ui: { postMessage: (message: unknown) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  const card = { id: "7:1", type: "FRAME", parent: null, getSharedPluginData: () => JSON.stringify(presetNamed("Success")) };
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: { selection: [], on: () => {}, off: () => {} },
+    getNodeByIdAsync: async () => card,
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "update-card", nodeId: "7:1", pattern: { ...presetNamed("Success"), name: "Paid" } });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  expect(posted).toEqual([
+    { type: "card-update-failed", nodeId: "7:1" },
+    { type: "status", tone: "error", message: "Couldn't load a font." },
+  ]);
+});

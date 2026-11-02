@@ -455,6 +455,27 @@ describe("App", () => {
     expect(screen.queryByLabelText("Name")).toBeNull();
   });
 
+  test("an edit the card refuses is dropped, and the editor shows the card as it is again", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+      act(() => vi.advanceTimersByTime(300));
+      emit({ type: "card-update-failed", nodeId: "1:2" });
+      emit({ type: "status", tone: "error", message: "Couldn't load a font." });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Success");
+      // It follows changes from elsewhere again, and the next edit is sent.
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Teammate" } } });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Teammate");
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid again" } });
+      act(() => vi.advanceTimersByTime(300));
+      expect(sent.filter((m) => m.type === "update-card")).toHaveLength(2);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("an unreadable card shows the newer-version message", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: null } });

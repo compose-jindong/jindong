@@ -27,6 +27,8 @@ const NO_ANSWER: Status = {
 export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
   const [selection, setSelection] = useState<SelectionState | null>(null);
   const [readOnly, setReadOnly] = useState(false);
+  // Edits the selected card refused, so its editor can show the card as it is.
+  const [refusedEdits, setRefusedEdits] = useState(0);
   // A new haptic being shaped before it becomes a card. Creating it or selecting something else ends it.
   const [draft, setDraft] = useState<{ id: number; pattern: PatternSpec } | null>(null);
   const draftIds = useRef(0);
@@ -47,6 +49,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         if (nodeId !== selectedNodeId.current) {
           setTab("main");
           setCards(null);
+          setRefusedEdits(0);
         }
         if (message.state.kind !== "none") setDraft(null);
         selectedNodeId.current = nodeId;
@@ -55,6 +58,8 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
         setCards(message.cards);
       } else if (message.type === "editor") {
         setReadOnly(message.readOnly);
+      } else if (message.type === "card-update-failed") {
+        if (message.nodeId === selectedNodeId.current) setRefusedEdits((count) => count + 1);
       } else {
         setStatus(message);
         // Every action ends with a status marked as its reply, success or error, so the buttons come back here.
@@ -148,6 +153,7 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
               mode="update"
               initial={pattern}
               onApply={(next) => bridge.send({ type: "update-card", nodeId, pattern: next })}
+              refusedEdits={refusedEdits}
             />
           </Tabbed>
         );

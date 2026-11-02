@@ -23,6 +23,8 @@ interface EditorProps {
   onSubmit?: (pattern: PatternSpec) => void;
   /** Receives each edit to a card as it settles, like Figma's own panels, so there's nothing to save. */
   onApply?: (pattern: PatternSpec) => void;
+  /** Counts edits the card refused. Each drops the oldest edit on its way; with none left, the card shows as it is. */
+  refusedEdits?: number;
   onBack?: () => void;
   /** An earlier request is still being handled. */
   busy?: boolean;
@@ -30,7 +32,7 @@ interface EditorProps {
 
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
-export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false }: EditorProps) {
+export function Editor({ mode, initial, onSubmit, onApply, refusedEdits = 0, onBack, busy = false }: EditorProps) {
   const [edits, setEdits] = useState<Edits>({ base: initial, pattern: initial, inFlight: [] });
   const draft = edits.pattern;
   const setDraft = (pattern: PatternSpec) => setEdits((current) => ({ ...current, pattern }));
@@ -44,6 +46,18 @@ export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false 
     saved.current = initial;
     setEdits((current) => reconcile(current, initial));
   }, [initial]);
+
+  // A refused edit never comes back, so waiting for it would stop the editor following undo and teammates.
+  const refused = useRef(refusedEdits);
+  useEffect(() => {
+    const count = refusedEdits - refused.current;
+    refused.current = refusedEdits;
+    if (count <= 0) return;
+    setEdits((current) => {
+      const inFlight = current.inFlight.slice(count);
+      return inFlight.length > 0 ? { ...current, inFlight } : { base: initial, pattern: initial, inFlight: [] };
+    });
+  }, [refusedEdits]);
 
   const apply = useRef(onApply);
   useEffect(() => {

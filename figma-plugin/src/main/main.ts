@@ -141,6 +141,7 @@ async function handle(message: UiToMain): Promise<void> {
         return;
     }
   } catch (error) {
+    if (message.type === "update-card") post({ type: "card-update-failed", nodeId: message.nodeId });
     postError(error, reply);
   }
 }
