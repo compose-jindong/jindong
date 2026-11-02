@@ -488,6 +488,42 @@ describe("App", () => {
     expect(screen.queryByRole("button", { name: "Remove link" })).toBeNull();
   });
 
+  test("when the saved link changes (undo, a teammate), the choices follow it", () => {
+    const { sent, emit } = setup();
+    const cards = [
+      { id: "9:1", name: "Success", tone: "green" as const, pageName: "Haptics" },
+      { id: "9:2", name: "Error", tone: "red" as const, pageName: "Haptics" },
+    ];
+    emit({
+      type: "selection",
+      state: layer({ link: { schema: 1, cardId: "9:1", trigger: "tap" }, linkedPattern: presetNamed("Success") }),
+    });
+    emit({ type: "cards", cards });
+    emit({
+      type: "selection",
+      state: layer({ link: { schema: 1, cardId: "9:2", trigger: "enter" }, linkedPattern: presetNamed("Error") }),
+    });
+    expect(screen.getByRole("radio", { name: /Error/ }).getAttribute("aria-checked")).toBe("true");
+    fireEvent.click(screen.getByRole("button", { name: "Link haptic" }));
+    expect(sent.filter((m) => m.type === "link").at(-1)).toMatchObject({ cardId: "9:2", trigger: "enter" });
+  });
+
+  test("a choice in progress isn't reset when the same link is sent again", () => {
+    const { emit } = setup();
+    const linked = layer({ link: { schema: 1, cardId: "9:1", trigger: "tap" }, linkedPattern: presetNamed("Success") });
+    emit({ type: "selection", state: linked });
+    emit({
+      type: "cards",
+      cards: [
+        { id: "9:1", name: "Success", tone: "green", pageName: "Haptics" },
+        { id: "9:2", name: "Error", tone: "red", pageName: "Haptics" },
+      ],
+    });
+    fireEvent.click(screen.getByRole("radio", { name: /Error/ }));
+    emit({ type: "selection", state: { ...linked } });
+    expect(screen.getByRole("radio", { name: /Error/ }).getAttribute("aria-checked")).toBe("true");
+  });
+
   test("a deleted linked card shows a notice and Remove link unlinks", () => {
     const { sent, emit } = setup();
     emit({ type: "selection", state: layer({ link: { schema: 1, cardId: "9:9", trigger: "tap" } }) });

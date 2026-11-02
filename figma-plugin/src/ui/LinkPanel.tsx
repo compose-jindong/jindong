@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TRIGGER_LABEL } from "../core/annotation";
 import { TONE_HEX, type HapticLink, type Trigger } from "../core/model";
 import type { CardSummary, SelectionState } from "../shared/messages";
@@ -20,8 +20,20 @@ const TRIGGERS: Trigger[] = ["tap", "enter", "state"];
 
 export function LinkPanel({ state, cards, onRequestCards, onLink, onUnlink, busy = false }: LinkPanelProps) {
   const { link, linkedPattern, warning, linkInherited, linkedCardUnreadable, linkFromLibrary } = state;
-  const [cardId, setCardId] = useState<string | null>(link && linkedPattern ? link.cardId : null);
-  const [trigger, setTrigger] = useState<Trigger>(link?.trigger ?? "tap");
+  const savedCardId = link && linkedPattern ? link.cardId : null;
+  const savedTrigger = link?.trigger ?? "tap";
+  const [cardId, setCardId] = useState<string | null>(savedCardId);
+  const [trigger, setTrigger] = useState<Trigger>(savedTrigger);
+
+  // Undo or a teammate can change the saved link; the choices follow it, while an unchanged link re-sent with
+  // the selection leaves a choice in progress alone.
+  const saved = useRef({ cardId: savedCardId, trigger: savedTrigger });
+  useEffect(() => {
+    if (saved.current.cardId === savedCardId && saved.current.trigger === savedTrigger) return;
+    saved.current = { cardId: savedCardId, trigger: savedTrigger };
+    setCardId(savedCardId);
+    setTrigger(savedTrigger);
+  }, [savedCardId, savedTrigger]);
 
   // Ask again whenever the list was reset, e.g. after the selection changed.
   useEffect(() => {
