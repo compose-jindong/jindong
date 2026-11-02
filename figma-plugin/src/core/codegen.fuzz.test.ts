@@ -6,11 +6,16 @@ import { toTimeline, validatePattern, type HapticEvent, type PatternSpec } from 
 // checks it lands on the card's timeline for many random patterns. Gradle compiles the fixed golden cases;
 // this covers the combinations those cases don't.
 
+// mulberry32: 32-bit integer steps, so the sequence doesn't lose precision and cycle early the way a large
+// floating-point multiply does.
 function random(seed: number) {
-  let state = seed;
+  let state = seed >>> 0;
   return () => {
-    state = (state * 1_103_515_245 + 12_345) % 2_147_483_648;
-    return state / 2_147_483_648;
+    state = (state + 0x6d2b79f5) >>> 0;
+    let t = state;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4_294_967_296;
   };
 }
 
@@ -61,8 +66,10 @@ function replay(code: string) {
 
 test("generated Kotlin replays to the card's timeline for 2,000 random patterns", () => {
   const next = random(42);
+  const seen = new Set<string>();
   for (let i = 0; i < 2000; i++) {
     const pattern = randomPattern(next);
+    seen.add(JSON.stringify(pattern));
     expect(validatePattern(pattern).ok).toBe(true);
     const timeline = toTimeline(pattern);
     const replayed = replay(patternCode(pattern));
@@ -77,4 +84,6 @@ test("generated Kotlin replays to the card's timeline for 2,000 random patterns"
       })),
     );
   }
+  // A generator that cycles early would test the same patterns over and over. Tiny patterns can repeat by chance.
+  expect(seen.size).toBeGreaterThan(1900);
 });
