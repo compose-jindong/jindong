@@ -107,6 +107,16 @@ describe("linkLayer", () => {
     expect(instance.getSharedPluginData("jindong", "link")).toBe(main.getSharedPluginData("jindong", "link"));
   });
 
+  test("a library instance linked to a local card that shares its library card's id still gets the link", async () => {
+    // 9:1 is the library file's card here; this file's 9:1 is a different card that happens to share the id.
+    const libraryMain = Object.assign(fakeLayer("3:4"), { remote: true });
+    writeLink(libraryMain as unknown as SceneNode, { schema: 1, cardId: "9:1", trigger: "tap", cardName: "Library tap" });
+    const instance = instanceOf("3:5", libraryMain);
+    nodes.set("3:5", instance);
+    expect((await linkLayer("3:5", "9:1", "tap")).inherited).toBeUndefined();
+    expect(readLink(instance as unknown as SceneNode)).toMatchObject({ cardId: "9:1", cardName: "Success", layerId: "3:5" });
+  });
+
   test("a link records the layer it was set on", async () => {
     const layer = fakeLayer("5:4");
     nodes.set("5:4", layer);

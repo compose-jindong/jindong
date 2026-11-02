@@ -27,7 +27,8 @@ export async function linkLayer(
   // Asking an instance for exactly what its main component gives it: drop any copy so it keeps following.
   if (node.type === "INSTANCE") {
     const main = await node.getMainComponentAsync();
-    const mainLink = main ? readLink(main) : null;
+    // A library component's link names a card in the library's file; its id means nothing here.
+    const mainLink = main && !main.remote ? readLink(main) : null;
     if (mainLink && mainLink.cardId === cardId && mainLink.trigger === trigger) {
       clearLink(node);
       setJindongAnnotation(node, null);
