@@ -358,3 +358,33 @@ test("a card update that fails names the card, so the window can show the card a
     { type: "status", tone: "error", message: "Couldn't load a font." },
   ]);
 });
+
+test("a failure after the card took the edit doesn't call the edit refused", async () => {
+  vi.doMock("./card", () => ({ createCard: vi.fn(), updateCard: vi.fn(async () => ({})) }));
+  const posted: { type: string }[] = [];
+  const ui: { postMessage: (message: { type: string }) => void; onmessage: ((message: unknown) => void) | null } = {
+    postMessage: (message) => posted.push(message),
+    onmessage: null,
+  };
+  const card = { id: "7:1", type: "FRAME", parent: null, getSharedPluginData: () => JSON.stringify(presetNamed("Success")) };
+  vi.stubGlobal("__html__", "<html></html>");
+  vi.stubGlobal("figma", {
+    editorType: "figma",
+    mode: "default",
+    showUI: () => {},
+    on: () => {},
+    ui,
+    currentPage: { selection: [], on: () => {}, off: () => {} },
+    getNodeByIdAsync: async () => card,
+    // A rename checks every page for a clash, after the card was already updated.
+    loadAllPagesAsync: async () => {
+      throw new Error("Couldn't load every page.");
+    },
+  });
+
+  await import("./main");
+  ui.onmessage?.({ type: "update-card", nodeId: "7:1", pattern: { ...presetNamed("Success"), name: "Paid" } });
+  await new Promise((resolve) => setTimeout(resolve, 0));
+
+  expect(posted.map((m) => m.type)).toEqual(["status"]);
+});

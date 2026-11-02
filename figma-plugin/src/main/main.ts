@@ -112,9 +112,17 @@ async function handle(message: UiToMain): Promise<void> {
       case "update-card": {
         // Edits reach the card whenever the designer pauses, so a routine update says nothing. A rename that
         // clashes with a card on any page still does; checking only on renames keeps other edits quick.
-        const pattern = valid(message.pattern);
-        const before = readPattern(await figma.getNodeByIdAsync(message.nodeId));
-        await updateCard(message.nodeId, pattern);
+        let pattern: PatternSpec;
+        let before: PatternSpec | null;
+        try {
+          pattern = valid(message.pattern);
+          before = readPattern(await figma.getNodeByIdAsync(message.nodeId));
+          await updateCard(message.nodeId, pattern);
+        } catch (error) {
+          // Only an edit that never reached the card is refused; a failure after the write isn't.
+          post({ type: "card-update-failed", nodeId: message.nodeId });
+          throw error;
+        }
         if (before?.name !== pattern.name && clashesWith(pattern.name, await cardNames(message.nodeId))) {
           await finish("warning", `Another card is also called “${pattern.name}”. Rename one so their code doesn't clash.`);
         } else {
@@ -141,7 +149,6 @@ async function handle(message: UiToMain): Promise<void> {
         return;
     }
   } catch (error) {
-    if (message.type === "update-card") post({ type: "card-update-failed", nodeId: message.nodeId });
     postError(error, reply);
   }
 }
