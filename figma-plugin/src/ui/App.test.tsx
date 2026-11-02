@@ -285,6 +285,40 @@ describe("App", () => {
     }
   });
 
+  test("undoing an edit before the card confirms it still reaches the card", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+      act(() => vi.advanceTimersByTime(300));
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Success" } });
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: { ...presetNamed("Success"), name: "Paid" } } });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("Success");
+      act(() => vi.advanceTimersByTime(300));
+      const last = sent.filter((m) => m.type === "update-card").at(-1);
+      expect(last?.type === "update-card" && last.pattern.name).toBe("Success");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  test("undoing an edit and leaving before the card confirms it still reaches the card", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Paid" } });
+      act(() => vi.advanceTimersByTime(300));
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "Success" } });
+      emit({ type: "selection", state: layer() });
+      const last = sent.filter((m) => m.type === "update-card").at(-1);
+      expect(last?.type === "update-card" && last.pattern.name).toBe("Success");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("an edit undone on the canvas shows the undone values and isn't sent again", () => {
     vi.useFakeTimers();
     try {

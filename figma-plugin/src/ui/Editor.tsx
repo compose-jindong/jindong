@@ -7,12 +7,12 @@ import { Timeline } from "./Timeline";
 // Edits to a card reach it once the designer pauses this long, and at once if they select something else first.
 const APPLY_DELAY_MS = 300;
 
-/** The editor's pattern, with the saved one it started from and the last one sent to the card. */
+/** The editor's pattern, with the saved one it started from and what it sent that the card hasn't shown yet. */
 interface Edits {
   base: PatternSpec;
   pattern: PatternSpec;
-  /** So the card coming back with this pattern isn't taken for someone else's change. */
-  sent?: PatternSpec;
+  /** Oldest first, so the card coming back with one of them isn't taken for someone else's change. */
+  inFlight: PatternSpec[];
 }
 
 interface EditorProps {
@@ -31,7 +31,7 @@ interface EditorProps {
 const TONES = Object.keys(TONE_HEX) as Tone[];
 
 export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false }: EditorProps) {
-  const [edits, setEdits] = useState<Edits>({ base: initial, pattern: initial });
+  const [edits, setEdits] = useState<Edits>({ base: initial, pattern: initial, inFlight: [] });
   const draft = edits.pattern;
   const setDraft = (pattern: PatternSpec) => setEdits((current) => ({ ...current, pattern }));
   const [selected, setSelected] = useState(0);
@@ -46,22 +46,26 @@ export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false 
   }, [initial]);
 
   const apply = useRef(onApply);
-  apply.current = onApply;
+  useEffect(() => {
+    apply.current = onApply;
+  });
+  // The card will hold the last edit sent once it arrives, so a draft is compared with that, not with the card now.
   const pending = useRef<PatternSpec | null>(null);
   useEffect(() => {
-    const changed = mode === "update" && validation.ok && !samePattern(draft, initial);
+    const expected = edits.inFlight.at(-1) ?? initial;
+    const changed = mode === "update" && validation.ok && !samePattern(draft, expected);
     pending.current = changed ? normalizePattern(validation.pattern) : null;
     if (!pending.current) return;
     const timer = setTimeout(sendPending, APPLY_DELAY_MS);
     return () => clearTimeout(timer);
-  }, [draft, initial]);
+  }, [draft, initial, edits.inFlight]);
   useEffect(() => () => sendPending(), []);
 
   function sendPending() {
     const next = pending.current;
     if (!next) return;
     pending.current = null;
-    setEdits((current) => ({ ...current, sent: next }));
+    setEdits((current) => ({ ...current, inFlight: [...current.inFlight, next] }));
     apply.current?.(next);
   }
 
@@ -165,10 +169,14 @@ export function Editor({ mode, initial, onSubmit, onApply, onBack, busy = false 
 // The saved card can change underneath: this editor's own edit coming back, undo, or a teammate's edit. Without
 // edits still on their way, show the new values; with them, keep the edits, which reach the card next.
 function reconcile(edits: Edits, saved: PatternSpec): Edits {
+  // One of this editor's edits landed, and every edit sent before it with it.
+  const landed = edits.inFlight.findIndex((sent) => samePattern(sent, saved));
+  if (landed >= 0) return { base: saved, pattern: edits.pattern, inFlight: edits.inFlight.slice(landed + 1) };
+  // A later edit is still on its way and will replace whatever this is.
+  if (edits.inFlight.length > 0) return edits;
   // Keep what was typed: normalizing trims the name, so the card can come back without a space just typed.
-  if (samePattern(edits.pattern, saved)) return { base: saved, pattern: edits.pattern };
-  if (samePattern(edits.pattern, edits.base)) return { base: saved, pattern: saved };
-  if (edits.sent && samePattern(edits.sent, saved)) return { base: saved, pattern: edits.pattern };
+  if (samePattern(edits.pattern, saved)) return { ...edits, base: saved };
+  if (samePattern(edits.pattern, edits.base)) return { base: saved, pattern: saved, inFlight: [] };
   return edits;
 }
 
