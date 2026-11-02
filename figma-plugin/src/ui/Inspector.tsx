@@ -6,9 +6,12 @@ import { CodePanel } from "./CodePanel";
 import { Notice } from "./Notice";
 import { Timeline } from "./Timeline";
 
-// The window in Dev Mode, where plugins can't change the file: the selected haptic, a preview and its code.
+// The selected haptic, a preview and its code, for where the plugin can't change it: Dev Mode, or a card that
+// comes from a team library.
 
-export function Inspector({ selection }: { selection: SelectionState }) {
+const DEV_MODE_NOTE = "Dev Mode is read-only. Switch to Design Mode to change haptics.";
+
+export function Inspector({ selection, note = DEV_MODE_NOTE }: { selection: SelectionState; note?: string }) {
   switch (selection.kind) {
     case "none":
       return <Notice>Select a haptic card, or a layer linked to one, to see its haptic and code.</Notice>;
@@ -18,7 +21,9 @@ export function Inspector({ selection }: { selection: SelectionState }) {
       const { pattern } = selection;
       if (!pattern) return <Notice>{UNREADABLE_CARD_NOTICE}</Notice>;
       const sections = codeSections({ pattern, link: null, linkedPattern: null });
-      return <View label="Haptic" title={pattern.name} summary={pattern.description} pattern={pattern} sections={sections} />;
+      return (
+        <View label="Haptic" title={pattern.name} summary={pattern.description} note={note} pattern={pattern} sections={sections} />
+      );
     }
     case "layer": {
       const { link, linkedPattern, linkedCardUnreadable, linkFromLibrary, nodeName } = selection;
@@ -34,7 +39,9 @@ export function Inspector({ selection }: { selection: SelectionState }) {
       // Without a readable card the code panel's own explanation is the whole answer.
       if (!linkedPattern) return <Notice>{sections[0].code}</Notice>;
       const summary = `Plays ${linkedPattern.name} · ${TRIGGER_LABEL[link.trigger]}`;
-      return <View label="Selected layer" title={nodeName} summary={summary} pattern={linkedPattern} sections={sections} />;
+      return (
+        <View label="Selected layer" title={nodeName} summary={summary} note={note} pattern={linkedPattern} sections={sections} />
+      );
     }
   }
 }
@@ -43,12 +50,14 @@ function View({
   label,
   title,
   summary,
+  note,
   pattern,
   sections,
 }: {
   label: string;
   title: string;
   summary: string;
+  note: string;
   pattern: PatternSpec;
   sections: CodeSection[];
 }) {
@@ -59,7 +68,7 @@ function View({
         <h2>{title}</h2>
         {summary && <p className="inspector-summary">{summary}</p>}
       </header>
-      <p className="callout">Dev Mode is read-only. Switch to Design Mode to change haptics.</p>
+      <p className="callout">{note}</p>
       <Timeline pattern={pattern} width={320} height={96} detailed />
       <CodePanel sections={sections} />
     </div>

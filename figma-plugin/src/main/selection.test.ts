@@ -53,7 +53,13 @@ describe("readSelection", () => {
     writePattern(card as unknown as SceneNode, presetNamed("Success"));
     const bar = fakeNode("7:2", "RECTANGLE", card);
     select(bar);
-    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:1", pattern: presetNamed("Success"), nameClash: false });
+    expect(await readSelection()).toEqual({
+      kind: "card",
+      nodeId: "7:1",
+      pattern: presetNamed("Success"),
+      nameClash: false,
+      fromLibrary: false,
+    });
   });
 
   test("an instance of a card that became a component opens that card, not the instance", async () => {
@@ -61,7 +67,21 @@ describe("readSelection", () => {
     writePattern(component as unknown as SceneNode, presetNamed("Heartbeat"));
     const instance = instanceOf("8:1", component, page);
     select(instance);
-    expect(await readSelection()).toEqual({ kind: "card", nodeId: "7:3", pattern: presetNamed("Heartbeat"), nameClash: false });
+    expect(await readSelection()).toEqual({
+      kind: "card",
+      nodeId: "7:3",
+      pattern: presetNamed("Heartbeat"),
+      nameClash: false,
+      fromLibrary: false,
+    });
+  });
+
+  test("a card from a team library is marked, since only the library's file can change it", async () => {
+    const libraryCard = fakeNode("7:30", "COMPONENT");
+    libraryCard.remote = true;
+    writePattern(libraryCard as unknown as SceneNode, presetNamed("Success"));
+    select(instanceOf("8:30", libraryCard, page));
+    expect(await readSelection()).toMatchObject({ kind: "card", nodeId: "7:30", fromLibrary: true });
   });
 
   test("a card duplicated with the same name is flagged, so the code clash is caught early", async () => {

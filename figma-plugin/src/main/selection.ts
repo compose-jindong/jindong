@@ -11,7 +11,13 @@ export async function readSelection(): Promise<SelectionState> {
   const card = await findCard(node);
   if (card) {
     const pattern = readPattern(card);
-    return { kind: "card", nodeId: card.id, pattern, nameClash: pattern ? clashesOnPage(card, pattern.name) : false };
+    return {
+      kind: "card",
+      nodeId: card.id,
+      pattern,
+      nameClash: pattern ? clashesOnPage(card, pattern.name) : false,
+      fromLibrary: card.type === "COMPONENT" && card.remote === true,
+    };
   }
 
   const link = readLink(node);

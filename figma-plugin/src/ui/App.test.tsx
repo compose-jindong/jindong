@@ -443,6 +443,18 @@ describe("App", () => {
     ).toBeTruthy();
   });
 
+  test("a card from a team library shows its haptic and code, and says where to edit it", () => {
+    const { emit } = setup();
+    emit({
+      type: "selection",
+      state: { kind: "card", nodeId: "7:30", pattern: presetNamed("Success"), fromLibrary: true },
+    });
+    expect(screen.getByText("This card comes from a library. Edit it in the library's file.")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Success" })).toBeTruthy();
+    expect(screen.getAllByRole("heading", { level: 3 }).map((h) => h.textContent)).toEqual(["Pattern", "Setup"]);
+    expect(screen.queryByLabelText("Name")).toBeNull();
+  });
+
   test("an unreadable card shows the newer-version message", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: null } });

@@ -128,6 +128,9 @@ export function App({ bridge = figmaBridge }: { bridge?: Bridge }) {
       case "card": {
         const { nodeId, pattern } = selection;
         if (!pattern) return <Notice>This card can't be read. It may come from a newer version of the plugin.</Notice>;
+        if (selection.fromLibrary) {
+          return <Inspector selection={selection} note="This card comes from a library. Edit it in the library's file." />;
+        }
         return (
           <Tabbed
             mainLabel="Edit"

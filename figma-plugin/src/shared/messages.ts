@@ -13,6 +13,8 @@ export type SelectionState =
       pattern: PatternSpec | null;
       /** Another card on the page has a name that generates the same Kotlin value (often a ⌘D copy). */
       nameClash?: boolean;
+      /** The card is a component from a team library, so only the library's file can change it. */
+      fromLibrary?: boolean;
     }
   | {
       kind: "layer";
