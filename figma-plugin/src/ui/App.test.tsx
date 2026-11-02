@@ -476,6 +476,24 @@ describe("App", () => {
     }
   });
 
+  test("a newer edit made while a refused one was on its way is kept and sent", () => {
+    vi.useFakeTimers();
+    try {
+      const { sent, emit } = setup();
+      emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: presetNamed("Success") } });
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "A" } });
+      act(() => vi.advanceTimersByTime(300));
+      fireEvent.change(screen.getByLabelText("Name"), { target: { value: "B" } });
+      emit({ type: "card-update-failed", nodeId: "1:2" });
+      expect((screen.getByLabelText("Name") as HTMLInputElement).value).toBe("B");
+      act(() => vi.advanceTimersByTime(300));
+      const last = sent.filter((m) => m.type === "update-card").at(-1);
+      expect(last?.type === "update-card" && last.pattern.name).toBe("B");
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   test("an unreadable card shows the newer-version message", () => {
     const { emit } = setup();
     emit({ type: "selection", state: { kind: "card", nodeId: "1:2", pattern: null } });

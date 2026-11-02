@@ -54,8 +54,14 @@ export function Editor({ mode, initial, onSubmit, onApply, refusedEdits = 0, onB
     refused.current = refusedEdits;
     if (count <= 0) return;
     setEdits((current) => {
+      // An edit this editor didn't send, such as one sent as an earlier editor closed, leaves this one alone.
+      if (current.inFlight.length === 0) return current;
       const inFlight = current.inFlight.slice(count);
-      return inFlight.length > 0 ? { ...current, inFlight } : { base: initial, pattern: initial, inFlight: [] };
+      if (inFlight.length > 0) return { ...current, inFlight };
+      // A newer edit made meanwhile stays and goes out next; otherwise the card shows as it is.
+      const refusedLast = current.inFlight[Math.min(count, current.inFlight.length) - 1];
+      const newer = !samePattern(current.pattern, refusedLast);
+      return { base: initial, pattern: newer ? current.pattern : initial, inFlight: [] };
     });
   }, [refusedEdits]);
 
