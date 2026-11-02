@@ -53,7 +53,7 @@ function View({
   sections: CodeSection[];
 }) {
   return (
-    <div className="inspector">
+    <div className="dev-inspector">
       <header className="link-header">
         <span className="link-label">{label}</span>
         <h2>{title}</h2>

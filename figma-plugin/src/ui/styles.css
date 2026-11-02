@@ -673,7 +673,7 @@ input[type="range"] {
 
 /* Dev Mode */
 
-.inspector {
+.dev-inspector {
   display: flex;
   flex-direction: column;
   gap: 14px;
