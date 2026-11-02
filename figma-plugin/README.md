@@ -20,6 +20,11 @@ A Figma plugin for designing haptic patterns and handing developers the Jindong 
 
 > **Note**: Dev Mode is read-only for plugins. Running Jindong there shows the selected haptic, its preview and its code. Edit haptics in Design Mode.
 
+## Limitations
+
+- A link names its card by node ID. Cutting and pasting a card gives it a new ID, so the layers linked to it show a broken link until they're linked again.
+- Two layers with the same name and haptic get the same tap counter in the generated code. Rename one of the layers.
+
 ## Try it in Figma
 
 1. Run `yarn install && yarn build` in `figma-plugin/`.
@@ -45,7 +50,7 @@ The preview accepts `?state=none|card|layer|linked|multiple`, `&page=<name>` and
 `golden/` holds the Kotlin the generator writes for every preset and some edge cases. `jindong-core` and `jindong-compose` compile it in `commonTest` and check that it plays the card's timeline.
 
 - After changing the generator, run `yarn golden` and commit the result. `yarn test` fails while `golden/` is stale.
-- When the Jindong version changes, update `src/core/version.ts`.
+- `src/core/version.ts` names the oldest Jindong release the generated code uses, which the setup snippet installs. Raise it only when the generator needs a newer API.
 
 ### Data
 
@@ -53,7 +58,8 @@ Cards and links are stored as shared plugin data under the `jindong` namespace: 
 
 ## Publishing
 
-1. Create the plugin in Figma to get its ID, and replace `jindong-local-dev` in `manifest.json`.
-2. Prepare a 128×128 icon and a 1920×960 cover image.
-3. With a fresh build, check in Figma desktop: create and edit a card, link a layer and check its Dev Mode note, check the code in Dev Mode and in the Code tab, and press **Preview rhythm** to hear it.
-4. Publish from the Figma desktop app.
+1. Make sure the Jindong release in `src/core/version.ts` is published, since the setup snippet installs it.
+2. Create the plugin in Figma to get its ID, and replace `jindong-local-dev` in `manifest.json`.
+3. Prepare a 128×128 icon and a 1920×960 cover image.
+4. With a fresh build, check in Figma desktop: create and edit a card, link a layer and check its Dev Mode note, check the code in Dev Mode and in the Code tab, and press **Preview rhythm** to hear it.
+5. Publish from the Figma desktop app.
