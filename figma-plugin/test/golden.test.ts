@@ -1,3 +1,4 @@
+/// <reference types="vite/client" />
 import { mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
@@ -13,7 +14,8 @@ const GOLDEN_DIR = fileURLToPath(new URL("../golden", import.meta.url));
 test("golden Kotlin matches the code generator", () => {
   const expected = goldenFiles();
 
-  if (process.env.UPDATE_GOLDEN) {
+  // `yarn golden` runs Vitest with `--mode golden`, which works in every shell, unlike an inline variable.
+  if (import.meta.env.MODE === "golden") {
     rmSync(GOLDEN_DIR, { recursive: true, force: true });
     for (const [path, content] of expected) {
       mkdirSync(dirname(join(GOLDEN_DIR, path)), { recursive: true });

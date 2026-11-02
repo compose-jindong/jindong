@@ -11,7 +11,7 @@
     "preview:ui": "vite --open /preview.html",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "golden": "UPDATE_GOLDEN=1 vitest run test/golden.test.ts"
+    "golden": "vitest run test/golden.test.ts --mode golden"
   },
   "devDependencies": {
     "@figma/plugin-typings": "^1.142.0",
