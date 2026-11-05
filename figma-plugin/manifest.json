@@ -1,0 +1,13 @@
+{
+  "name": "Jindong",
+  "id": "jindong-local-dev",
+  "api": "1.0.0",
+  "main": "dist/main.js",
+  "ui": "dist/index.html",
+  "editorType": ["figma", "dev"],
+  "capabilities": ["codegen", "inspect"],
+  "codegenLanguages": [{ "label": "Jindong (Compose)", "value": "jindong" }],
+  "documentAccess": "dynamic-page",
+  "networkAccess": { "allowedDomains": ["none"] },
+  "relaunchButtons": [{ "command": "edit", "name": "Edit haptic" }]
+}

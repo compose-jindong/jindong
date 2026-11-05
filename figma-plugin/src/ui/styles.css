@@ -1,0 +1,732 @@
+/* Figma supplies --figma-color-* (light and dark) when the window opens with themeColors.
+   The fallbacks keep the browser preview readable. */
+:root {
+  --bg: var(--figma-color-bg, #ffffff);
+  --bg-subtle: var(--figma-color-bg-secondary, #f5f5f5);
+  --bg-hover: var(--figma-color-bg-hover, #f0f0f0);
+  --text: var(--figma-color-text, #1e1e1e);
+  --text-secondary: var(--figma-color-text-secondary, #6f6f6f);
+  --text-tertiary: var(--figma-color-text-tertiary, #a3a3a3);
+  --border: var(--figma-color-border, #e6e6e6);
+  --focus: var(--figma-color-border-selected, #0d99ff);
+  --danger: var(--figma-color-text-danger, #dc3412);
+  --warning: var(--figma-color-text-warning, #b86200);
+  --success: var(--figma-color-text-success, #14ae5c);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  font: 12px/1.45 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+button,
+input {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+button:disabled {
+  cursor: default;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 1px;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.screen {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 16px 0;
+}
+
+.status {
+  padding: 9px 16px;
+  border-top: 1px solid var(--border);
+  font-size: 11px;
+  line-height: 1.45;
+}
+
+/* Collapsed but still rendered: a live region that appears together with its text often isn't announced. */
+.status:empty {
+  padding: 0;
+  border-top: 0;
+}
+
+.status-success {
+  color: var(--success);
+}
+
+.status-warning {
+  color: var(--warning);
+}
+
+.status-error {
+  color: var(--danger);
+}
+
+.notice {
+  margin: 8px 0 16px;
+  max-width: 34ch;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  white-space: pre-line;
+}
+
+/* Gallery */
+
+.gallery {
+  padding-bottom: 16px;
+}
+
+.gallery-header h1 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.gallery-header p {
+  margin: 2px 0 14px;
+  color: var(--text-secondary);
+}
+
+.preset-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.preset {
+  display: grid;
+  gap: 1px;
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg);
+  text-align: left;
+}
+
+.preset:hover {
+  border-color: var(--text-tertiary);
+}
+
+.preset .timeline {
+  margin-bottom: 6px;
+}
+
+.preset-name {
+  font-weight: 600;
+}
+
+.preset-description {
+  overflow: hidden;
+  color: var(--text-secondary);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.preset-duration {
+  color: var(--text-tertiary);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.gallery-hint {
+  margin: 14px 0 0;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+/* Timeline: width is time, height is strength. */
+
+.timeline-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  overflow: visible;
+}
+
+.bar-hit {
+  fill: transparent;
+  cursor: pointer;
+}
+
+.timeline-selectable .bar:not(.selected) {
+  opacity: 0.55;
+}
+
+.bar.selected > rect:not(.bar-hit),
+.bar.selected > circle {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  paint-order: stroke;
+}
+
+.timeline-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
+  color: var(--text-tertiary);
+  font-size: 10px;
+  font-variant-numeric: tabular-nums;
+}
+
+.play-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 8px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text);
+  font-size: 11px;
+}
+
+.play-button:hover {
+  background: var(--bg-hover);
+}
+
+/* Preview: a playhead crosses the timeline in real time and each event lights up as it plays. */
+
+.playhead {
+  stroke: var(--text);
+  stroke-width: 1.5;
+  animation-name: sweep;
+  animation-timing-function: linear;
+  animation-fill-mode: forwards;
+}
+
+@keyframes sweep {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(var(--sweep));
+  }
+}
+
+/* Every bar dims evenly during playback, selected or not, so only the lit one stands out. */
+.timeline-svg.playing .bar {
+  opacity: 0.3;
+}
+
+.timeline-svg.playing .bar.lit {
+  opacity: 1;
+}
+
+/* An event lights up at once and fades as it ends. */
+@media (prefers-reduced-motion: no-preference) {
+  .timeline-svg.playing .bar {
+    transition: opacity 200ms ease-out;
+  }
+
+  .timeline-svg.playing .bar.lit {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .playhead {
+    display: none;
+  }
+}
+
+/* Editor */
+
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  align-self: flex-start;
+  gap: 4px;
+  padding: 2px 4px 2px 0;
+  border: 0;
+  background: none;
+  color: var(--text-secondary);
+}
+
+.back-button:hover {
+  color: var(--text);
+}
+
+.identity {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 8px 12px;
+}
+
+.description-field {
+  grid-column: 1 / -1;
+}
+
+.text-field {
+  display: grid;
+  gap: 4px;
+}
+
+.text-field span {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+input:not([type]),
+input[type="number"] {
+  min-width: 0;
+  height: 28px;
+  padding: 0 8px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+}
+
+input:not([type])::placeholder {
+  color: var(--text-tertiary);
+}
+
+input[type="range"] {
+  width: 100%;
+  min-width: 0;
+  margin: 0;
+  accent-color: var(--text);
+}
+
+.tones {
+  display: flex;
+  gap: 7px;
+  padding-bottom: 6px;
+}
+
+.tone {
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgb(0 0 0 / 8%);
+}
+
+.tone[aria-checked="true"] {
+  box-shadow:
+    0 0 0 2px var(--bg),
+    0 0 0 3.5px var(--text);
+}
+
+.inspector {
+  display: grid;
+  gap: 8px;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.inspector-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.inspector-title {
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.event-stepper {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.icon-button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  color: var(--text);
+}
+
+.icon-button:disabled {
+  opacity: 0.3;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+}
+
+.segmented button {
+  padding: 3px 12px;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.segmented button[aria-pressed="true"] {
+  background: var(--bg);
+  color: var(--text);
+  font-weight: 600;
+  box-shadow: 0 0 0 1px var(--border);
+}
+
+.range-field {
+  display: grid;
+  grid-template-columns: 80px minmax(0, 1fr) 76px;
+  align-items: center;
+  gap: 10px;
+}
+
+.range-field label {
+  color: var(--text-secondary);
+}
+
+.number-field {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.number-field input {
+  width: 56px;
+  padding: 0 6px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.unit {
+  width: 16px;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.inspector-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.secondary {
+  height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--bg);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--bg-hover);
+}
+
+.secondary:disabled {
+  opacity: 0.4;
+}
+
+.pattern-settings {
+  padding: 0 13px;
+}
+
+/* Card edits apply as they're made, so there's no footer; leave room at the end instead. */
+.editor-live {
+  padding-bottom: 16px;
+}
+
+.editor-footer {
+  position: sticky;
+  bottom: 0;
+  display: grid;
+  gap: 8px;
+  margin: 0 -16px;
+  padding: 12px 16px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+}
+
+.form-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 11px;
+}
+
+.primary {
+  width: 100%;
+  height: 32px;
+  border: 0;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-weight: 600;
+}
+
+.primary:disabled {
+  opacity: 0.35;
+}
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  gap: 16px;
+  margin: -4px 0 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.tabs button {
+  margin-bottom: -1px;
+  padding: 6px 0 8px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  color: var(--text-secondary);
+}
+
+.tabs button[aria-selected="true"] {
+  border-bottom-color: var(--text);
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* Link panel */
+
+.link-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.link-header {
+  display: grid;
+  gap: 2px;
+}
+
+.link-label {
+  color: var(--text-secondary);
+  font-size: 11px;
+}
+
+.link-header h2 {
+  margin: 0;
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 600;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.callout {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.current-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.current-link p {
+  margin: 0;
+}
+
+.current-link-broken p {
+  color: var(--warning);
+}
+
+.link-section {
+  display: grid;
+  gap: 8px;
+}
+
+.link-section h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.muted {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.card-list {
+  display: grid;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+
+.card-option {
+  display: grid;
+  /* A long page name gives way to the card name. */
+  grid-template-columns: 8px minmax(0, 1fr) fit-content(40%);
+  align-items: center;
+  gap: 10px;
+  padding: 8px 12px;
+  border: 0;
+  border-top: 1px solid var(--border);
+  background: var(--bg);
+  text-align: left;
+}
+
+.card-option:first-child {
+  border-top: 0;
+}
+
+.card-option:hover {
+  background: var(--bg-hover);
+}
+
+.card-option[aria-checked="true"] {
+  background: var(--bg-subtle);
+  box-shadow: inset 2px 0 0 var(--text);
+}
+
+.card-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.card-option-name {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.card-option[aria-checked="true"] .card-option-name {
+  font-weight: 600;
+}
+
+.card-option-page {
+  overflow: hidden;
+  color: var(--text-tertiary);
+  font-size: 11px;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+.link-panel .segmented {
+  display: flex;
+}
+
+.link-panel .segmented button {
+  flex: 1;
+  padding: 4px 6px;
+}
+
+/* Dev Mode */
+
+.dev-inspector {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inspector-summary {
+  margin: 2px 0 0;
+  color: var(--text-secondary);
+}
+
+/* Code */
+
+.code-panel {
+  display: grid;
+  gap: 14px;
+  padding-bottom: 16px;
+}
+
+.code-block {
+  display: grid;
+  gap: 6px;
+}
+
+.code-block-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.code-block-head h3 {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.code-hint {
+  flex: 1;
+  color: var(--text-tertiary);
+  font-size: 11px;
+}
+
+.code-block-head .secondary {
+  height: 24px;
+  margin-left: auto;
+  font-size: 11px;
+}
+
+.code-block pre {
+  margin: 0;
+  padding: 10px 12px;
+  overflow-x: auto;
+  border-radius: 6px;
+  background: var(--bg-subtle);
+  font: 11px/1.55 "SF Mono", SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+  tab-size: 4;
+}

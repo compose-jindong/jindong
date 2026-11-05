@@ -1,0 +1,62 @@
+import type { HapticLink, PatternSpec, Tone, Trigger } from "../core/model";
+
+// Messages between the plugin window (UI) and the Figma main thread.
+
+export type LayerWarning = "main-component" | "component-set" | "inside-main-component" | "inside-instance" | null;
+
+export type SelectionState =
+  | { kind: "none" }
+  | { kind: "multiple" }
+  | {
+      kind: "card";
+      nodeId: string;
+      pattern: PatternSpec | null;
+      /** Another card on the page has a name that generates the same Kotlin value (often a ⌘D copy). */
+      nameClash?: boolean;
+      /** The card is a component from a team library, so only the library's file can change it. */
+      fromLibrary?: boolean;
+    }
+  | {
+      kind: "layer";
+      nodeId: string;
+      nodeName: string;
+      link: HapticLink | null;
+      linkedPattern: PatternSpec | null;
+      warning: LayerWarning;
+      /** The link comes from the main component of this instance, so only the main component can remove it. */
+      linkInherited?: boolean;
+      /** The linked card exists, but its data is from a plugin version this one can't read. */
+      linkedCardUnreadable?: boolean;
+      /** The link comes from a component in a team library, whose card this file can't read. */
+      linkFromLibrary?: boolean;
+    };
+
+export interface CardSummary {
+  id: string;
+  name: string;
+  tone: Tone;
+  pageName: string;
+}
+
+export type UiToMain =
+  | { type: "ready" }
+  | { type: "list-cards" }
+  | { type: "create-card"; pattern: PatternSpec }
+  | { type: "update-card"; nodeId: string; pattern: PatternSpec }
+  | { type: "link"; nodeId: string; cardId: string; trigger: Trigger }
+  | { type: "unlink"; nodeId: string };
+
+export type MainToUi =
+  /** Dev Mode can't change the file, so the window only shows the selection there. */
+  | { type: "editor"; readOnly: boolean }
+  | { type: "selection"; state: SelectionState }
+  /** An edit sent with update-card didn't reach the card, so the window shows the card as it is. */
+  | { type: "card-update-failed"; nodeId: string }
+  | { type: "cards"; cards: CardSummary[] }
+  | {
+      type: "status";
+      tone: "success" | "warning" | "error";
+      message: string;
+      /** Answers the window's last action (create, link, unlink), which is now over. */
+      reply?: boolean;
+    };
